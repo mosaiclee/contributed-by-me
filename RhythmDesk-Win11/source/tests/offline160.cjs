@@ -28,6 +28,6 @@ function navigate(suffix,mode='navigate') {let response;handlers.fetch({request:
     assert.deepEqual(data,fs.readFileSync(path.join(dir,dest.endsWith('Offline.html')?'RhythmDesk-iPhone-Offline.html':'index.html')));
   }
   const check=await navigate('./?rhythm-cache-check=1','same-origin');
-  assert.deepEqual(await check.json(),{version:'1.59',ready:true});
-  console.log('PASS service-worker install, corrupt cache rejection, scope-safe upgrade, offline launch, standalone HTML and 1.59 integrity check.');
+  assert.deepEqual(await check.json(),{version:'1.60',ready:true});
+  console.log('PASS service-worker install, corrupt cache rejection, scope-safe upgrade, offline launch, standalone HTML and 1.60 integrity check.');
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -134,6 +134,101 @@ document.addEventListener('click', event => {
   if (quickTap && !quickTap.target.contains(event.target)) quickTap = null;
 }, true);
 
+// 1.60: every control that opens a menu on a double-tap also opens it when held for one second
+// (finger, pen or left mouse button). The menu then keeps clear of the held point, and the click
+// that ends the hold is dropped, so lifting the finger never chooses a menu item.
+const MENU_HOLD_MS = 1000;
+const MENU_HOLD_SLOP = 10;
+const MENU_HOLD_CLEARANCE = 40;
+let menuHold = null;
+let menuHoldPoint = null;
+let menuHoldClickUntil = 0;
+function cancelMenuHold() {
+  if (menuHold) clearTimeout(menuHold.timer);
+  menuHold = null;
+}
+function bindMenuHold(node, open, allowed = () => true) {
+  node.addEventListener('pointerdown', event => {
+    cancelMenuHold();
+    if (!event.isPrimary || event.button !== 0 || !allowed()) return;
+    const press = {node, id: event.pointerId, x: event.clientX, y: event.clientY, target: event.target};
+    press.timer = setTimeout(() => {
+      if (menuHold !== press) return;
+      menuHold = null;
+      if (!node.isConnected || !allowed()) return;
+      quickTap = null;
+      menuHoldPoint = {id: press.id, x: press.x, y: press.y};
+      menuHoldClickUntil = Infinity;
+      open(press);
+    }, MENU_HOLD_MS);
+    menuHold = press;
+  });
+  node.addEventListener('contextmenu', event => event.preventDefault());
+}
+document.addEventListener('pointerdown', event => {
+  // A second finger (pinch) or another pointer ends the hold.
+  if (menuHold && menuHold.id !== event.pointerId) cancelMenuHold();
+}, true);
+document.addEventListener('pointermove', event => {
+  if (menuHold?.id === event.pointerId &&
+      Math.hypot(event.clientX - menuHold.x, event.clientY - menuHold.y) > MENU_HOLD_SLOP) cancelMenuHold();
+}, true);
+for (const name of ['pointerup', 'pointercancel']) {
+  document.addEventListener(name, event => {
+    if (menuHold?.id === event.pointerId) cancelMenuHold();
+    if (menuHoldPoint?.id !== event.pointerId) return;
+    menuHoldPoint = null;
+    menuHoldClickUntil = performance.now() + 400;
+  }, true);
+}
+window.addEventListener('click', event => {
+  if (performance.now() >= menuHoldClickUntil) return;
+  menuHoldClickUntil = 0;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+}, true);
+// Wheel zoom moves the score under a held mouse. Programmatic scrolling (playback following) does not
+// cancel a hold; finger panning already ends it with pointercancel.
+window.addEventListener('wheel', cancelMenuHold, {capture: true, passive: true});
+window.addEventListener('blur', cancelMenuHold);
+
+// Move a menu box {left, top, width, height} so it does not cover the point still held by a long press.
+// Returns the same object when no move is needed.
+function clearOfMenuHold(box, bounds) {
+  const point = menuHoldPoint;
+  if (!point) return box;
+  const reach = MENU_HOLD_CLEARANCE;
+  const covers = ({left, top}) => point.x > left - reach && point.x < left + box.width + reach &&
+    point.y > top - reach && point.y < top + box.height + reach;
+  if (!covers(box)) return box;
+  const fit = (left, top) => ({...box,
+    left: clamp(left, bounds.left, Math.max(bounds.left, bounds.right - box.width)),
+    top: clamp(top, bounds.top, Math.max(bounds.top, bounds.bottom - box.height))});
+  // Layout sizes are rounded to whole pixels, so place the menu with a small margin beyond the reach.
+  const gap = reach + 2;
+  const aboveTop = point.y - gap - box.height, belowTop = point.y + gap;
+  const rightLeft = point.x + gap, leftLeft = point.x - gap - box.width;
+  // Above the finger first: the hand usually covers the screen below the fingertip.
+  const options = [fit(box.left, aboveTop), fit(box.left, belowTop), fit(rightLeft, box.top), fit(leftLeft, box.top),
+    fit(rightLeft, aboveTop), fit(leftLeft, aboveTop), fit(rightLeft, belowTop), fit(leftLeft, belowTop)];
+  const clear = options.find(option => !covers(option));
+  if (clear) return clear;
+  // No free side is large enough: keep as much of the menu as possible away from the finger, and tell
+  // the caller so a scrollable menu can shorten itself to menuHoldRoom() and try again.
+  const overlap = option =>
+    Math.max(0, Math.min(point.x + reach, option.left + box.width) - Math.max(point.x - reach, option.left)) *
+    Math.max(0, Math.min(point.y + reach, option.top + box.height) - Math.max(point.y - reach, option.top));
+  return {...options.reduce((best, option) => overlap(option) < overlap(best) ? option : best), covered: true};
+}
+
+// The larger free height above or below the held point.
+function menuHoldRoom(bounds) {
+  const point = menuHoldPoint;
+  if (!point) return Infinity;
+  const gap = MENU_HOLD_CLEARANCE + 2;
+  return Math.max(point.y - gap - bounds.top, bounds.bottom - point.y - gap);
+}
+
 function button(label, action, className = '') {
   const node = document.createElement('button');
   node.type = 'button';
@@ -174,13 +269,6 @@ function warnBeforeChangingNotes(key) {
   warning.style.bottom = Math.max(0, innerHeight - bottom) + Math.min(20, (bottom - top) / 4) + 'px';
   warning.showModal();
   setTimeout(() => warning.close(), NOTICE_DURATION_MS);
-}
-
-function blockSubdivisionChange(key = 'beat.clearBeforeSplit') {
-  const entry = rows.get(cursor.track)?.entries[cursor.beat];
-  if (!entry || !entry.track.cells.slice(entry.start, entry.start + entry.size).some(Boolean)) return false;
-  warnBeforeChangingNotes(key);
-  return true;
 }
 
 function putDocument(item) {
@@ -431,6 +519,7 @@ function boundaryAt(track, bar, measure, side = '', showPending = true) {
     ? '<path d="M16 4v48" stroke="currentColor" stroke-width="4"/><path d="M11 4v48" stroke="currentColor"/><circle cx="5" cy="23" r="2"/><circle cx="5" cy="33" r="2"/>'
     : '<path d="M10 4v48" stroke="currentColor" stroke-width="1.5"/>';
   const line = button('', event => { if (quickDoubleTap(event)) openTrackBoundary(track, bar, event.currentTarget, side); }, 'barline');
+  bindMenuHold(line, () => { if (!blockOtherTrack(track.id)) openTrackBoundary(track, bar, line, side); });
   if (side === 'end') line.classList.add('line-end');
   if (pendingStart || (showPending && side !== 'end' && measureCopyStart?.track === track && measureCopyStart.bar === bar)) {
     line.classList.add('pending-repeat');
@@ -602,18 +691,29 @@ function renderScore(updatedTrack) {
         handDot.setAttribute('aria-hidden', 'true');
         item.append(handDot);
         item.addEventListener('contextmenu', event => event.preventDefault());
+        // Multi-selection keeps its own 0.5 s hold for whole groups.
+        bindMenuHold(item, press => {
+          const hand = Boolean(press.target.classList?.contains('hand-dot'));
+          const {scrollLeft, scrollTop} = scoreEditViewport(item);
+          selectSlot(track.id, beat, slot);
+          el.paper.scrollTo({left: scrollLeft, top: scrollTop, behavior: 'instant'});
+          if (hand) openHandMenu(item);
+          else openBeatMenu(box);
+        }, () => !multiGroups);
         slotList.append(item);
         return item;
       });
       const meter = layout.steps?.length ? layout.steps[0].meter : groupMeter(measure, group);
       const meterButton = button((meter ?? '–') + ' ▾',
         event => { if (quickDoubleTap(event)) openGroupMeterMenu(event.currentTarget, track.id, beat); }, 'group-meter');
+      bindMenuHold(meterButton, () => { if (!blockOtherTrack(track.id)) openGroupMeterMenu(meterButton, track.id, beat); });
       meterButton.style.left = ((stems[0] ?? leading) / width * 100) + '%';
       meterButton.title = t('meter.groupButton', {bar: bar + 1, group: group + 1, meter: meter ?? '–'});
       meterButton.setAttribute('aria-label', meterButton.title);
       meterButton.setAttribute('aria-haspopup', 'true');
       const tempoButton = button(Math.round(effectiveTempo(doc, track, measure, group)) + ' ♩',
         event => { if (quickDoubleTap(event)) openTempoEditor(track, bar, group); }, 'group-tempo');
+      bindMenuHold(tempoButton, () => { if (!blockOtherTrack(track.id)) openTempoEditor(track, bar, group); });
       tempoButton.title = t('tempo.group');
       tempoButton.style.left = meterButton.style.left;
       box.append(graphic, slotList, meterButton, tempoButton);
@@ -957,13 +1057,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.59', userAgent: navigator.userAgent,
+    version: '1.60', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.59.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.60.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));
@@ -1369,10 +1469,22 @@ function popup(anchor, items) {
 
 function positionPopup(anchor, handMenu = false) {
   const rect = anchor.getBoundingClientRect();
-  const left = clamp(rect.left, 7, innerWidth - el.menu.offsetWidth - 7);
-  const below = handMenu ? rect.top + Math.min(rect.height * .19, 28) + 4 : rect.bottom + 4;
-  el.menu.style.left = left + 'px';
-  el.menu.style.top = clamp(below, 6, innerHeight - el.menu.offsetHeight - 7) + 'px';
+  const bounds = {left: 7, top: 6, right: innerWidth - 7, bottom: innerHeight - 7};
+  const place = () => {
+    const width = el.menu.offsetWidth, height = el.menu.offsetHeight;
+    const left = clamp(rect.left, 7, innerWidth - width - 7);
+    const below = handMenu ? rect.top + Math.min(rect.height * .19, 28) + 4 : rect.bottom + 4;
+    return clearOfMenuHold({left, top: clamp(below, 6, innerHeight - height - 7), width, height}, bounds);
+  };
+  el.menu.style.maxHeight = '';
+  let box = place();
+  if (box.covered) {
+    // Too tall for the space beside a held finger: shorten the scrollable menu to the larger free side.
+    el.menu.style.maxHeight = Math.max(48, Math.floor(menuHoldRoom(bounds))) + 'px';
+    box = place();
+  }
+  el.menu.style.left = box.left + 'px';
+  el.menu.style.top = box.top + 'px';
 }
 
 function openHandMenu(anchor) {
@@ -1431,9 +1543,14 @@ function positionBeatMenu() {
   const height = el.beatMenu.offsetHeight * menuScale;
   const above = rect.top - height - 9;
   const below = above < topEdge;
+  const placed = {width, height, left: clamp((rect.left + rect.right - width) / 2, leftEdge, rightEdge - width),
+    top: clamp(below ? rect.bottom + 9 : above, topEdge, Math.max(topEdge, bottomEdge - height))};
+  const box = clearOfMenuHold(placed, {left: leftEdge, top: topEdge, right: rightEdge, bottom: Math.max(topEdge + height, bottomEdge)});
   el.beatMenu.classList.toggle('below', below);
-  el.beatMenu.style.left = clamp((rect.left + rect.right - width) / 2, leftEdge, rightEdge - width) + 'px';
-  el.beatMenu.style.top = clamp(below ? rect.bottom + 9 : above, topEdge, Math.max(topEdge, bottomEdge - height)) + 'px';
+  // Moved clear of a held finger, the menu no longer sits next to its beat and hides the pointer arrow.
+  el.beatMenu.classList.toggle('clear-of-hold', box !== placed);
+  el.beatMenu.style.left = box.left + 'px';
+  el.beatMenu.style.top = box.top + 'px';
 }
 
 function copyBeat() {
@@ -1506,22 +1623,15 @@ function confirmBeatSizes(collisions) {
   return !collisions || confirm(t('beat.confirmMerge', {count: collisions}));
 }
 
+// 1.60: written notes stay while subdivisions change; notes landing on one cell merge after confirmation.
 function applyBeatSizes(sizes, subdivision) {
-  let occupied = false;
   const edits = doc.tracks.map(track => {
     const grid = trackGrid(doc, track);
     const next = track.measures ? grid.beats.map(() => subdivision) : sizes;
-    let offset = 0;
-    grid.beats.forEach((size, beat) => {
-      const end = offset + groupSize(size);
-      if (size !== next[beat] && track.cells.slice(offset, end).some(Boolean)) occupied = true;
-      offset = end;
-    });
     const edit = convertCells(track.cells, grid.beats, next);
     if (track.hands) edit.collisions += convertCells(track.hands, grid.beats, next).collisions;
     return {track, grid, next, ...edit};
   });
-  if (occupied) { warnBeforeChangingNotes('beat.clearBeforeBulkSplit'); return; }
   const same = (a, b) => a.every((size, index) => size === b[index]);
   if (subdivision === doc.subdivision && same(sizes, doc.beats) && edits.every(edit => same(edit.next, edit.grid.beats))) return;
   if (!confirmBeatSizes(edits.reduce((count, edit) => count + edit.collisions, 0))) return;
@@ -1540,7 +1650,6 @@ function applyBeatSizes(sizes, subdivision) {
 }
 
 function changeTuplet() {
-  if (blockSubdivisionChange()) return;
   const grid = currentGrid();
   const sizes = grid.beats.slice();
   const current = sizes[cursor.beat];
@@ -1557,8 +1666,8 @@ function changeTuplet() {
 }
 
 // 0.22: choose 1-4 equal parts for the cell under the cursor (1 = not split).
+// 1.60: also while the cell holds notes; they move to the nearest new sub-cell.
 function openSplitMenu(anchor) {
-  if (blockSubdivisionChange()) return;
   const info = beatSplitInfo(doc, selectedTrack(), cursor.beat, cursor.slot);
   const cell = rows.get(cursor.track)?.entries[cursor.beat]?.slots[cursor.slot];
   popup(anchor?.isConnected && anchor.offsetParent ? anchor : cell ?? el.score, [1, 2, 3, 4].map(parts => [
@@ -1573,7 +1682,6 @@ function splitBeat(parts) {
   if (parts === false) parts = 1;
   const track = selectedTrack();
   const info = beatSplitInfo(doc, track, cursor.beat, cursor.slot);
-  if (parts !== info.count && blockSubdivisionChange()) return;
   const result = splitTrackBeat(doc, track, cursor.beat, cursor.slot, parts);
   if (!result) { notify(t('beat.alreadySplit', {n: info.count})); return; }
   const hands = track.hands && splitTrackBeat(doc, {...track, cells: track.hands}, cursor.beat, cursor.slot, parts);
@@ -2399,6 +2507,33 @@ function openMultiGroupMeter(track) {
   paintMultiGroups();
 }
 
+// 1.60: copy a track with everything in it (notes included) into a new track directly below.
+function duplicateTrackWithContent(source) {
+  const track = doc.tracks.find(item => item.id === source.id);
+  if (!track) return;
+  if (doc.tracks.length >= TRACK_LIMIT) { notify(t('track.duplicateLimit')); return; }
+  const extra = Object.values(track.samples).reduce((size, sample) => size + sampleBytes(sample), 0);
+  if (projectSampleBytes(doc) + extra > SAMPLE_BUDGET) { notify(t('track.duplicateBudget')); return; }
+  const position = track.id === cursor.track ? {beat: cursor.beat, slot: cursor.slot} : {beat: 0, slot: 0};
+  let copy;
+  change(() => {
+    copy = duplicateTrack(doc, track, duplicateTrackName(track.name));
+    cursor = {track: copy.id, ...position};
+  }, true);
+  revealSlot(scoreIndex(), copy.id);
+  notify(t('track.duplicated', {track: track.name, copy: copy.name}));
+}
+
+function duplicateTrackName(name) {
+  const suffix = t('track.copySuffix');
+  const taken = new Set(doc.tracks.map(track => track.name));
+  for (let number = 1; ; number++) {
+    const ending = suffix + (number > 1 ? ' ' + number : '');
+    const candidate = (name.slice(0, Math.max(0, 28 - ending.length)).trimEnd() + ending).trim();
+    if (!taken.has(candidate)) return candidate;
+  }
+}
+
 function openTrackMenu(track, anchor) {
   if (multiGroups?.trackId === track.id) {
     const {picks, clip} = multiGroups;
@@ -2428,6 +2563,7 @@ function openTrackMenu(track, anchor) {
     [t('multi.start'), () => startMultiGroups(track)],
     [t('track.moveUp'), () => move(-1), index <= 0],
     [t('track.moveDown'), () => move(1), index >= blocks.length - 1],
+    [t('track.duplicate'), () => duplicateTrackWithContent(track), doc.tracks.length >= TRACK_LIMIT],
     [range ? t('track.loopOff') : t('track.loopOn'), () => {
       if (range) removeTrackLoop(track, range);
       else addTrackLoop(track, bar, bar + 1);
@@ -3560,12 +3696,11 @@ loadInstrumentPresets().then(() => {
 function openBulkSplit(anchor, tracks, fromBar = 0, toBar = null) {
   popup(anchor, [1, 2, 3, 4].map(parts => [parts === 1 ? t('split.one') : t('split.option', {n: parts}), () => {
     const targets = tracks.map(track => ({track, grid: trackGrid(doc, track)}));
-    if (targets.some(({track, grid}) => track.cells.slice(grid.barSteps[fromBar], grid.barSteps[toBar ?? grid.measures.length]).some(Boolean))) {
-      warnBeforeChangingNotes('bulk.clearFirst'); return;
-    }
     try {
+      // 1.60: written notes stay; notes landing on one cell merge only after confirmation.
       const results = targets.map(({track, grid}) => splitTrackRange(doc, track, fromBar, toBar ?? grid.measures.length, parts));
-      change(() => results.forEach((result, i) => Object.assign(targets[i].track, result)), true);
+      if (!confirmBeatSizes(results.reduce((count, result) => count + result.merged, 0))) return;
+      change(() => results.forEach((result, i) => Object.assign(targets[i].track, result.track)), true);
     } catch (error) { notify(error.message); }
   }]));
 }
@@ -3606,6 +3741,11 @@ function openTempoEditor(track = null, bar = null, group = null) {
   panel.append(form);
   panel.addEventListener('close', () => panel.remove(), {once:true});
   document.body.append(panel); panel.showModal();
+  // Opened by a one-second hold: keep the dialog's buttons away from the finger that is still down.
+  const frame = panel.getBoundingClientRect();
+  const placed = {left: frame.left, top: frame.top, width: frame.width, height: frame.height};
+  const box = clearOfMenuHold(placed, {left: 8, top: 8, right: innerWidth - 8, bottom: innerHeight - 8});
+  if (box !== placed) Object.assign(panel.style, {position: 'fixed', inset: 'auto', margin: '0', left: box.left + 'px', top: box.top + 'px'});
 }
 
 for (const [id, delta] of [['tempoMinus', -1], ['tempoPlus', 1]]) {

@@ -341,4 +341,7 @@ input[type="range"] { width: 100%; min-width: 0; accent-color: var(--blue); curs
 #beatMenu { z-index:10000; overflow:auto; overscroll-behavior:contain; max-height:calc(100dvh - 14px); }
 
 #score { padding-right: calc(clamp(18px, 4vw, 44px) + var(--loop-tail, 0px)); }
+/* 1.60: controls that open a menu on a one-second hold never start text selection or a system callout. */
+.barline, .slot, .group-meter, .group-tempo { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.beat-menu.clear-of-hold::after { display: none; }
 @media (max-width: 650px) { #score { padding-right: calc(14px + var(--loop-tail, 0px)); } }

@@ -71,7 +71,7 @@ def main():
     files.update(licenses)
     with ZipFile(args.output / 'RhythmDesk-iPhone-Offline-PWA.zip', 'w', ZIP_DEFLATED) as archive:
         for name, data in sorted(files.items()):
-            info = ZipInfo('RhythmDesk-iPhone-Offline-PWA/' + name, (2026, 11, 17, 0, 0, 0))
+            info = ZipInfo('RhythmDesk-iPhone-Offline-PWA/' + name, (2026, 11, 21, 0, 0, 0))
             info.compress_type = ZIP_DEFLATED
             info.create_system = 3
             info.external_attr = 0o100644 << 16

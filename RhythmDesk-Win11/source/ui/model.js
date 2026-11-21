@@ -341,6 +341,22 @@ function trackBlocks(doc) {
   return blocks;
 }
 
+// 1.60: an independent copy of one track with all of its content (notes, sticking, measures, group
+// meters, split cells, tempo, loops, line breaks, sounds, preset and mix), placed directly below the
+// track or below its Bell/Drum pair. A copied Bell is not paired with any drum.
+function duplicateTrack(doc, track, name) {
+  if (doc.tracks.length >= TRACK_LIMIT || !doc.tracks.includes(track)) return null;
+  const copy = structuredClone(track);
+  let number = 1;
+  while (doc.tracks.some(item => item.id === `t${number}`)) number++;
+  copy.id = `t${number}`;
+  copy.name = shortText(name, 28, track.name);
+  if (copy.type === 'bell') copy.bellFor = null;
+  const block = trackBlocks(doc).find(items => items.includes(track));
+  doc.tracks.splice(doc.tracks.indexOf(block.at(-1)) + 1, 0, copy);
+  return copy;
+}
+
 function detachTrackPair(doc, track) {
   for (const bell of doc.tracks) {
     if (bell === track || bell.bellFor === track.id) {
@@ -948,13 +964,15 @@ function splitTrackBeat(doc, track, beat, slot, parts) {
     const replacement = Array.from({length: count}, (_, i) => ({
       ...first, at: first.at + Math.round((end - first.at) * i / count), parts: count, part: i
     }));
+    // 1.60: notes stay while the cell is split or merged; each moves to the nearest new
+    // sub-cell and only notes landing on an occupied sub-cell are merged (counted as dropped).
     const values = emptyCells(count);
     let dropped = 0;
     for (let i = 0; i < info.count; i++) {
       const value = track.cells[start + i];
       if (!value) continue;
-      const target = replacement.findIndex(step => step.at === entry.steps[part + i].at);
-      if (target < 0) dropped++;
+      const target = Math.min(count - 1, Math.round(i * count / info.count));
+      if (values[target]) dropped++;
       else values[target] = value;
     }
     const cells = track.cells.slice();
@@ -970,11 +988,19 @@ function splitTrackBeat(doc, track, beat, slot, parts) {
   const start = beatStart(grid, beat);
   const old = cellPositions(entry);
   const group = emptyCells(groupSize(next));
+  // 1.60: notes stay while the cell is split or merged. Other cells keep their exact positions;
+  // inside the edited cell each note moves to the nearest new sub-cell, and only notes landing on an
+  // occupied sub-cell are merged (counted as dropped).
+  const oldFirst = Array.isArray(entry) ? groupSize(entry.slice(0, part)) : part;
+  const newFirst = Array.isArray(next) ? groupSize(next.slice(0, part)) : part;
   let dropped = 0;
   old.forEach((position, index) => {
     const stroke = track.cells[start + index];
     if (!stroke) return;
-    const target = cellNear(next, position, true);
+    const inner = index - oldFirst;
+    const target = inner >= 0 && inner < info.count
+      ? newFirst + Math.min(count - 1, Math.round(inner * count / info.count))
+      : cellNear(next, position, true);
     if (target < 0 || group[target]) dropped++;
     else group[target] = stroke;
   });
@@ -1110,8 +1136,10 @@ function loopEndpointAllowed(track, from, to, bars) {
   return Number.isInteger(from) && Number.isInteger(to) && from >= 0 && to > from && to <= bars &&
     !track.loops.some(loop => loop.from !== from && from < loop.to && loop.from < to);
 }
+// 1.60: returns the split track and how many notes merged; written notes no longer block the split.
 function splitTrackRange(doc, track, fromBar, toBar, parts) {
   const work = structuredClone(track);
+  let merged = 0;
   const grid = trackGrid(doc, work);
   const first = grid.barBeats[fromBar], end = grid.barBeats[toBar];
   for (let beat = end - 1; beat >= first; beat--) {
@@ -1121,12 +1149,12 @@ function splitTrackRange(doc, track, fromBar, toBar, parts) {
       const result = splitTrackBeat(doc, work, beat, slot, parts);
       if (result) {
         const hands = work.hands && splitTrackBeat(doc, {...work, cells: work.hands}, beat, slot, parts);
-        if (result.dropped || hands?.dropped) throw new Error(t('beat.clearBeforeSplit'));
+        merged += result.dropped + (hands?.dropped ?? 0);
         work.measures = result.measures; work.cells = result.cells;
         if (hands) work.hands = hands.cells;
       }
       slot -= info.count;
     }
   }
-  return work;
+  return {track: work, merged};
 }
