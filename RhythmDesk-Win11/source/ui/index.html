@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>鼓谱工作台</title>
+  <!-- STYLE -->
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 5h6l2 2h10v13H3zM3 10h18"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M10 11h2v6m-2 0h4m-2-9h.01"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="m8 4-5 5 5 5M3 9h12a5 5 0 0 1 0 10H6"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="m16 4 5 5-5 5m5-5H9a5 5 0 0 0 0 10h9"/></symbol>
+    <symbol id="i-tempo" viewBox="0 0 24 24"><path d="M9 3h6l5 18H4zM6 17h12M14 17 6 5"/><circle cx="5" cy="4" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3v18l14-9z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 4h4v16H6zm8 0h4v16h-4z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><path d="M5 5h14v14H5z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path d="M3 4l12 8L3 20zM18 4h2v16h-2z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="i-solo" viewBox="0 0 24 24"><path d="M4 16v-4a8 8 0 0 1 16 0v4"/><rect x="4" y="12" width="4" height="7" rx="1.5" fill="currentColor"/><rect x="16" y="12" width="4" height="7" rx="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path d="M19 5 4 20"/></symbol>
+    <symbol id="i-backspace" viewBox="0 0 24 24"><path d="M9 5h12v14H9l-7-7zM12 9l6 6m0-6-6 6"/></symbol>
+    <symbol id="i-clear-measure" viewBox="0 0 24 24"><path d="M3 5v14M21 5v14M9 9l6 6m0-6-6 6"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 10h.1m4-.1h.1m4 .1h.1m4-.1h.1M7 15h10"/></symbol>
+  </svg>
+  <main id="rhythmBrowser" class="rhythm-browser" aria-labelledby="browserTitle">
+    <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.59 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-17">2026-11-17</time></p>
+    <div class="browser-top">
+      <h1 id="browserTitle" class="browser-pill" data-i18n="browse.title">浏览</h1>
+      <div class="browser-pill browser-tools">
+        <button type="button" id="langBrowser" class="lang-toggle" data-i18n="lang.toggle" data-i18n-title="lang.toggleTitle" data-i18n-aria="lang.toggleTitle">EN</button>
+        <button type="button" id="browserNew" class="icon" data-i18n-title="browse.new" data-i18n-aria="browse.new" title="新建鼓谱" aria-label="新建鼓谱">+</button>
+        <button type="button" id="browserMore" class="icon" data-i18n-title="browse.options" data-i18n-aria="browse.options" title="浏览选项" aria-label="浏览选项"><svg aria-hidden="true"><use href="#i-more"/></svg></button>
+      </div>
+    </div>
+    <a href="./offline/" style="display:inline-block;margin:0 0 12px">离线使用</a>
+    <label class="browser-search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+      <input id="rhythmSearch" type="search" data-i18n-placeholder="browse.search" data-i18n-aria="browse.searchLabel" placeholder="搜索" aria-label="按名称搜索节奏" autocomplete="off">
+    </label>
+    <div id="rhythmGrid" class="rhythm-grid">
+      <button type="button" id="createDocument" class="rhythm-card"><span class="rhythm-thumbnail new-thumbnail" aria-hidden="true">+</span><span class="rhythm-card-name" data-i18n-html="browse.create">新建<br>鼓谱</span></button>
+    </div>
+    <p id="rhythmSearchEmpty" class="browser-empty" data-i18n="browse.empty" hidden>没有找到匹配的节奏。</p>
+  </main>
+  <header id="editorNav" hidden>
+    <div class="nav">
+      <button type="button" id="files" class="icon blue" data-i18n-title="nav.files" data-i18n-aria="nav.files" title="返回节奏文件夹" aria-label="返回节奏文件夹"><svg><use href="#i-folder"/></svg></button>
+      <div class="center-title">
+        <button type="button" id="info" class="icon blue" data-i18n-title="nav.info" data-i18n-aria="nav.info" title="节奏信息" aria-label="节奏信息"><svg><use href="#i-info"/></svg></button>
+        <h1 id="title"></h1>
+      </div>
+      <div class="nav-right">
+        <div class="tool-group nav-history">
+          <button type="button" id="undo" class="icon" data-i18n-title="undo.title" data-i18n-aria="undo" title="撤销 Ctrl+Z" aria-label="撤销"><svg><use href="#i-undo"/></svg></button>
+          <button type="button" id="redo" class="icon" data-i18n-title="redo.title" data-i18n-aria="redo" title="重做 Ctrl+Y" aria-label="重做"><svg><use href="#i-redo"/></svg></button>
+        </div>
+        <button type="button" id="more" class="icon blue" data-i18n-title="nav.more" data-i18n-aria="nav.more" title="更多操作" aria-label="更多操作"><svg><use href="#i-more"/></svg></button>
+      </div>
+      <input type="file" id="file" accept=".json,.djjson,application/json" hidden>
+    </div>
+    <div class="meter-bar">
+      <div class="score-global-actions">
+      <button type="button" id="meterLabel" data-i18n="meter.clearButton" aria-haspopup="dialog">清空整谱</button><span id="scoreZoomValue">100%</span></div>
+      <div class="meter-picker" role="group" aria-label="整谱拍号" data-i18n-aria="meter.label">
+        <button type="button" data-meter="4/4" aria-label="4/4 拍，重置整谱" aria-pressed="false" title="重置为 4/4 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator">4</span><span class="meter-slash">/</span><span class="meter-denominator">4</span></span></button>
+        <button type="button" data-meter="5/8" aria-label="5/8 拍，重置整谱" aria-pressed="false" title="重置为 5/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator">5</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="6/8" aria-label="6/8 拍，重置整谱" aria-pressed="false" title="重置为 6/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator">6</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="7/8" aria-label="7/8 拍，重置整谱" aria-pressed="false" title="重置为 7/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator">7</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="9/8" aria-label="9/8 拍，重置整谱" aria-pressed="false" title="重置为 9/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator">9</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="11/8" aria-label="11/8 拍，重置整谱" aria-pressed="false" title="重置为 11/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator meter-numerator-wide">11</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="13/8" aria-label="13/8 拍，重置整谱" aria-pressed="false" title="重置为 13/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator meter-numerator-wide">13</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="17/8" aria-label="17/8 拍，重置整谱" aria-pressed="false" title="重置为 17/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator meter-numerator-wide">17</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="19/8" aria-label="19/8 拍，重置整谱" aria-pressed="false" title="重置为 19/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator meter-numerator-wide">19</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+        <button type="button" data-meter="23/8" aria-label="23/8 拍，重置整谱" aria-pressed="false" title="重置为 23/8 拍"><span class="meter-label" aria-hidden="true"><span class="meter-numerator meter-numerator-wide">23</span><span class="meter-slash">/</span><span class="meter-denominator">8</span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <div id="scoreViewport" hidden>
+    <main id="paper" aria-label="鼓谱" data-i18n-aria="score.aria">
+      <div id="score"></div>
+      <div class="track-add-area"><button type="button" id="addTrack" class="add-track" data-i18n-title="track.add" data-i18n-aria="track.add" aria-label="添加音轨" title="添加音轨" aria-haspopup="true">+</button></div>
+    </main>
+    <span id="scoreVerticalThumb" aria-hidden="true" hidden></span>
+  </div>
+  <footer id="editorTransport" class="transport" aria-label="播放和编辑工具" data-i18n-aria="transport.aria" hidden>
+    <div class="transport-inner">
+      <button type="button" id="restartPlayback" class="icon" data-i18n-title="keys.goToBeginning" data-i18n-aria="keys.goToBeginning" title="回到全谱开头" aria-label="回到全谱开头"><svg aria-hidden="true"><use href="#i-restart"/></svg></button>
+      <button type="button" id="play" class="icon" title="播放 Space" aria-label="播放"><svg><use id="playGlyph" href="#i-play"/></svg></button>
+      <button type="button" id="stop" class="icon" title="停止" aria-label="停止" disabled><svg><use href="#i-stop"/></svg></button>
+      <button type="button" id="swing" class="icon" data-i18n-title="swing.button" data-i18n-aria="swing.button" title="律动（Swing）" aria-label="律动（Swing）"><svg><use href="#i-tempo"/></svg></button>
+      <button type="button" id="mixer" class="icon" data-i18n-title="mixer.button" data-i18n-aria="mixer.button" title="混音：音量 / 声像" aria-label="混音：音量 / 声像"><svg><use href="#i-speaker"/></svg></button>
+      <button type="button" id="followPlayback" class="icon follow-toggle" data-i18n-title="more.follow" data-i18n-aria="more.follow" title="播放时跟随谱面" aria-label="播放时跟随谱面" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5m-6-8h6m-3-3v6"/></svg></button>
+      <button type="button" id="showKeys" class="icon keyboard-toggle" data-i18n-title="keys.toggle" data-i18n-aria="keys.aria" title="显示或收起音符键盘" aria-label="音符键盘" aria-pressed="false"><svg><use href="#i-keyboard"/></svg></button>
+    </div>
+  </footer>
+  <section id="keyboard" class="keyboard" aria-label="音符键盘" data-i18n-aria="keys.aria" hidden><div id="keys" class="keyboard-inner"></div></section>
+  <section id="selectionBar" class="selection-bar" data-i18n-aria="multi.toolbar" aria-label="选区操作" hidden>
+    <div class="selection-inner">
+      <p id="selectionSummary" class="selection-summary" aria-live="polite"></p>
+      <div id="selectionActions" class="selection-actions">
+        <button type="button" data-selection-action="copy" data-i18n="multi.copy">复制</button>
+        <button type="button" data-selection-action="cut" data-i18n="multi.cut">剪切</button>
+        <button type="button" data-selection-action="clear" data-i18n="multi.clear">清空选区音符</button>
+        <button type="button" data-selection-action="meter" data-i18n="multi.meter">区域拍号</button>
+      </div>
+      <div id="selectionMeters" class="selection-meters" hidden></div>
+      <button type="button" id="selectionBack" class="selection-link" data-i18n="multi.back" hidden>返回选区</button>
+      <button type="button" id="selectionExit" class="selection-link" data-i18n="multi.exit">退出</button>
+    </div>
+  </section>
+  <div id="status" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="renameRhythmPanel" class="name-dialog" aria-labelledby="renameRhythmHeading">
+    <form id="renameRhythmForm">
+      <h2 id="renameRhythmHeading" data-i18n="card.rename">重命名</h2>
+      <input id="renameRhythmName" type="text" maxlength="64" required autocomplete="off" data-i18n-aria="card.rename" aria-label="重命名">
+      <div class="dialog-actions"><button type="button" data-close="renameRhythmPanel" data-i18n="dialog.cancel">取消</button><button type="submit" id="renameRhythmConfirm" data-i18n="card.rename">重命名</button></div>
+    </form>
+  </dialog>
+  <dialog id="noteChangeWarning" class="note-change-warning" role="alertdialog" aria-labelledby="noteChangeMessage"><p id="noteChangeMessage"></p></dialog>
+
+  <div id="menu" class="popup-menu" hidden></div>
+  <div id="beatMenu" class="beat-menu" hidden></div>
+  <dialog id="newRhythmPanel" class="name-dialog" aria-labelledby="newRhythmHeading">
+    <form id="newRhythmForm" method="dialog">
+      <div class="name-dialog-body">
+        <h2 id="newRhythmHeading" data-i18n="new.title">新建鼓谱</h2>
+        <input id="newRhythmName" type="text" placeholder="鼓谱名称" aria-label="鼓谱名称" data-i18n-placeholder="new.placeholder" data-i18n-aria="new.placeholder" maxlength="64" autocomplete="off" required autofocus>
+      </div>
+      <div class="name-dialog-actions">
+        <button type="button" data-close="newRhythmPanel" data-i18n="dialog.cancel">取消</button>
+        <button type="submit" id="createRhythm" data-i18n="dialog.create" disabled>创建</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="infoPanel" class="sheet">
+    <form method="dialog">
+      <header class="sheet-nav"><button type="submit" data-i18n="dialog.done">完成</button><h2 data-i18n="info.title">节奏信息</h2><span></span></header>
+      <div class="info-fields sheet-body">
+        <label><span data-i18n="info.name">名称</span> <input id="infoTitle" maxlength="64" required></label>
+        <label><span data-i18n="info.region">地区</span> <input id="infoRegion" maxlength="80"></label>
+        <label><span data-i18n="info.ethnic">族群</span> <input id="infoEthnic" maxlength="80"></label>
+        <textarea id="infoNotes" maxlength="8000" aria-label="曲目介绍" placeholder="曲目介绍、来源或教学笔记" data-i18n-aria="info.notes" data-i18n-placeholder="info.notesPlaceholder"></textarea>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="mixerPanel" class="sheet">
+    <header class="sheet-nav"><button type="button" data-close="mixerPanel" data-i18n="dialog.done">完成</button><div class="segmented"><button type="button" id="volTab" aria-pressed="true" data-i18n="mix.volume">音量</button><button type="button" id="panTab" aria-pressed="false" data-i18n="mix.balance">声像</button></div><button type="button" id="resetMix" data-i18n="mix.reset">重置</button></header>
+    <div id="mixRows" class="sheet-body"></div>
+  </dialog>
+  <dialog id="swingPanel" class="sheet swing-sheet">
+    <header class="sheet-nav"><button type="button" data-close="swingPanel" data-i18n="swing.back">‹ 返回</button><h2 data-i18n="swing.title">编辑律动（Swing）</h2><div class="actions"><button type="button" id="copyFeel" data-i18n="swing.copy">复制</button><button type="button" id="pasteFeel" data-i18n="swing.paste">粘贴</button></div></header>
+    <div class="sheet-body">
+      <div class="section-label" data-i18n="swing.pattern">拍内时值</div>
+      <div class="pattern">
+        <div class="pattern-top">
+          <div class="segmented"><button type="button" data-feel-size="3">3</button><button type="button" data-feel-size="4">4</button></div>
+          <div class="actions"><button type="button" id="copyPattern" data-i18n="swing.copy">复制</button><button type="button" id="pastePattern" data-i18n="swing.paste">粘贴</button></div>
+        </div>
+        <svg id="diagram" viewBox="0 0 440 144" role="img" aria-label="拍内时值图。拖动中间的符杆可调整比例。" data-i18n-aria="swing.diagram"></svg>
+        <div id="ratios" class="ratios" aria-label="分音时值百分比" data-i18n-aria="swing.ratios"></div>
+        <label class="line-range"><span data-i18n="swing.strength">强度</span> <input type="range" min="0" max="200" id="strength"><output id="strengthValue"></output></label>
+        <label class="compound-swing"><input type="checkbox" id="compoundSwing"><span data-i18n="swing.compound">6/8 和 9/8 也使用 Swing 时值</span></label>
+      </div>
+      <div class="section-label" data-i18n="swing.tempo">速度</div>
+      <div class="swing-tempo">
+        <div class="tempo-controls"><button type="button" id="tempoMinus" aria-label="−1 BPM">−</button><output id="swingBpmLabel"></output><button type="button" id="tempoPlus" aria-label="+1 BPM">+</button></div>
+        <input type="range" min="20" max="360" id="swingBpm" aria-label="速度 BPM" data-i18n-aria="tempo.range">
+        
+      </div>
+    </div>
+  </dialog>
+  <dialog id="exportPanel" class="sheet export-sheet">
+    <form id="exportForm">
+      <header class="sheet-nav"><button type="button" data-close="exportPanel" data-i18n="dialog.cancel">取消</button><h2 data-i18n="export.title">导出音频</h2><button type="submit" id="exportConfirm" data-i18n="export.confirm">导出</button></header>
+      <div class="sheet-body">
+        <div class="section-label" data-i18n="export.file">文件</div>
+        <div class="file-fields">
+          <input id="exportName" aria-label="导出文件名" data-i18n-aria="export.name" maxlength="80" required>
+          <div class="format-row"><span data-i18n="export.format">格式</span> <div class="segmented"><button type="button" data-format="m4a" aria-pressed="false" title="需要系统提供 AAC 编码器" data-i18n-title="export.m4aTitle" disabled>M4A</button><button type="button" data-format="wav" aria-pressed="true">WAV</button><button type="button" data-format="aiff" aria-pressed="false">AIFF</button></div></div>
+        </div>
+        <div class="section-label" data-i18n="export.duration">时长</div>
+        <div class="duration">
+          <div class="time-wheel" data-wheel="minutes">
+            <button type="button" data-time="minutes" data-delta="-1" aria-label="减少一分钟" data-i18n-aria="export.minus1m"></button>
+            <label><input type="number" id="minutes" min="0" max="30" value="0" required aria-label="分钟" data-i18n-aria="export.minutes"> <span data-i18n="export.min">分</span></label>
+            <button type="button" data-time="minutes" data-delta="1" aria-label="增加一分钟" data-i18n-aria="export.plus1m"></button>
+          </div>
+          <div class="time-wheel" data-wheel="seconds">
+            <button type="button" data-time="seconds" data-delta="-1" aria-label="减少一秒" data-i18n-aria="export.minus1s"></button>
+            <label><input type="number" id="seconds" min="0" max="59" value="30" required aria-label="秒" data-i18n-aria="export.seconds"> <span data-i18n="export.sec">秒</span></label>
+            <button type="button" data-time="seconds" data-delta="1" aria-label="增加一秒" data-i18n-aria="export.plus1s"></button>
+          </div>
+        </div>
+        <p class="export-note" data-i18n="export.note">44.1 kHz · 16-bit · 立体声</p>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="scoreConflictPanel" class="sheet"><h2 data-i18n="save.conflict">文件已存在</h2><p id="scoreConflictName"></p><div class="tempo-controls"><button type="button" id="scoreOverwrite" data-i18n="save.overwrite">覆盖</button><button type="button" id="scoreKeepBoth" data-i18n="save.keepBoth">保留两个</button><button type="button" data-close="scoreConflictPanel" data-i18n="dialog.cancel">取消</button></div></dialog>
+  <dialog id="scoreExportPanel" class="sheet" aria-labelledby="scoreExportHeading">
+    <form id="scoreExportForm">
+      <header class="sheet-nav">
+        <button type="button" data-close="scoreExportPanel" data-i18n="dialog.cancel">取消</button>
+        <h2 id="scoreExportHeading" data-i18n="more.scoreExportTitle">导出鼓谱</h2>
+        <button type="submit" id="scoreExportConfirm" data-i18n="scoreExport.prepare">生成</button>
+      </header>
+      <div class="sample-body">
+        <label class="sample-choice"><span data-i18n="export.format">格式</span>
+          <select id="scoreExportFormat"><option value="jpg">JPG</option><option value="pdf">PDF</option></select>
+        </label>
+        <p class="sample-standard" data-i18n="scoreExport.detail">每页 3840 × 2160 像素。多页 JPG 打包为 ZIP，PDF 合并为一个文件。</p>
+        <p class="sample-standard" id="scoreSaveHint"></p>
+        <p id="scoreExportStatus" class="sample-message" role="status"></p>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="samplePanel" class="sheet" aria-labelledby="sampleHeading">
+    <header class="sheet-nav">
+      <button type="button" data-close="samplePanel" data-i18n="dialog.done">完成</button>
+      <h2 id="sampleHeading" data-i18n="sample.title">替换音色</h2><span></span>
+    </header>
+    <div class="sample-body">
+      <p id="sampleTrackName" class="sample-track"></p>
+      <label class="sample-choice"><span data-i18n="sample.instrument">乐器</span> <select id="sampleInstrument"></select></label>
+      <label class="sample-choice"><span data-i18n="sample.slot">预设槽位</span> <select id="sampleSlot"></select></label>
+      <label class="sample-choice"><span data-i18n="sample.stroke">鼓音</span> <select id="sampleStroke"></select></label>
+      <p id="sampleCurrent" class="sample-current"></p>
+      <div class="sample-actions">
+        <button type="button" id="sampleImport" data-i18n="sample.import">导入 WAV</button>
+        <button type="button" id="samplePreview" data-i18n="sample.preview">试听</button>
+        <button type="button" id="sampleReset" data-i18n="sample.reset">恢复内置</button>
+        <button type="button" id="sampleApply" data-i18n="sample.apply">应用到当前音轨</button>
+        <input type="file" id="sampleFile" accept=".wav,.wave,audio/wav,audio/x-wav" hidden>
+      </div>
+      <p id="sampleMessage" role="status" class="sample-message"></p>
+      <p class="sample-standard" data-i18n-html="sample.standard"><strong>采样标准</strong><br>16-bit PCM WAV · 44.1 或 48 kHz · 单声道或双声道（导入后转为单声道）<br>单个文件录一击，0.05–1.50 秒，推荐 0.15–0.80 秒。<br>尽量剪掉前置空白，保留自然尾音。鼓谱内自定义采样共用 640 KiB。</p>
+    </div>
+  </dialog>
+  <dialog id="deleteMeasurePanel" class="name-dialog" aria-labelledby="deleteMeasureHeading" aria-describedby="deleteMeasureMessage">
+    <div class="name-dialog-body">
+      <h2 id="deleteMeasureHeading" data-i18n="measure.deleteTitle">删除小节</h2>
+      <p id="deleteMeasureMessage"></p>
+    </div>
+    <div class="name-dialog-actions">
+      <button type="button" data-close="deleteMeasurePanel" data-i18n="dialog.cancel" autofocus>取消</button>
+      <button type="button" id="confirmDeleteMeasure" data-i18n="measure.deleteTitle">删除小节</button>
+    </div>
+  </dialog>
+  <dialog id="clearScorePanel" class="name-dialog" aria-labelledby="clearScoreHeading" aria-describedby="clearScoreMessage">
+    <div class="name-dialog-body">
+      <h2 id="clearScoreHeading" data-i18n="meter.clearScore">清空整份鼓谱</h2>
+      <p id="clearScoreMessage" data-i18n="meter.confirmClear">清空所有音轨的音符？可以一次撤销。</p>
+    </div>
+    <div class="name-dialog-actions">
+      <button type="button" data-close="clearScorePanel" data-i18n="dialog.cancel" autofocus>取消</button>
+      <button type="button" id="confirmClearScore" data-i18n="meter.clearAction">清空</button>
+    </div>
+  </dialog>
+  <dialog id="clearTrackNotesPanel" class="name-dialog" aria-labelledby="clearTrackNotesHeading" aria-describedby="clearTrackNotesMessage">
+    <div class="name-dialog-body">
+      <h2 id="clearTrackNotesHeading" data-i18n="track.clearNotes">清空本乐器所有音符</h2>
+      <p id="clearTrackNotesMessage"></p>
+    </div>
+    <div class="name-dialog-actions">
+      <button type="button" data-close="clearTrackNotesPanel" data-i18n="dialog.cancel" autofocus>取消</button>
+      <button type="button" id="confirmClearTrackNotes" data-i18n="meter.clearAction">清空</button>
+    </div>
+  </dialog>
+  <dialog id="multiPastePanel" class="name-dialog" aria-labelledby="multiConfirmTitle" aria-describedby="multiConfirmMessage multiConfirmRange">
+    <div class="name-dialog-body">
+      <h2 id="multiConfirmTitle"></h2>
+      <p id="multiConfirmRange" class="paste-range-summary"></p>
+      <p id="multiConfirmMessage" data-i18n="multi.confirmMessage">将首尾之间的音符、空拍和切分连续覆盖到目标位置？</p>
+    </div>
+    <div class="name-dialog-actions">
+      <button type="button" data-close="multiPastePanel" data-i18n="dialog.cancel" autofocus>取消</button>
+      <button type="button" id="confirmMultiPaste" data-i18n="multi.confirmAction">确认</button>
+    </div>
+  </dialog>
+  <dialog id="removeTrackPanel" class="name-dialog" aria-labelledby="removeTrackHeading" aria-describedby="removeTrackMessage">
+    <div class="name-dialog-body">
+      <h2 id="removeTrackHeading" data-i18n="track.remove">删除乐器</h2>
+      <p id="removeTrackMessage"></p>
+    </div>
+    <div class="name-dialog-actions">
+      <button type="button" data-close="removeTrackPanel" data-i18n="dialog.cancel" autofocus>取消</button>
+      <button type="button" id="confirmRemoveTrack" data-i18n="track.remove">删除乐器</button>
+    </div>
+  </dialog>
+  <dialog id="trackPanel" class="sheet">
+    <form method="dialog">
+      <header class="sheet-nav"><button type="button" data-close="trackPanel" data-i18n="dialog.cancel">取消</button><h2 data-i18n="instrument.title">乐器</h2><button type="submit" data-i18n="dialog.done">完成</button></header>
+      <div class="info-fields sheet-body">
+        <label><span data-i18n="instrument.name">名称</span> <input id="trackName" maxlength="28" required></label>
+        <label><span data-i18n="instrument.detail">说明</span> <input id="trackDetail" maxlength="28"></label>
+        <label><span data-i18n="instrument.type">乐器</span> <select id="trackType"></select></label>
+      </div>
+    </form>
+  </dialog>
+  <script src="sounds/recorded-samples.js"></script>
+  <!-- GUIDE -->
+  <!-- SCRIPTS -->
+</body>
+</html>

@@ -1,0 +1,70 @@
+<style>
+#offline-access { position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 10; padding: 8px 12px; background: #fff; color: #292522; border: 1px solid #ddd; border-radius: 12px; font: 13px system-ui; }
+#offline-access a { color: #1764b0; }
+#offline-access p { margin: 6px 0 0; }
+#offline-access summary { cursor: pointer; }
+</style>
+<details id="offline-access" open>
+  <summary>离线使用</summary>
+  <p id="offline-status" role="status">正在准备离线资源…</p>
+  <p id="offline-test" hidden><a href="./?rhythm-offline-test=1">试开离线副本</a></p>
+  <p><a id="offline-download" href="RhythmDesk-iPhone-Offline.html" download>下载单文件 HTML</a></p>
+</details>
+<script>
+(() => {
+  const panel = document.getElementById('offline-access');
+  const editor = document.getElementById('editorNav');
+  const status = document.getElementById('offline-status');
+  const test = document.getElementById('offline-test');
+  const phrases = {
+    zh: {title: '离线使用', test: '试开离线副本', download: '下载单文件 HTML',
+      preparing: '正在准备离线资源…', ready: '1.59 离线资源已校验。可从同一地址或主屏幕离线打开。',
+      failed: '1.59 离线校验未完成。请保持联网，在同一浏览器重新打开本页。',
+      unsupported: '请在 Safari 中通过 HTTPS 打开本页以启用离线缓存。'},
+    en: {title: 'Offline access', test: 'Test the offline copy', download: 'Download standalone HTML',
+      preparing: 'Preparing offline files…', ready: 'Offline files for 1.59 are verified. Reopen this address or Home Screen app offline.',
+      failed: 'Offline files for 1.59 are not ready. Stay online and reopen this page in the same browser.',
+      unsupported: 'Open this page over HTTPS in Safari to enable offline caching.'}
+  };
+  let state = 'preparing';
+  function renderStatus() {
+    const words = document.documentElement.lang === 'en' ? phrases.en : phrases.zh;
+    panel.querySelector('summary').textContent = words.title;
+    test.querySelector('a').textContent = words.test;
+    document.getElementById('offline-download').textContent = words.download;
+    status.textContent = words[state];
+    test.hidden = state !== 'ready';
+  }
+  function updateVisibility() { panel.hidden = !editor.hidden; }
+  new MutationObserver(updateVisibility).observe(editor, {attributes: true, attributeFilter: ['hidden']});
+  new MutationObserver(renderStatus).observe(document.documentElement, {attributes: true, attributeFilter: ['lang']});
+  updateVisibility();
+  renderStatus();
+  if (!('serviceWorker' in navigator)) { state = 'unsupported'; renderStatus(); return; }
+  let latestAttempt = 0;
+  async function verifyCache() {
+    const attempt = ++latestAttempt;
+    let ready = false;
+    try {
+      const response = await fetch('./?rhythm-cache-check=1', {cache: 'no-store'});
+      if (response.ok && response.headers.has('X-RhythmDesk-Cache')) {
+        const result = await response.json();
+        ready = result.version === '1.59' && result.ready === true;
+      }
+    } catch {}
+    if (attempt === latestAttempt) { state = ready ? 'ready' : 'failed'; renderStatus(); }
+  }
+  navigator.serviceWorker.addEventListener('controllerchange', verifyCache);
+  navigator.serviceWorker.register('./sw.js', {updateViaCache:'none'}).then(registration => {
+    const watchInstall = () => {
+      const worker = registration.installing;
+      if (worker) worker.addEventListener('statechange', () => {
+        if (worker.state === 'redundant') void verifyCache();
+      });
+    };
+    watchInstall();
+    registration.addEventListener('updatefound', watchInstall);
+    if (navigator.serviceWorker.controller) void verifyCache();
+  }).catch(() => { state = 'failed'; renderStatus(); });
+})();
+</script>

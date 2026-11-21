@@ -1,0 +1,101 @@
+<nav class="guide-toc" aria-label="Guide contents">
+  <a href="#guide-home-en">Home</a><a href="#guide-editor-en">Notation</a><a href="#guide-tracks-en">Tracks and measures</a><a href="#guide-selection-en">Selection</a><a href="#guide-play-en">Playback</a><a href="#guide-swing-en">Swing</a><a href="#guide-mix-en">Mixing and samples</a><a href="#guide-export-en">Saving and exporting</a>
+</nav>
+<section id="guide-home-en">
+  <h3>Home and rhythm files</h3>
+      <p><small>For version 1.59 · Updated 2026-11-17</small></p>
+  <p>Illustrations identify functional areas. Follow the steps below and the current on-screen labels.</p>
+  <figure><img src="{{home}}" alt="Home screen showing New, More and Search"><figcaption>① New rhythm　② More menu　③ Search</figcaption></figure>
+  <dl>
+    <dt>＋ / New rhythm</dt><dd>Enter a name and choose Create. The name must contain 1–64 characters. Cancel returns to the rhythm library.</dd>
+    <dt>Search and rhythm cards</dt><dd>Search filters by name. Tap a card to open it. Long-press or right-click for Rename, Share, Duplicate and Delete. Rename keeps the score content; Duplicate creates an independent copy. Check the name before deleting.</dd>
+    <dt>Top-right ⋯ and language button</dt><dd>Import a .rhythm.json file, load the ensemble example, sort by last edit or name, or open the User Guide and About Rhythm Desk. Use the separate EN / 中文 button on Home to switch the interface language.</dd>
+    <dt>Offline use</dt><dd>On Windows 11, extract the full ZIP and open RhythmDesk.exe to edit and play offline. On iPhone, first open this version’s offline web app in Safari while online. After the offline check succeeds, reopen it from the same address or Home Screen. The standalone HTML includes the editor and sounds and requires a browser that runs JavaScript. Devices, browsers and Home Screen apps can keep separate libraries. Export .rhythm.json files to move your scores.</dd>
+  </dl>
+  {{footer}}
+
+</section>
+<section id="guide-editor-en">
+
+  <h3>Notation and the note keyboard</h3>
+  <figure><img src="{{editor}}" alt="Score editor with navigation, meter controls, tracks, playback and note keyboard"><figcaption>① Header　② Score meter　③ Tracks and stems　④ Transport　⑤ Note keyboard</figcaption></figure>
+  <dl>
+    <dt>Header</dt><dd>The folder returns to the rhythm library. ⓘ opens rhythm details; choose Done to apply edits. Curved arrows undo and redo when history is available. ⋯ opens score actions.</dd>
+    <dt>Score and group meters</dt><dd>Score meter buttons reset the score to 4/4, 5/8, 6/8, 7/8, 9/8, 11/8, 13/8, 17/8, 19/8 or 23/8. Clear any notes in the affected range first. Clear Score opens the score-clear confirmation. The meter button above a group changes only that group.</dd>
+    <dt>Stems, sticking and beat menu</dt><dd>Tap a stem once to select it without moving the viewport. Tap the same stem twice within 0.25 seconds to open its beat menu. Double-tap the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also require a double-tap; choose menu items with one tap. The beat menu offers copy, paste, three/four subdivisions, split, group meter and sticking. Beat paste requires matching subdivision counts and compatible strokes. Multi-selection keeps its single-tap and long-press controls.</dd>
+    <dt>Stroke keys</dt><dd>Djembe offers B (bass), T (tone), S (slap X), H (alternate high x), G (muted slap), P (light touch) and BT, BS, TT, TS, ST, SS, TB, HB grace combinations in playing order. Dununba, Sangba and Kenkeni use O (open), M (muted), K (stick on rim); Bell and Shekere use X.</dd>
+    <dt>Editing keys</dt><dd>Clear removes the notes in the selected beamed group. ♫ splits a subdivision into two, three or four parts, or restores one part. Merging overlapping notes asks for confirmation. Backspace deletes the previous note; Rest enters a rest; ← and → move one step; ⇤ and ⇥ jump to the track start or end. Use the transport keyboard icon to show or hide the keys.</dd>
+    <dt>Reset score meter</dt><dd>Changing the whole-score meter creates one Djembe track with one empty measure.</dd>
+    <dt>Positioning when tapping a stem</dt><dd>The selection moves to the tapped stem while the viewport stays in place. Start or resume playback, or toggle follow, to restore playback following after this edit.</dd>
+    <dt>Pan and zoom</dt><dd>Swipe to pan and pinch to zoom on touch screens. With a mouse, drag a blank area to pan, or hold the left button while using the wheel to zoom. The editor ⋯ menu offers Zoom In, Zoom Out and Reset to 100%. The percentage appears beside Clear Score at the top; the range is 50%–500%.</dd>
+    <dt>Split a range</dt><dd>Measure, track and score menus can split a target range into 1–4 equal parts. Clear any notes in the target range first.</dd>
+      </dl>
+  {{footer}}
+</section>
+<section id="guide-tracks-en">
+  <h3>Tracks, measures and loops</h3>
+  <figure><img src="{{editor}}" alt="Score editor showing track headers and barlines"><figcaption>③ Open the ⋯ menu on a track header, or double-tap a barline for measure actions.</figcaption></figure>
+  <dl>
+    <dt>Add track / ＋ at the end of a track</dt><dd>The bottom ＋ adds an instrument. A score can hold 100 tracks. Kenkeni, Sangba and Dununba each require two free slots because each comes with a Bell track. The track-end ＋ adds a measure only to that track. If the new measure and its ＋ are fully visible, the viewport stays in place. Only when the new measure extends beyond the right edge does the editor align that track’s final ＋ with the right edge, preserving the vertical position. Other tracks’ lengths do not affect this check. After note entry, the cursor advances without scrolling if the next stem is fully visible. Otherwise it is centered horizontally, preserving the vertical position.</dd>
+    <dt>Track header ⋯</dt><dd>Start multi-selection, move the track up or down, toggle a loop for the current measure, edit instrument/name/details, manage samples, clear track line breaks, toggle mute, open the mixer, clear notes or remove the instrument. Paired tracks move together, and tracks at either end cannot move farther. Keep at least one track. Review confirmation prompts for deletion and clearing.</dd>
+    <dt>Barline</dt><dd>Clear or copy the measure, mark a copy start and copy through a later barline, insert at the boundary, toggle a line break, delete, set or cancel loop boundaries, remove adjacent loops, or set the measure meter. Line breaks require an interior boundary. Keep at least one measure in each track. Clear the measure’s notes before changing its meter.</dd>
+    <dt>Track loops and whole-score looping</dt><dd>Double-tap barlines to set a track loop start and end. The end must follow the start; loops on a track cannot overlap or pass the next loop. Existing loop ends can be changed. During playback, the Stop square releases the active loop at the end of its current pass and continues into the following section. The score ⋯ menu offers Play Once and Loop Score; configure section loops in barline menus.</dd>
+    <dt>Measure actions in the score ⋯ menu</dt><dd>Add, duplicate or delete the measure at the current score position. Deleting notes requires confirmation. The menu also clears all track line breaks and switches the score to three or four subdivisions when its existing notes and split cells allow it.</dd>
+    <dt>Add tracks with a copied layout</dt><dd>Choose Copy layout from the bottom ＋ menu, then choose an instrument. New tracks appear last and copy the previous last track’s measures, line breaks, subdivisions and group meters, with empty notes and hand marks. Paired Bell and Drum tracks receive the same layout, Bell first. Ordinary instrument creation adds one empty measure.</dd>
+      </dl>
+  {{footer}}
+</section>
+<section id="guide-selection-en">
+  <h3>Selecting and pasting</h3>
+  <figure><img src="{{editor}}" alt="Score editor with stems and measure boundaries"><figcaption>③ Use stems and barlines to define a selection. Selection actions then appear below the score.</figcaption></figure>
+  <ol>
+    <li>Start multi-selection from the track ⋯ menu. Tap a stem to select a position. Long-press or use Shift+Enter for a whole group. You can also mark a range using barlines; notes beyond the end boundary are outside the range.</li>
+    <li>With a selection, the bottom toolbar offers Copy, Cut, Clear Selected Notes and Region Meter. Region Meter changes subdivisions within the selection. Back returns to the selection; Exit leaves multi-selection.</li>
+    <li>After Copy or Cut, select a destination stem and review the highlighted overwrite range. Confirm applies it; Cancel preserves the score. Pasting preserves the source timing and overwrites with rests as well as notes. The editor adds measures if needed. Cut removes the source notes on confirmation.</li>
+    <li>After copying measures from the barline menu, choose Paste Measures at the destination. The destination instrument must support the copied strokes. Start at the first stem of the destination measure to retain the full measure structure.</li>
+  </ol>
+  {{footer}}
+</section>
+<section id="guide-play-en">
+  <h3>Playback and follow mode</h3>
+  <figure><img src="{{editor}}" alt="Score editor transport controls"><figcaption>④ From left to right: beginning, play, stop, swing, mixer, follow and note keyboard.</figcaption></figure>
+  <dl>
+    <dt>Beginning / Play / Stop</dt><dd>Select the first note of the current track and jump horizontally to its beginning without changing the vertical scroll position or starting playback. Play starts from the edit cursor and toggles pause or resume. During a track loop, the square button releases the loop and lets playback continue; otherwise it stops. Space toggles play or pause.</dd>
+    <dt>Follow and panning</dt><dd>Follow initially uses the first track. Selecting a stem designates that track as the follow target; other tracks’ loops or endings do not change it. Starting playback first positions the selected track. Pausing preserves the displayed position, and resuming continues from there. Horizontal movement begins when the playhead reaches about 70% of the viewport width and follows each group’s actual playback duration, rather than restarting at each note, rest or subdivision. Entry into a later loop stays continuous; a loop return instantly aligns its start, then following continues at the same threshold. Line wraps position the view on the appropriate row. Ordinary horizontal following preserves your vertical position and supports tempo changes and zoom from 50% to 500% during playback. Dragging takes priority; after release, horizontal following resumes at your chosen vertical position. Tap Follow again to turn it off.</dd>
+    <dt>Audition and shortcuts</dt><dd>Use the editor ⋯ menu to turn note-entry audition on or off. On desktop, use Ctrl/Cmd+Z to undo and Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z to redo. An active text field or dialog may handle the keystroke itself.</dd>
+    <dt>Audio preparation and playback completion</dt><dd>Starting or resuming adds about 0.25 seconds of preparation. After idle, audio output is prepared before the beat clock starts. Natural completion preserves the cursor and view near the followed track’s last sounding note. Note-entry audition uses the track’s volume, pan, mute and solo settings.</dd>
+        <dt>Export follow diagnostics</dt><dd>In the editor ⋯ menu, Export Follow Diagnostics saves a JSON record. Export pauses active playback first. The file includes the version, device/browser environment, viewport size and recent loop/follow states for troubleshooting. It does not replace a .rhythm.json score backup.</dd>
+      </dl>
+  {{footer}}
+</section>
+<section id="guide-swing-en">
+  <h3>Swing and tempo</h3>
+  <figure><img src="{{swing}}" alt="Swing panel showing copy controls, timing ratios and tempo"><figcaption>① Copy or paste all swing settings　② Subdivision pattern and timing ratios　③ Tempo</figcaption></figure>
+  <dl>
+    <dt>Timing within a beat</dt><dd>Choose the three- or four-subdivision pattern. Drag the dividers in the diagram or enter ratios. Strength controls how far timing shifts from even subdivisions. The compound swing option applies swing to the relevant compound meters.</dd>
+    <dt>Copy and paste</dt><dd>The top buttons copy or paste all swing settings. The buttons by the pattern handle just that pattern and require a matching subdivision count. Paste becomes available after copying.</dd>
+    <dt>Score and local tempo</dt><dd>Adjust score tempo in the bottom Swing panel, within 20–360 BPM; −/+ changes it by 1 BPM. Track and measure menus set their local tempo; double-tap the tempo beside a group meter to change that group. Local tempos scale with score tempo and stay within 20–360 BPM. In a tempo dialog, choose the blue Done button or press Enter to save; Cancel discards edits. Back closes the Swing panel.</dd>
+  </dl>
+  {{footer}}
+</section>
+<section id="guide-mix-en">
+  <h3>Mixing and custom samples</h3>
+  <figure><img src="{{mix}}" alt="Mixer showing volume, pan, master slider and track controls"><figcaption>① Volume, pan and reset　② Master slider　③ Track slider, solo and mute</figcaption></figure>
+  <dl>
+    <dt>Mixer</dt><dd>Volume adjusts level; pan places the sound left or right. The master slider affects all tracks. Track sliders adjust individual tracks. The headphone button solos a track; the mute button silences it. Reset restores default mixer settings. Done closes the mixer.</dd>
+    <dt>Presets and sample panel</dt><dd>Tap the gray preset name to switch sounds. Open sample management from the track ⋯ menu, then choose the instrument, slot and stroke. Import WAV replaces the selected stroke; Preview plays it; Restore Built-in removes the replacement. Apply to Current Track selects the chosen slot; Done closes the panel.</dd>
+    <dt>Sample limits</dt><dd>Use 16-bit PCM WAV at 44.1 or 48 kHz, mono or stereo. Stereo is converted to mono. Use one hit per file, 0.05–1.50 seconds long; 0.15–0.80 seconds is recommended. Each instrument has 10 numbered slots stored locally. Track-only samples travel with the score, up to 640 KiB of embedded samples per score.</dd>
+  </dl>
+  {{footer}}
+</section>
+<section id="guide-export-en">
+  <h3>Saving, sharing and exporting</h3>
+  <figure><img src="{{editor}}" alt="Score editor with the More menu button at the top right"><figcaption>① The editor ⋯ menu contains Save, Share, Download and both export options.</figcaption></figure>
+  <dl>
+    <dt>Save / Download backup / Share</dt><dd>Save writes to the local library. Download creates a re-importable .rhythm.json file. In Windows Edge or Chrome with a folder picker, choose a folder, then overwrite, keep both or cancel when a name already exists. Keep Both chooses the next unused number. On iPhone, use Save to Files in the Safari share sheet or the browser download option. The system handles destination conflicts and cancellation. Sharing tries to include numbered-preset recordings and asks before exceeding the sample budget.</dd>
+    <dt>Export a score</dt><dd>Choose JPG or PDF, then Generate and save or share the result. Export preserves the current note spacing and includes meters, tempos and sticking. It crops to the longest track with left and right margins. Long scores are divided into continuous pages, left to right and then top to bottom; JPG filenames identify row and column. For tiled printing, use 100% actual size and disable Fit to Page. Use JPG for image viewing and PDF for printing. Keep a .rhythm.json copy for further editing.</dd>
+    <dt>Export audio</dt><dd>Name the file and choose WAV, AIFF or M4A where supported. Enter minutes and seconds or use ＋ and −. Exports can run from 1 second to 30 minutes and use the current mixer settings. Submit to render or choose Cancel to leave the panel.</dd>
+    <dt>Backup and move to another device</dt><dd>Local scores, numbered presets and caches are specific to the device and browser environment. Export the score file first, then import it from the Home ⋯ menu on the destination device.</dd>
+  </dl>
+  {{footer}}
+</section>

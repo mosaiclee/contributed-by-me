@@ -1,0 +1,127 @@
+<dialog id="guidePanel" class="guide-panel" aria-labelledby="guideTitle">
+  <header class="guide-header">
+    <h2 id="guideTitle" data-i18n="help.guide">软件使用说明</h2>
+    <div class="guide-actions">
+      <button id="guideLanguage" type="button" lang="en">English</button>
+      <button type="button" data-close="guidePanel" data-i18n="dialog.done">完成</button>
+    </div>
+  </header>
+  <div class="guide-body">
+    <div id="guideChinese" lang="zh-CN">
+    <nav class="guide-toc" aria-label="说明目录">
+      <a href="#guide-home">首页</a><a href="#guide-editor">记谱</a><a href="#guide-tracks">轨道与小节</a><a href="#guide-selection">选区</a><a href="#guide-play">播放</a><a href="#guide-swing">律动</a><a href="#guide-mix">混音与采样</a><a href="#guide-export">保存与导出</a>
+    </nav>
+    <section id="guide-home">
+      <h3>首页与鼓谱文件</h3>
+      <p><small>适用版本 1.59 · 更新于 2026-11-17</small></p>
+      <p>配图用于识别功能区域，操作步骤以本文及当前界面为准。</p>
+      <figure><img src="{{home}}" alt="首页实拍，标出新建、更多和搜索位置"><figcaption>① 新建　② 首页更多菜单　③ 搜索</figcaption></figure>
+      <dl>
+        <dt>＋／新建鼓谱</dt><dd>输入名称后点「创建」。名称不能为空，最多 64 字符；「取消」返回首页。</dd>
+        <dt>搜索与文件卡片</dt><dd>按谱名筛选，点卡片打开。长按或右键打开重命名、分享、复制、删除菜单。重命名只修改谱名，保留所有编辑内容。复制建立独立谱；删除前核对谱名。</dd>
+        <dt>右上角「⋯」与语言按钮</dt><dd>可导入 .rhythm.json、载入合奏示例、按最近编辑或名称排序，亦可打开本说明和「关于本软件」。使用首页独立的 EN／中文按钮切换界面语言。</dd>
+        <dt>离线使用</dt><dd>Windows 11 解压完整安装包，双击 RhythmDesk.exe 即可离线记谱和播放。iPhone 用 Safari 首次联网打开本版离线网页，等到「离线资源已校验」后可从同一地址或主屏幕离线使用。单文件 HTML 已包含编辑器和音色，需要用能运行 JavaScript 的浏览器打开。不同浏览器、设备及主屏幕网页各自保存鼓谱，迁移时请先导出 .rhythm.json。</dd>
+      </dl>
+      {{footer}}
+    </section>
+    <section id="guide-editor">
+
+      <h3>记谱与键盘</h3>
+      <figure><img src="{{editor}}" alt="编辑器实拍，标出导航、拍号、谱面、播放栏与键盘"><figcaption>① 顶栏　② 整谱拍号　③ 轨道和符杆　④ 播放栏　⑤ 音符键盘</figcaption></figure>
+      <dl>
+        <dt>顶栏</dt><dd>文件夹返回首页；ⓘ 打开节奏信息，编辑后点「完成」；左、右弯箭头分别撤销、重做，记录为空时不可用；「⋯」打开整谱操作。</dd>
+        <dt>整谱拍号与分组拍号</dt><dd>顶栏拍号按钮会重置整谱，重建为一条 Djembe 音轨和一个空白小节，支持 4/4、5/8、6/8、7/8、9/8、11/8、13/8、17/8、19/8、23/8。已有音符时先清空相应范围；点「清空整谱」可打开清空确认。某组上方的拍号按钮只调整该组，组内有音符时先清理该组。</dd>
+        <dt>符杆、左右手与拍菜单</dt><dd>单击符杆移动蓝色选框，画面保持原位。编辑定位后，可重新播放、继续播放或切换跟随按钮来恢复播放跟随。在同一符杆上连续点按两次（间隔小于 0.25 秒）打开拍菜单。双击符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样需要双击；菜单打开后，选项单击执行。拍菜单可复制、粘贴、切换三／四分音、细分、改本组拍号或编辑左右手。按拍粘贴要求分音数量匹配且乐器支持复制的音符。多选模式的点选和长按规则不变。</dd>
+        <dt>鼓音键</dt><dd>Djembe 提供 B 低音、T 中音、S 拍音 X、H 高音 x、G 闷拍、P 轻触和八种装饰音组合 BT、BS、TT、TS、ST、SS、TB、HB（字母为击打顺序）。Dununba、Sangba、Kenkeni 提供 O 开放音、M 闷音、K 鼓棒敲鼓边；Bell、Shekere 使用 X。</dd>
+        <dt>辅助键</dt><dd>清空键清除当前横线组的音符；♫ 可还原为一份或细分为 2、3、4 份，合并重叠音符时需确认。退格删除前一位置的音符；休止写入空拍；←／→ 逐格移动；⇤／⇥ 跳到当前轨道的首尾。播放栏键盘图标展开或收起键盘。</dd>
+        <dt>移动与缩放</dt><dd>触屏滑动浏览，双指缩放；鼠标按住谱面空白处可拖动，按住左键并滚动滚轮可缩放。编辑器「⋯」也提供放大、缩小、重置 100%。比例显示在顶部「清空整谱」同一行右侧，范围为 50%–500%。</dd>
+        <dt>统一细分</dt><dd>小节、轨道和整谱菜单可将目标范围统一拆分为 1–4 份；目标范围有音符时，请先清空相应音符。</dd>
+      </dl>
+      {{footer}}
+    </section>
+    <section id="guide-tracks">
+      <h3>轨道、小节与循环</h3>
+      <figure><img src="{{editor}}" alt="编辑器实拍，③ 为轨道名称、菜单与小节"><figcaption>点③的轨道标题「⋯」或双击谱面边界线，打开对应菜单。</figcaption></figure>
+      <dl>
+        <dt>添加音轨／轨道末尾「＋」</dt><dd>底部「＋」添加乐器，整份谱最多 100 条轨道。Kenkeni、Sangba、Dununba 添加时各需两条空位，配套 Bell 各占一条。轨道末尾「＋」只加该轨的小节，新小节和「＋」都完整可见时保持原位；仅在新小节超出右边缘时，将该轨的新「＋」对齐右边缘，上下位置不变，其他轨道的长度不影响判断。输入音符后，光标自动前进，下一根竖线完整可见时画面保持原位，离开左右可见范围时将光标横向居中并保留上下位置。</dd>
+        <dt>轨道标题「⋯」</dt><dd>开始多选；向上／向下调整轨道顺序（首尾不能继续移动，配对轨道作为一组移动）；添加或取消当前小节的轨道循环；修改乐器、名称与说明；管理采样、清除该轨换行、静音／取消静音、打开混音、清空该轨音符或删除乐器。至少保留一条轨道；删除与清空按弹窗确认。</dd>
+        <dt>小节边界竖线</dt><dd>可清空本节、复制本节、指定复制起点后再点终点复制连续小节、在边界插入、换行或取消换行、删除小节、设循环起止点、取消未完成的循环起点、移除相邻循环或改本节拍号。首尾边界不能换行，单轨最后一个小节不可删除。改拍号前先清理该节音符。</dd>
+        <dt>轨道循环与整曲循环</dt><dd>双击小节边界设置轨道循环起点与终点。终点须在起点之后，同轨循环不可重叠或越过下一个循环；已设终点可再次修改。播放时按停止方块，会在本轮终点释放当前循环并继续后面的内容。整谱「⋯」只提供「播放一次」和「循环整曲」；分段循环使用小节边界菜单设置。</dd>
+        <dt>整谱「⋯」的小节操作</dt><dd>添加、复制或删除整谱当前位置的小节；有音符的删除需确认。还可清除所有轨道换行、统一切换每拍三／四分音（受已有音符、细分状态约束）。</dd>
+        <dt>复制排版添加音轨</dt><dd>底部加号菜单中的「全复制」用于复制最后一轨的排版。选乐器后，新轨追加在最后，沿用原最后一轨的小节数量、换行、分拍和各横线组拍号，音符与左右手标记为空。Dununba、Sangba、Kenkeni 的 Bell 和 Drum 共用该排版，Bell 在上。普通添加乐器创建一个空白小节。</dd>
+      </dl>
+      {{footer}}
+    </section>
+    <section id="guide-selection">
+      <h3>选区与粘贴</h3>
+      <figure><img src="{{editor}}" alt="鼓谱实际编辑界面"><figcaption>③ 谱面符杆和小节边界可用于指定选区；多选后底部出现操作栏。</figcaption></figure>
+      <ol>
+        <li>从轨道「⋯」进入多选。点符杆选择单个位置；长按选整组，键盘也可用 Shift+Enter。可在小节边界设区间起点和终点，终点边界之后的内容不纳入选区。</li>
+        <li>底部「复制」「剪切」「清空选区音符」「区域拍号」在已有选区后可用。区域拍号改变选区分音；「返回选区」可退出当前操作步骤，「退出」离开多选。</li>
+        <li>复制或剪切后点目标符杆，查看覆盖预览，再点「确认」；「取消」保留原谱。确认后按所选范围的原时值覆盖，范围内的休止也会覆盖目标，超出末尾会补小节。剪切在确认时移走源音符。</li>
+        <li>从边界复制整小节后，在目标位置打开「粘贴小节」。目标乐器不支持源鼓音时不能粘贴；需要保留完整小节结构时，选目标小节的首个符杆。</li>
+      </ol>
+      {{footer}}
+    </section>
+    <section id="guide-play">
+      <h3>播放与跟随</h3>
+      <figure><img src="{{editor}}" alt="编辑器实际播放栏"><figcaption>④ 播放栏，依次为回到开头、播放、停止、律动、混音、跟随与音符键盘。</figcaption></figure>
+      <dl>
+        <dt>回到开头／播放／停止方块</dt><dd>回到当前轨道第一个音符并显示蓝框，仅横向回到左端，纵向位置不变，不开始播放；三角从当前编辑位置播放，再按可暂停或继续；方块在轨道循环中先释放循环并继续往后走，其余情况下停止。可按空格播放或暂停。开始或继续播放额外预留0.25秒，保护首个音符的完整播放。</dd>
+        <dt>跟随按钮与画面拖动</dt><dd>打开跟随后，默认跟随第一条轨道；点选符杆后，以蓝框所在轨道为跟随目标，不因其他轨道的循环或结束而切换。开始播放时先定位指定轨道；暂停保留画面位置，继续播放时从停留处衔接。光标到达画面宽度约 70% 的位置后开始横向跟随，按横线组的实际播放时长连续移动，空拍、细分和律动不会让画面逐音符起停。首次进入后续循环区间时保持连续跟随；循环回跳瞬间对齐该循环起点，随后在光标达到约 70% 时继续移动。换行时自动定位到相应行。普通横向跟随保留纵向位置，支持播放中调节速度和 50%–500% 缩放。手指或鼠标拖动优先，松开后在选定的纵向位置恢复横向跟随。再次点跟随按钮可关闭。</dd>
+        <dt>输入时试听与快捷键</dt><dd>编辑器「⋯」可开关输入时试听。桌面撤销 Ctrl/Cmd+Z，重做 Ctrl/Cmd+Y 或 Ctrl/Cmd+Shift+Z；键盘聚焦输入框或弹窗时，快捷键依当前控件处理。</dd>
+        <dt>音频准备与自然结束</dt><dd>开始或继续播放预留约 0.25 秒准备时间；闲置后会先准备音频输出，再开始计拍。播放自然结束时，光标和画面保留在所跟随轨道的最后一个有效音符附近。输入音符的试听遵循当前轨道的音量、声像和静音／独奏设置。</dd>
+        <dt>导出跟随诊断</dt><dd>编辑器「⋯」中的「导出跟随诊断记录」可保存诊断 JSON。播放中导出会先暂停；文件记录版本、设备浏览环境、窗口大小及近期循环与跟随状态，供反馈问题时使用，不代替 .rhythm.json 鼓谱备份。</dd>
+      </dl>
+      {{footer}}
+    </section>
+    <section id="guide-swing">
+      <h3>律动与速度</h3>
+      <figure><img src="{{swing}}" alt="律动面板，标出整体复制、拍型和速度"><figcaption>① 整套律动复制／粘贴　② 拍型与分音比　③ 速度</figcaption></figure>
+      <dl>
+        <dt>拍内时值</dt><dd>3／4 按钮选择三或四分音模板。拖动图中的分界，或输入比例。强度调整模板对均匀拍的影响；复拍开关决定是否让相应复拍应用 Swing。</dd>
+        <dt>复制与粘贴</dt><dd>顶栏按钮复制或粘贴整套律动；拍内区域的按钮只处理当前模板，目标分音数须匹配。尚无可用复制内容时，「粘贴」不可用。</dd>
+        <dt>整谱与局部速度</dt><dd>在底部律动面板调节整谱速度，范围 20–360 BPM，−／＋ 每次调整 1 BPM。轨道菜单可设置轨道速度，小节菜单可设置小节速度；双击横线组拍号旁的速度可设置该组速度。局部速度随整谱速度按比例变化，并限制在 20–360 BPM。速度弹窗中点蓝色「完成」或按回车保存，「取消」不保存修改；「返回」关闭律动面板。</dd>
+      </dl>
+      {{footer}}
+    </section>
+    <section id="guide-mix">
+      <h3>混音与自定义采样</h3>
+      <figure><img src="{{mix}}" alt="混音面板，标出音量声像、总量和单轨按钮"><figcaption>① 音量／声像切换及重置　② 全部滑杆　③ 单轨滑杆、独奏、静音</figcaption></figure>
+      <dl>
+        <dt>混音</dt><dd>「音量」调响度，「声像」调左右位置；「全部」控制总输出，单轨滑杆只调该轨。耳机图标独奏，静音图标切换该轨静音。「重置」恢复默认混音，「完成」返回。</dd>
+        <dt>预设与采样面板</dt><dd>点轨道的浅灰预设名切换音色；轨道「⋯」的采样管理可选择乐器、槽位和鼓音。「导入 WAV」替换所选鼓音，「试听」试播，「恢复内置」清除该处替换，「应用到当前音轨」切换到所选槽位，「完成」关闭。</dd>
+        <dt>采样限制</dt><dd>16-bit PCM WAV，44.1 或 48 kHz，单／双声道（导入后转单声道），每文件一击，0.05–1.50 秒，建议 0.15–0.80 秒。每种乐器 10 个编号槽，编号预设存在当前设备的浏览环境；「本轨专用」随谱携带，全谱内嵌采样共 640 KiB。</dd>
+      </dl>
+      {{footer}}
+    
+</section>
+    <section id="guide-export">
+      <h3>保存、分享与导出</h3>
+      <figure><img src="{{editor}}" alt="实际编辑器的右上角更多按钮"><figcaption>① 编辑器顶栏的「⋯」包含保存、分享、下载和两种导出。</figcaption></figure>
+      <dl>
+        <dt>保存鼓谱／下载备份／分享</dt><dd>「保存」写入本机谱库，「下载」生成可重新导入的 .rhythm.json。在支持目录选择的 Windows Edge 或 Chrome 中，选好文件夹后可对同名文件选择覆盖、保留两个或取消；保留两个会自动使用未占用的编号。iPhone Safari 使用系统分享面板中的「存储到文件」或浏览器下载，重名由系统处理。取消系统保存时不会写入。分享会尝试携带编号预设录音，超出采样容量时先请你确认。</dd>
+        <dt>导出谱面</dt><dd>选择 JPG 或 PDF 后点「生成」，完成后保存或分享。保留导出前缩放下的音符间距，显示拍号、速度和左右手标记；按最长轨道裁切并保留左右边距。长谱分为连续多页，先从左到右、再从上到下，JPG 文件名标注行列。拼接打印请使用 100% 实际尺寸，关闭「适合页面」。JPG 便于图片查看，PDF 便于打印；继续编辑请保留 .rhythm.json。</dd>
+        <dt>导出音频</dt><dd>填写名称，选择 WAV、AIFF 或设备支持时的 M4A。分钟／秒可输入，也可用 ＋／－ 调整，时长 1 秒至 30 分钟。提交后等待生成，或点「取消」返回。导出受当前混音设置影响。</dd>
+        <dt>备份与跨设备</dt><dd>本地谱库、编号预设及缓存按设备和运行环境保存。跨设备使用时，先导出鼓谱文件，再在另一端首页「⋯」导入。</dd>
+      </dl>
+      {{footer}}
+    </section>
+    </div>
+    <div id="guideEnglish" lang="en" hidden>{{english}}</div>
+  </div>
+</dialog>
+<dialog id="aboutPanel" class="guide-panel guide-about" aria-labelledby="aboutTitle">
+  <header class="guide-header"><h2 id="aboutTitle" data-i18n="help.about">关于本软件</h2><button type="button" data-close="aboutPanel" data-i18n="dialog.done">完成</button></header>
+  <div class="guide-body"><section>
+    <h3 data-i18n="help.aboutName">Rhythm Desk · 鼓谱工作台</h3>
+    <p data-i18n="help.aboutText">面向西非鼓乐教学、排练与编配的节奏编辑器。可分轨编写 Djembe、Dununba、Sangba、Kenkeni、Bell 和 Shekere，结合循环、律动、混音与导出，用于课堂演示和分声部练习。</p>
+    <p><span data-i18n="browse.release">版本</span> 1.59 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-17">2026-11-17</time></p>
+    <p data-i18n="help.aboutPlayback">支持 50%–500% 缩放、20–360 BPM 速度与分段循环，播放时连续跟随所选轨道。</p>
+    <p data-i18n="help.aboutUpdate">本版整理并同步中英文说明书，更新跟随、循环、手势和文件保存操作的介绍。</p>
+    <p data-i18n="help.aboutSamples">部分内置音色取自 TimGM6mb 声音字体（GPL-2.0-only）；来源和许可文件随安装包提供。可导入 WAV 替换鼓音。</p>
+    <p class="about-author"><span data-i18n="help.author">作者</span><span aria-hidden="true">：</span><strong>Zebra Djembe <span lang="zh-CN">【斑马非洲鼓工作室】</span></strong></p>
+    <p><span data-i18n="help.website">网址</span>　<a href="https://www.zebradjembe.com" target="_blank" rel="noopener noreferrer">www.zebradjembe.com</a></p>
+    {{footer}}
+  </section></div>
+</dialog>

@@ -1,0 +1,7 @@
+# Signing keys must never be committed.
+*.pem
+*.p12
+*.jks
+*.keystore
+# Local release archives (shipped separately).
+dist/

@@ -1,0 +1,2150 @@
+{
+  "format": "rhythm-desk",
+  "version": 7,
+  "title": "Abondan",
+  "bpm": 120,
+  "subdivision": 3,
+  "bars": 1,
+  "meter": "6/8",
+  "beats": [
+    3,
+    3
+  ],
+  "feel": {
+    "3": [
+      33.333333333333336,
+      33.333333333333336,
+      33.333333333333336
+    ],
+    "4": [
+      25,
+      25,
+      25,
+      25
+    ],
+    "strength": 100
+  },
+  "region": "",
+  "ethnic": "",
+  "notes": "",
+  "volume": 1,
+  "pan": 0,
+  "repeat": null,
+  "tracks": [
+    {
+      "id": "t1",
+      "type": "djembe",
+      "name": "Djembe 1",
+      "detail": "Djembe",
+      "volume": 0.78,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        "H",
+        "H",
+        null,
+        "H",
+        null,
+        "H",
+        null,
+        "H",
+        "H",
+        null,
+        "H",
+        null,
+        null,
+        "SS",
+        null,
+        "SS",
+        null,
+        "SS",
+        null,
+        null,
+        null,
+        null,
+        "S",
+        null,
+        "B",
+        null,
+        null,
+        "T",
+        null,
+        "S",
+        "B",
+        null,
+        null,
+        null,
+        "S",
+        null,
+        "B",
+        "T",
+        "T",
+        "T",
+        "T",
+        "S",
+        "B",
+        null,
+        null,
+        null,
+        "S",
+        null,
+        "H",
+        "H",
+        null,
+        "H",
+        null,
+        "H",
+        null,
+        "H",
+        "H",
+        null,
+        "H",
+        null,
+        null,
+        "SS",
+        null,
+        "SS",
+        null,
+        "SS",
+        null,
+        null,
+        null,
+        null,
+        "S",
+        null,
+        "B",
+        null,
+        null,
+        "T",
+        null,
+        "S",
+        "B",
+        null,
+        "T",
+        "T",
+        "T",
+        "T",
+        "B",
+        null,
+        null,
+        "T",
+        null,
+        "S",
+        "B",
+        null,
+        "T",
+        "T",
+        "T",
+        "T",
+        "S",
+        "S",
+        null,
+        "S",
+        null,
+        "S",
+        null,
+        "S",
+        "S",
+        null,
+        "S",
+        null,
+        null,
+        null,
+        "SS",
+        null,
+        "SS",
+        null,
+        "SS",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "loops": [
+        {
+          "from": 2,
+          "to": 4
+        },
+        {
+          "from": 6,
+          "to": 8
+        }
+      ],
+      "samples": {},
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "type": "bell",
+      "name": "Bell",
+      "detail": "Dununba",
+      "volume": 0.43,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "loops": [
+        {
+          "from": 2,
+          "to": 4
+        },
+        {
+          "from": 6,
+          "to": 8
+        }
+      ],
+      "samples": {},
+      "bellFor": "t2",
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "type": "dundunba",
+      "name": "Dununba",
+      "detail": "Drum",
+      "volume": 1,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "loops": [
+        {
+          "from": 2,
+          "to": 4
+        },
+        {
+          "from": 6,
+          "to": 8
+        }
+      ],
+      "samples": {},
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "type": "bell",
+      "name": "Bell",
+      "detail": "Sangba",
+      "volume": 0.6,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "loops": [
+        {
+          "from": 2,
+          "to": 4
+        },
+        {
+          "from": 6,
+          "to": 8
+        }
+      ],
+      "samples": {},
+      "bellFor": "t4",
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "type": "sangban",
+      "name": "Sangba",
+      "detail": "Drum",
+      "volume": 0.35,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "M",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        "M",
+        null,
+        "M",
+        null,
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "loops": [
+        {
+          "from": 2,
+          "to": 4
+        },
+        {
+          "from": 6,
+          "to": 8
+        }
+      ],
+      "samples": {},
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t7",
+      "type": "bell",
+      "name": "Bell",
+      "detail": "Kenkeni",
+      "volume": 0.6,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        null,
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        "X",
+        null,
+        "X",
+        null,
+        "X",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "loops": [
+        {
+          "from": 2,
+          "to": 4
+        },
+        {
+          "from": 6,
+          "to": 8
+        }
+      ],
+      "samples": {},
+      "bellFor": "t6",
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t6",
+      "type": "kenkeni",
+      "name": "Kenkeni",
+      "detail": "Drum",
+      "volume": 0.68,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        null,
+        null,
+        "O",
+        "O",
+        null,
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        "O",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "loops": [
+        {
+          "from": 2,
+          "to": 4
+        },
+        {
+          "from": 6,
+          "to": 8
+        }
+      ],
+      "samples": {},
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t8",
+      "type": "shekere",
+      "name": "Shekere",
+      "detail": "",
+      "volume": 1,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "cells": [
+        "X",
+        "X",
+        "X",
+        "X",
+        "X",
+        "X",
+        "X",
+        "X",
+        "X",
+        "X",
+        "X",
+        "X"
+      ],
+      "loops": [
+        {
+          "from": 0,
+          "to": 2
+        }
+      ],
+      "samples": {},
+      "measures": [
+        {
+          "meter": "6/8",
+          "beats": [
+            3,
+            3
+          ]
+        },
+        {
+          "meter": "6/8",
+          "beats": [
+            3,
+            3
+          ]
+        }
+      ]
+    }
+  ]
+}
