@@ -42,6 +42,7 @@ let sortByName = false;
 let cursor = { track: doc.tracks[0].id, beat: 0, slot: 0 };
 let keysOpen = false;
 let keyboardType = '';
+let noteLock; // 1.61: {stroke, type} while a note key (or Rest, stroke null) is locked for tap entry
 let rows = new Map();
 let playingPositions = new Map();
 let pending = false;
@@ -93,9 +94,9 @@ let followedLine = null;
 
 
 const engine = new Transport((positions, gates, playbackStarts, jumps = new Map()) => {
-  const oldGateState = playingLoops.map(g => `${g.from}/${g.to}/${g.released}`).join();
+  const oldGateState = playingLoops.map(g => `${g.from}/${g.to}/${g.released}/${g.repeats}`).join();
   playingLoops = gates;
-  if (oldGateState !== gates.map(g => `${g.from}/${g.to}/${g.released}`).join()) refreshControls();
+  if (oldGateState !== gates.map(g => `${g.from}/${g.to}/${g.released}/${g.repeats}`).join()) refreshControls();
   positions = new Map(positions);
   for (const lane of engine.lanes) {
     const step = positions.get(lane.track.id);
@@ -376,11 +377,19 @@ function refreshControls() {
   el.play.setAttribute('aria-label', playLabel);
   el.stop.disabled = !pending && !engine.running;
   const gates = engine.paused ? [] : playingLoops;
+  const repeats = Math.max(0, ...gates.map(gate => gate.released ? gate.repeats || 0 : 0));
   const stopLabel = gates.length
-    ? (gates.every(gate => gate.released) ? t('stop.releaseWait') : t('stop.release')) : t('stop');
+    ? (gates.every(gate => gate.released) ? (repeats ? t('stop.repeatWait', {n: repeats}) : t('stop.releaseWait')) : t('stop.release')) : t('stop');
   el.stop.title = stopLabel;
   el.stop.setAttribute('aria-label', stopLabel);
   el.stop.classList.toggle('release-loop', gates.length > 0);
+  // 1.61: during a loop, a chip above the square chooses how many more passes play before continuing.
+  el.loopRepeat.hidden = !gates.length;
+  if (gates.length) {
+    el.loopRepeat.textContent = repeats ? t('loop.repeatLeft', {n: repeats}) : t('loop.repeatChip');
+    el.loopRepeat.classList.toggle('pending', repeats > 0);
+    el.loopRepeat.style.left = el.stop.offsetLeft + el.stop.offsetWidth / 2 + 'px';
+  } else if (el.menu.classList.contains('transport-menu')) closePopups();
 }
 
 function syncTempo() {
@@ -647,11 +656,14 @@ function renderScore(updatedTrack) {
             return;
           }
           const hand = event.target.classList.contains('hand-dot');
-          const activate = quickDoubleTap(event, hand ? 'hand' : 'note');
+          // 1.61: with a locked note key, a tap enters that note (the 1 s hold still opens the beat menu).
+          const locked = Boolean(noteLock) && !hand;
+          const activate = !locked && quickDoubleTap(event, hand ? 'hand' : 'note');
           const {scrollLeft, scrollTop} = scoreEditViewport(event.currentTarget);
           selectSlot(track.id, beat, slot);
           el.paper.scrollTo({left: scrollLeft, top: scrollTop, behavior: 'instant'});
-          if (activate) {
+          if (locked) writeLockedStroke();
+          else if (activate) {
             if (hand) openHandMenu(event.currentTarget);
             else openBeatMenu(box);
           }
@@ -836,7 +848,7 @@ function clearSelectedBeat() {
 function updateKeyboard() {
   el.keyboard.hidden = !keysOpen;
   el.showKeys.setAttribute('aria-pressed', keysOpen);
-  if (!keysOpen) return;
+  if (!keysOpen) { if (noteLock) setNoteLock(); return; }
   const type = selectedTrack().type;
   if (keyboardType === type) return;
   keyboardType = type;
@@ -847,10 +859,10 @@ function updateKeyboard() {
   };
   const key = (text, handler, className = '') => button(text, handler, 'key ' + className);
   const strokeKey = stroke => {
-    const node = key('', () => writeStroke(stroke));
+    const node = lockableKey(key('', () => tapNoteKey(stroke)), stroke);
     const label = noteLabel(stroke, type);
     node.setAttribute('aria-label', label);
-    node.title = label;
+    node.title = label + ' · ' + t('keys.lockHint');
     node.innerHTML = '<svg viewBox="0 0 54 48" aria-hidden="true"><path d="M37 8v23" stroke="currentColor" stroke-width="1.7"/>' +
       noteAt(stroke, type, 37, 31) + '</svg>';
     return node;
@@ -884,8 +896,61 @@ function updateKeyboard() {
     return node;
   };
   nav.append(jump('⇤', t('keys.start'), false), jump('⇥', t('keys.end'), true),
-    key(t('keys.rest'), () => writeStroke(null), 'silence'), key('←', () => moveCursor(-1), 'aux'), key('→', () => moveCursor(1), 'aux'));
+    lockableKey(key(t('keys.rest'), () => tapNoteKey(null), 'silence'), null), key('←', () => moveCursor(-1), 'aux'), key('→', () => moveCursor(1), 'aux'));
   el.keys.replaceChildren(...rows, main, nav);
+  paintNoteLock();
+}
+
+// 1.61: hold a note key (or Rest) for 1 s to lock it. While locked, tapping a stem enters that note
+// there without moving on (tapping the same note again clears it; a locked Rest clears). A tap on
+// the locked key or Esc unlocks; holding another key moves the lock.
+function lockableKey(node, stroke) {
+  node.dataset.stroke = stroke ?? '';
+  if (!stroke) node.title = t('keys.rest') + ' · ' + t('keys.lockHint');
+  bindMenuHold(node, () => toggleNoteLock(stroke), () => !multiGroups);
+  return node;
+}
+
+function setNoteLock(stroke) {
+  noteLock = stroke === undefined ? undefined
+    : {stroke, type: stroke ? Object.keys(TYPES).find(type => TYPES[type].strokes.includes(stroke)) : null};
+  if (noteLock?.stroke && TYPES[selectedTrack().type].strokes.includes(noteLock.stroke)) noteLock.type = selectedTrack().type;
+  paintNoteLock();
+}
+
+function paintNoteLock() {
+  for (const node of el.keys.querySelectorAll('.key[data-stroke]')) {
+    const locked = Boolean(noteLock) && node.dataset.stroke === (noteLock.stroke ?? '');
+    node.classList.toggle('locked', locked);
+    node.setAttribute('aria-pressed', String(locked));
+  }
+  el.paper.classList.toggle('note-lock', Boolean(noteLock));
+}
+
+function unlockNote() {
+  setNoteLock();
+  notify(t('lock.off'));
+}
+
+function toggleNoteLock(stroke) {
+  if (noteLock && noteLock.stroke === stroke) { unlockNote(); return; }
+  setNoteLock(stroke);
+  notify(stroke ? t('lock.on', {note: noteLabel(stroke, noteLock.type)}) : t('lock.onRest'));
+}
+
+function tapNoteKey(stroke) {
+  if (noteLock && noteLock.stroke === stroke) unlockNote();
+  else writeStroke(stroke);
+}
+
+function writeLockedStroke() {
+  const track = selectedTrack();
+  const {stroke, type} = noteLock;
+  if (stroke && !TYPES[track.type].strokes.includes(stroke)) {
+    notify(t('lock.unsupported', {track: track.name, note: noteLabel(stroke, type)}));
+    return;
+  }
+  writeStroke(stroke && track.cells[scoreIndex()] === stroke ? null : stroke, 0);
 }
 
 function setFollowGutter(active = false) {
@@ -1057,13 +1122,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.60', userAgent: navigator.userAgent,
+    version: '1.61', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.60.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.61.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));
@@ -1111,7 +1176,7 @@ function lastSoundingStep(lane) {
 
 function followLimit(lane) {
   return Math.min(lane.path.end,
-    ...lane.path.gates.filter(gate => !gate.released && gate.to > lane.step).map(gate => gate.to));
+    ...lane.path.gates.filter(gate => gateLoopsBack(gate) && gate.to > lane.step).map(gate => gate.to));
 }
 
 
@@ -1450,6 +1515,7 @@ function paintPlaySteps(positions) {
 
 let beatMenuAnchor = null;
 function closePopups() {
+  el.menu.classList.remove('transport-menu');
   beatMenuAnchor = null;
   handMenuAnchor = undefined;
   el.menu.hidden = el.beatMenu.hidden = true;
@@ -1910,6 +1976,31 @@ function useSquareButton() {
   }
   refreshControls();
   notify(t('stop.released'));
+}
+
+// 1.61: repeat the playing loop 1-8 more times, then continue; or cancel a pending continue.
+function openLoopRepeatMenu(anchor) {
+  const gates = engine.paused ? [] : playingLoops;
+  if (!gates.length) return;
+  const released = gates.every(gate => gate.released);
+  const left = Math.max(0, ...gates.map(gate => gate.released ? gate.repeats || 0 : 0));
+  popup(anchor, [
+    ...[1, 2, 3, 4, 5, 6, 7, 8].map(times =>
+      [(released && left === times ? '✓ ' : '') + t('loop.repeatTimes', {n: times}), () => changeLoopRelease(times)]),
+    [t('loop.keepLooping'), () => changeLoopRelease(null), !released]
+  ]);
+  el.menu.classList.add('transport-menu');
+}
+
+function changeLoopRelease(times) {
+  if (!(times === null ? engine.keepLooping() : engine.releaseLoop(times))) return;
+  if (canFollow()) {
+    // Re-plan the camera for the new loop end, as the square button does.
+    stopFollowing('release');
+    animateFollow(performance.now());
+  }
+  refreshControls();
+  notify(times === null ? t('loop.keptLooping') : t('loop.repeatSet', {n: times}));
 }
 
 async function playScore() {
@@ -3160,6 +3251,7 @@ el.undo.addEventListener('click', () => historyMove(undoStack, redoStack));
 el.redo.addEventListener('click', () => historyMove(redoStack, undoStack));
 el.play.addEventListener('click', togglePlayback);
 el.stop.addEventListener('click', useSquareButton);
+el.loopRepeat.addEventListener('click', event => openLoopRepeatMenu(event.currentTarget));
 el.restartPlayback.addEventListener('click', () => {
   const track = selectedTrack();
   const top = el.paper.scrollTop;
@@ -3604,7 +3696,8 @@ for (const name of ['gesturestart', 'gesturechange']) {
 el.paper.addEventListener('scroll', () => {
   positionBeatMenu();
   if (!el.menu.hidden && handMenuAnchor?.isConnected) positionPopup(handMenuAnchor, true);
-  else el.menu.hidden = true;
+  // The loop-repeat menu belongs to the transport, so following the playhead does not close it.
+  else if (!el.menu.classList.contains('transport-menu')) el.menu.hidden = true;
 });
 window.addEventListener('resize', () => {
   if (!el.beatMenu.hidden) positionBeatMenu();
@@ -3630,6 +3723,7 @@ document.addEventListener('keydown', event => {
   if (document.querySelector('dialog[open]')) return;
   if (event.key === 'Escape') {
     if (!el.menu.hidden || !el.beatMenu.hidden) closePopups();
+    else if (noteLock) unlockNote();
     else if (multiGroups) finishMultiGroups();
     else if (measureCopyStart) { measureCopyStart = undefined; renderScore(); }
     else if (loopStart) cancelLoopStart();

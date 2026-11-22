@@ -311,26 +311,36 @@ class PlaybackCursor {
 
   restart(step = this.first) {
     this.step = step;
-    this.gates = this.loops.map(range => ({...range, released: false}));
+    this.gates = this.loops.map(range => ({...range, released: false, repeats: 0}));
     this.index = this.gates.findIndex(gate => gate.to > step);
     if (this.index < 0) this.index = this.gates.length;
   }
 
   get waitingAtBoundary() {
     const gate = this.gates[this.index];
-    return gate && this.step === gate.to && !gate.released;
+    return gate && this.step === gate.to && gateLoopsBack(gate);
   }
 
   take() {
     const ending = this.gates[this.index];
-    const loopReturn = Boolean(ending && this.step === ending.to && !ending.released);
-    if (loopReturn) this.step = ending.from;
+    const loopReturn = Boolean(ending && this.step === ending.to && gateLoopsBack(ending));
+    if (loopReturn) {
+      // One of the extra passes chosen after the release.
+      if (ending.released) ending.repeats--;
+      this.step = ending.from;
+    }
     else if (ending && this.step === ending.to) this.index++;
     if (this.step === this.end) return null;
     const gate = this.gates[this.index];
     const step = this.step++;
     return {step, gate: gate && step >= gate.from ? gate : null, loopReturn};
   }
+}
+
+// 1.61: a loop boundary returns to the loop start until the loop is released. After a release it
+// still returns for the extra passes chosen with the repeat button (gate.repeats), then continues.
+function gateLoopsBack(gate) {
+  return Boolean(gate) && (!gate.released || gate.repeats > 0);
 }
 
 // Group-clock motion is independent of subdivisions and silent notes. Keep the
@@ -619,7 +629,7 @@ class Transport {
     const group = lane?.visualGroup;
     if (!group || lane.step < 0) return null;
     return {from: group.from, to: group.to,
-      loopEnd: Boolean(lane.gate && !lane.gate.released && group.to === lane.gate.to),
+      loopEnd: gateLoopsBack(lane.gate) && group.to === lane.gate.to,
       progress: groupClockProgress(group, this.context.currentTime)};
   }
 
@@ -627,20 +637,29 @@ class Transport {
     const lane = this.lanes.find(item => item.track.id === trackId);
     const beat = lane?.visualBeat;
     if (!beat || lane.step < 0 || !(beat.until > beat.when)) return null;
-    const next = lane.queue[0]?.step ?? (lane.gate && !lane.gate.released && lane.step + 1 === lane.gate.to
+    const next = lane.queue[0]?.step ?? (gateLoopsBack(lane.gate) && lane.step + 1 === lane.gate.to
       ? lane.gate.from : lane.step + 1 < lane.path.end ? lane.step + 1 : -1);
-    return {next, loopFrom: lane.gate && !lane.gate.released ? lane.gate.from : null, progress: clamp((this.context.currentTime - beat.when) / (beat.until - beat.when), 0, 1)};
+    return {next, loopFrom: gateLoopsBack(lane.gate) ? lane.gate.from : null, progress: clamp((this.context.currentTime - beat.when) / (beat.until - beat.when), 0, 1)};
   }
 
   currentGates() {
     return this.lanes.map(lane => lane.gate).filter(Boolean);
   }
 
-  releaseLoop() {
+  // 1.61: `repeats` extra passes of the current loops play before playback continues (0 = this pass).
+  releaseLoop(repeats = 0) {
     if (!this.running || this.paused) return false;
     this.advancePlayhead(this.context.currentTime);
     const gates = this.currentGates();
-    for (const gate of gates) gate.released = true;
+    for (const gate of gates) Object.assign(gate, {released: true, repeats});
+    return gates.length > 0;
+  }
+
+  // 1.61: cancel a pending release; the current loops repeat until released again.
+  keepLooping() {
+    if (!this.running || this.paused) return false;
+    const gates = this.currentGates();
+    for (const gate of gates) Object.assign(gate, {released: false, repeats: 0});
     return gates.length > 0;
   }
 

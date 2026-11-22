@@ -59,7 +59,7 @@ self.addEventListener('fetch', event => {
       const cache = await caches.open(cacheName);
       const results = await Promise.all(Array.from(required,
         async ([key, hash]) => Boolean(await verified(await cache.match(key), hash))));
-      return new Response(JSON.stringify({version: '1.60', ready: results.every(Boolean)}), {
+      return new Response(JSON.stringify({version: '1.61', ready: results.every(Boolean)}), {
         headers: {'Content-Type': 'application/json', 'X-RhythmDesk-Cache': '__BUILD_ID__'},
       });
     })());

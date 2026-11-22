@@ -15,13 +15,26 @@ FILES = {
 }
 
 EDITS = []
+SECTION = None
+SECTIONS = {  # requirement each edit belongs to (used by the handoff document)
+    'dup': '需求 1：轨道菜单「复制本轨道」',
+    'split': '需求 2：写入音符状态下直接切分',
+    'hold': '需求 3：双击菜单同时支持长按 1 秒，菜单避开长按位置',
+    'common': '版本说明（三项需求共用）',
+}
+
+
+def section(tag):
+    global SECTION
+    SECTION = tag
 
 
 def edit(kind, old, new):
-    EDITS.append((kind, old, new))
+    EDITS.append((kind, old, new, SECTION))
 
 
 # ---------------------------------------------------------------- 1. Duplicate track (model)
+section('dup')
 edit('model', """function detachTrackPair(doc, track) {""", """// 1.60: an independent copy of one track with all of its content (notes, sticking, measures, group
 // meters, split cells, tempo, loops, line breaks, sounds, preset and mix), placed directly below the
 // track or below its Bell/Drum pair. A copied Bell is not paired with any drum.
@@ -41,6 +54,7 @@ function duplicateTrack(doc, track, name) {
 function detachTrackPair(doc, track) {""")
 
 # ---------------------------------------------------------------- 2. Split with notes in place (model)
+section('split')
 edit('model', """    const values = emptyCells(count);
     let dropped = 0;
     for (let i = 0; i < info.count; i++) {
@@ -109,6 +123,7 @@ edit('model', """        if (result.dropped || hands?.dropped) throw new Error(t
 }""")
 
 # ---------------------------------------------------------------- 3. One-second hold opens every double-tap menu
+section('hold')
 edit('app', """document.addEventListener('click', event => {
   if (quickTap && !quickTap.target.contains(event.target)) quickTap = null;
 }, true);
@@ -294,6 +309,7 @@ edit('app', """  document.body.append(panel); panel.showModal();
 }""")
 
 # ---------------------------------------------------------------- 2. Split with notes in place (editor)
+section('split')
 edit('app', """function applyBeatSizes(sizes, subdivision) {
   let occupied = false;
   const edits = doc.tracks.map(track => {
@@ -349,6 +365,7 @@ edit('app', """    const targets = tracks.map(track => ({track, grid: trackGrid(
     } catch (error) { notify(error.message); }""")
 
 # ---------------------------------------------------------------- 1. Duplicate track (editor)
+section('dup')
 edit('app', """function openTrackMenu(track, anchor) {""", """// 1.60: copy a track with everything in it (notes included) into a new track directly below.
 function duplicateTrackWithContent(source) {
   const track = doc.tracks.find(item => item.id === source.id);
@@ -383,28 +400,39 @@ edit('app', """    [t('track.moveDown'), () => move(1), index >= blocks.length -
 """)
 
 # ---------------------------------------------------------------- Interface text
+section('split')
 edit('i18n', """    'bulk.clearFirst': '请先清空所选范围的音符，再统一拆分小拍子',
 """, "")
+section('split')
 edit('i18n', """    'bulk.clearFirst': 'Clear notes in the target range before splitting subdivisions.',
 """, "")
+section('split')
 edit('i18n', """    'beat.clearBeforeSplit': '请先清空蓝框内的音符，再更换切分小拍。',
     'beat.clearBeforeBulkSplit': '请先清空受影响小节的音符，再更换细分。',
 """, "")
+section('split')
 edit('i18n', """    'beat.clearBeforeSplit': 'Clear the notes in the blue selection before changing its subdivision.',
     'beat.clearBeforeBulkSplit': 'Clear the notes in the affected measures before changing their subdivision.',
 """, "")
+section('common')
 edit('i18n', """    'help.aboutUpdate': '本版整理并同步中英文说明书，更新跟随、循环、手势和文件保存操作的介绍。',""",
      """    'help.aboutUpdate': '本版新增轨道菜单「复制本轨道」（连同音符复制全部内容）；已写入音符时可直接切分或更换细分，无需先清空；所有双击打开的菜单也可长按 1 秒打开，并自动避开长按位置，防止误按。',""")
+section('common')
 edit('i18n', """    'help.aboutUpdate': 'This release synchronizes the Chinese and English guide, updating the instructions for following, loops, gestures and file saving.',""",
      """    'help.aboutUpdate': 'This release adds Duplicate Track to the track menu (copies everything, notes included), lets you split cells or change subdivisions without clearing written notes, and opens every double-tap menu with a 1-second hold as well, placed clear of the held point to prevent mistaken taps.',""")
+section('hold')
 edit('i18n', """    'meter.groupButton': '第 {bar} 小节第 {group} 组拍号 {meter}，快速双击更换',""",
      """    'meter.groupButton': '第 {bar} 小节第 {group} 组拍号 {meter}，快速双击或长按 1 秒更换',""")
+section('hold')
 edit('i18n', """    'meter.groupButton': 'Measure {bar}, group {group}: {meter}. Change group meter.',""",
      """    'meter.groupButton': 'Measure {bar}, group {group}: {meter}. Double-tap or hold for 1 second to change the group meter.',""")
+section('hold')
 edit('i18n', """    'bar.pickEnd': '请快速双击同一音轨后面的小节线，设置循环终点。',""",
      """    'bar.pickEnd': '请快速双击或长按 1 秒同一音轨后面的小节线，设置循环终点。',""")
+section('hold')
 edit('i18n', """    'bar.pickEnd': 'Double-tap a later barline on the same track to set the loop end.',""",
      """    'bar.pickEnd': 'Double-tap a later barline on the same track, or hold it for 1 second, to set the loop end.',""")
+section('dup')
 edit('i18n', """    'track.moveDown': '↓ 下移轨道',
 """, """    'track.moveDown': '↓ 下移轨道',
     'track.duplicate': '复制本轨道',
@@ -413,6 +441,7 @@ edit('i18n', """    'track.moveDown': '↓ 下移轨道',
     'track.duplicateLimit': '整份谱最多 100 条轨道，无法再复制。',
     'track.duplicateBudget': '复制后采样将超过 640 KiB 上限，请先缩短或移除本轨的自定义采样。',
 """)
+section('dup')
 edit('i18n', """    'track.moveDown': '↓ Move Track Down',
 """, """    'track.moveDown': '↓ Move Track Down',
     'track.duplicate': 'Duplicate Track',
@@ -421,12 +450,15 @@ edit('i18n', """    'track.moveDown': '↓ Move Track Down',
     'track.duplicateLimit': 'A score can hold 100 tracks, so this track cannot be duplicated.',
     'track.duplicateBudget': 'The copy would exceed the 640 KiB sample limit. Shorten or remove this track’s custom samples first.',
 """)
+section('split')
 edit('i18n', """    'beat.confirmSplitMerge': '改成 {n} 份后有 {count} 个鼓点不在新的格位上，会被移除。继续吗？',""",
      """    'beat.confirmSplitMerge': '改成 {n} 份后有 {count} 个鼓点会与同一格的鼓点重叠并被合并。继续吗？',""")
+section('split')
 edit('i18n', """    'beat.confirmSplitMerge': 'With {n} parts, {count} notes no longer sit on a cell and will be removed. Continue?',""",
      """    'beat.confirmSplitMerge': 'With {n} parts, {count} notes land on an occupied cell and will be merged. Continue?',""")
 
 # ---------------------------------------------------------------- Style: no text selection or callout on held controls
+section('hold')
 edit('style', """#score { padding-right: calc(clamp(18px, 4vw, 44px) + var(--loop-tail, 0px)); }
 """, """#score { padding-right: calc(clamp(18px, 4vw, 44px) + var(--loop-tail, 0px)); }
 /* 1.60: controls that open a menu on a one-second hold never start text selection or a system callout. */
@@ -435,38 +467,54 @@ edit('style', """#score { padding-right: calc(clamp(18px, 4vw, 44px) + var(--loo
 """)
 
 # ---------------------------------------------------------------- Guide (Chinese)
+section('hold')
 edit('guide', """在同一符杆上连续点按两次（间隔小于 0.25 秒）打开拍菜单。双击符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样需要双击；菜单打开后，选项单击执行。""",
      """在同一符杆上连续点按两次（间隔小于 0.25 秒）或按住 1 秒打开拍菜单。双击或长按 1 秒符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样可双击或长按 1 秒打开；长按打开的菜单会避开手指所在位置，松手不会误选；菜单打开后，选项单击执行。""")
+section('split')
 edit('guide', """♫ 可还原为一份或细分为 2、3、4 份，合并重叠音符时需确认。""",
      """♫ 可还原为一份或细分为 2、3、4 份；已写入音符时无需先清空，可直接切分，音符移到最近的新格位，合并重叠音符时需确认。拍菜单的「切换 3/4 细分」同样保留音符。""")
+section('split')
 edit('guide', """<dt>统一细分</dt><dd>小节、轨道和整谱菜单可将目标范围统一拆分为 1–4 份；目标范围有音符时，请先清空相应音符。</dd>""",
      """<dt>统一细分</dt><dd>小节、轨道和整谱菜单可将目标范围统一拆分为 1–4 份；已有音符会保留在最近的新格位，合并重叠音符时需确认。</dd>""")
+section('hold')
 edit('guide', """点③的轨道标题「⋯」或双击谱面边界线，打开对应菜单。""",
      """点③的轨道标题「⋯」，或双击／长按 1 秒谱面边界线，打开对应菜单。""")
+section('dup')
 edit('guide', """<dt>轨道标题「⋯」</dt><dd>开始多选；向上／向下调整轨道顺序（首尾不能继续移动，配对轨道作为一组移动）；""",
      """<dt>轨道标题「⋯」</dt><dd>开始多选；向上／向下调整轨道顺序（首尾不能继续移动，配对轨道作为一组移动）；「复制本轨道」把该轨的全部内容（音符、左右手、小节与拍号、细分、速度、循环、换行、音色与混音设置）复制为新轨，副本名称加「副本」，放在该轨（或其 Bell／Drum 配对组）下方，可一次撤销；""")
+section('hold')
 edit('guide', """双击小节边界设置轨道循环起点与终点。""",
      """双击或长按 1 秒小节边界设置轨道循环起点与终点。""")
+section('split')
 edit('guide', """统一切换每拍三／四分音（受已有音符、细分状态约束）。""",
      """统一切换每拍三／四分音（受细分状态约束；已有音符随之保留，重叠时确认合并）。""")
+section('hold')
 edit('guide', """双击横线组拍号旁的速度可设置该组速度。""",
      """双击或长按 1 秒横线组拍号旁的速度可设置该组速度。""")
 
 # ---------------------------------------------------------------- Guide (English)
+section('hold')
 edit('guide_en', """Tap the same stem twice within 0.25 seconds to open its beat menu. Double-tap the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also require a double-tap; choose menu items with one tap.""",
      """Tap the same stem twice within 0.25 seconds, or hold it for 1 second, to open its beat menu. Double-tap or hold the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also open with a double-tap or a 1-second hold. A menu opened by holding appears clear of your finger, so lifting it never picks an item; choose menu items with one tap.""")
+section('split')
 edit('guide_en', """♫ splits a subdivision into two, three or four parts, or restores one part. Merging overlapping notes asks for confirmation.""",
      """♫ splits a subdivision into two, three or four parts, or restores one part. Written notes need not be cleared first: they move to the nearest new cell, and merging overlapping notes asks for confirmation. The beat menu’s three/four switch keeps notes the same way.""")
+section('split')
 edit('guide_en', """<dt>Split a range</dt><dd>Measure, track and score menus can split a target range into 1–4 equal parts. Clear any notes in the target range first.</dd>""",
      """<dt>Split a range</dt><dd>Measure, track and score menus can split a target range into 1–4 equal parts. Existing notes stay on the nearest new cell; merging overlapping notes asks for confirmation.</dd>""")
+section('hold')
 edit('guide_en', """③ Open the ⋯ menu on a track header, or double-tap a barline for measure actions.""",
      """③ Open the ⋯ menu on a track header, or double-tap or hold a barline for 1 second for measure actions.""")
+section('dup')
 edit('guide_en', """<dt>Track header ⋯</dt><dd>Start multi-selection, move the track up or down, """,
      """<dt>Track header ⋯</dt><dd>Start multi-selection, move the track up or down, duplicate the track with all of its content (notes, sticking, measures and meters, splits, tempo, loops, line breaks, sounds and mix; the copy is named with “copy” and appears below the track or its Bell/Drum pair, undoable in one step), """)
+section('hold')
 edit('guide_en', """Double-tap barlines to set a track loop start and end.""",
      """Double-tap barlines, or hold them for 1 second, to set a track loop start and end.""")
+section('split')
 edit('guide_en', """switches the score to three or four subdivisions when its existing notes and split cells allow it.""",
      """switches the score to three or four subdivisions when its split cells allow it; existing notes are kept, and merging overlapping notes asks for confirmation.""")
+section('hold')
 edit('guide_en', """double-tap the tempo beside a group meter to change that group.""",
      """double-tap or hold for 1 second the tempo beside a group meter to change that group.""")
 
@@ -478,7 +526,7 @@ ANDROID_VERSION_COUNTS = (6, 6)
 
 
 def apply(text, edits, label):
-    for kind, old, new in edits:
+    for kind, old, new, _ in edits:
         count = text.count(old)
         if count != 1:
             raise SystemExit(f'{label}: [{kind}] expected 1 match, found {count}: {old[:90]!r}')

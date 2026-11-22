@@ -29,7 +29,7 @@
     <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 10h.1m4-.1h.1m4 .1h.1m4-.1h.1M7 15h10"/></symbol>
   </svg>
   <main id="rhythmBrowser" class="rhythm-browser" aria-labelledby="browserTitle">
-    <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.60 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-21">2026-11-21</time></p>
+    <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.61 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
     <div class="browser-top">
       <h1 id="browserTitle" class="browser-pill" data-i18n="browse.title">浏览</h1>
       <div class="browser-pill browser-tools">
@@ -94,6 +94,7 @@
       <button type="button" id="restartPlayback" class="icon" data-i18n-title="keys.goToBeginning" data-i18n-aria="keys.goToBeginning" title="回到全谱开头" aria-label="回到全谱开头"><svg aria-hidden="true"><use href="#i-restart"/></svg></button>
       <button type="button" id="play" class="icon" title="播放 Space" aria-label="播放"><svg><use id="playGlyph" href="#i-play"/></svg></button>
       <button type="button" id="stop" class="icon" title="停止" aria-label="停止" disabled><svg><use href="#i-stop"/></svg></button>
+      <button type="button" id="loopRepeat" class="loop-repeat" data-i18n-title="loop.repeatButton" title="再循环几次后继续向后播放" aria-haspopup="true" hidden>↻ 再循环…</button>
       <button type="button" id="swing" class="icon" data-i18n-title="swing.button" data-i18n-aria="swing.button" title="律动（Swing）" aria-label="律动（Swing）"><svg><use href="#i-tempo"/></svg></button>
       <button type="button" id="mixer" class="icon" data-i18n-title="mixer.button" data-i18n-aria="mixer.button" title="混音：音量 / 声像" aria-label="混音：音量 / 声像"><svg><use href="#i-speaker"/></svg></button>
       <button type="button" id="followPlayback" class="icon follow-toggle" data-i18n-title="more.follow" data-i18n-aria="more.follow" title="播放时跟随谱面" aria-label="播放时跟随谱面" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5m-6-8h6m-3-3v6"/></svg></button>
