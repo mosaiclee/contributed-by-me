@@ -142,11 +142,12 @@ document.addEventListener('click', event => {
 // mouse button). The menu then keeps clear of the held point, and the click that ends the hold is
 // dropped, so lifting the finger never chooses a menu item.
 // 1.63: the hold takes 0.5 s (was 1 s), and a menu opened by a double-tap keeps clear of the tap too.
-// 1.65: menus open after a 0.2 s hold. Locking a note key keeps 0.5 s: ordinary key presses often last
-// 0.2 s, so a shorter lock hold would lock keys while notes are being entered. For the same reason a
-// stem keeps 0.5 s while a note is locked, so tapping stems to enter notes never opens the beat menu.
-const MENU_HOLD_MS = 200;
-const NOTE_LOCK_HOLD_MS = 500;
+// 1.65: menus opened after a 0.2 s hold, while locking a note key, and a stem's beat menu while a note
+// was locked, kept 0.5 s.
+// 1.66: as requested, every hold takes 0.1 s, the note lock included, so a press held longer than 0.1 s
+// counts as a hold. NOTE_LOCK_HOLD_MS stays separate so the lock can be tuned on its own again.
+const MENU_HOLD_MS = 100;
+const NOTE_LOCK_HOLD_MS = 100;
 const MENU_HOLD_SLOP = 10;
 const MENU_HOLD_CLEARANCE = 40;
 let menuHold = null;
@@ -1169,13 +1170,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.65', userAgent: navigator.userAgent,
+    version: '1.66', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.65.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.66.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));
@@ -2997,8 +2998,8 @@ function saveScore() {
 }
 
 // 0.18: long press (mouse or touch) or right-click on a rhythm card shows 复制 / 删除.
-// 1.65: the card menu opens after 0.2 s like the editor menus (was 0.5 s).
-const LONG_PRESS_MS = 200;
+// 1.65: the card menu opened after 0.2 s (was 0.5 s); 1.66: 0.1 s, like the editor menus.
+const LONG_PRESS_MS = 100;
 let cardPress = null;
 let suppressCardClick = null;
 
