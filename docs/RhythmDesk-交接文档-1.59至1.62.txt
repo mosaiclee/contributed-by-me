@@ -1,5 +1,5 @@
 ﻿RhythmDesk（鼓谱工作台）开发交接文档
-覆盖范围：1.59（接手时的版本）→ 1.60 → 1.61
+覆盖范围：1.59（接手时的版本）→ 1.60 → 1.61 → 1.62
 编写日期：2026-11-22
 
 ==============================================================================
@@ -16,7 +16,7 @@
 2. 安卓版（RhythmDesk-Android-x.xx.apk，包名 org.rhythmdesk.app，minSdk 26，targetSdk 34）
    · 外壳 classes.dex（WebView）未改动；编辑器是 APK 内的 assets/index.html，它和 Win11 页面使用同一套脚本、样式和说明书，
      另含安卓专用代码（rhythmDeskAndroid 标志、系统保存窗口桥接、androidFollow* 跟随实现、内嵌音色数据、安卓版说明书文字）。
-   · 接手的压缩包没有安卓 index.html 的拆分源码，因此每轮修改都写成补丁清单（tools/patch160.py、tools/patch161.py），
+   · 接手的压缩包没有安卓 index.html 的拆分源码，因此每轮修改都写成补丁清单（tools/patch160.py、tools/patch161.py、tools/patch162.py），
      同一份清单同时作用于 Win11 源码和安卓 index.html：每处修改必须在两边都恰好匹配规定次数，否则整个补丁不写入。
      这保证两个平台的改动完全一致。生成后还比对了「Win11 页面 与 安卓页面」的差异，确认只剩原有的安卓专用部分。
    · APK 重新打包：tools/repack_apk.py 以上一版已签名 APK 为基础，只替换 assets/index.html 和二进制 AndroidManifest.xml 中的
@@ -29,24 +29,25 @@
 
 3. 构建命令
    python3 RhythmDesk-Win11/source/build_ui.py
-   python3 tools/patch161.py RhythmDesk-Win11/source/ui android/index.html      （在 1.60 源码上应用 1.61 修改，已应用过的不要重复执行）
-   python3 tools/repack_apk.py 上一版.apk android/index.html unsigned.apk 1.61
+   python3 tools/patch162.py RhythmDesk-Win11/source/ui android/index.html      （在 1.61 源码上应用 1.62 修改，已应用过的不要重复执行）
+   python3 tools/repack_apk.py 上一版.apk android/index.html unsigned.apk 1.62
    java --add-exports java.base/sun.security.x509=ALL-UNNAMED --add-exports java.base/sun.security.pkcs=ALL-UNNAMED \
-        --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java 签名.pem unsigned.apk RhythmDesk-Android-1.61.apk
-   python3 tools/verify_v2.py RhythmDesk-Android-1.61.apk
+        --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java 签名.pem unsigned.apk RhythmDesk-Android-1.62.apk
+   python3 tools/verify_v2.py RhythmDesk-Android-1.62.apk
 
 4. 测试（RhythmDesk-Win11/source/tests）
-   node interaction161.cjs                                  双击计时、滚轮缩放、拖动、保存流程、诊断文件版本
-   node playback161.cjs 安卓index.html ../../RhythmDesk.html  安卓页面与浏览器页面播放跟随轨迹一致、循环释放规则
-   node offline161.cjs 解压后的iPhone离线包目录                 iPhone 离线版 service worker（需要先生成 iPhone 包）
+   node interaction162.cjs                                  双击计时、滚轮缩放、拖动、保存流程、诊断文件版本
+   node playback162.cjs 安卓index.html ../../RhythmDesk.html  安卓页面与浏览器页面播放跟随轨迹一致、循环释放规则
+   node offline162.cjs 解压后的iPhone离线包目录                 iPhone 离线版 service worker（需要先生成 iPhone 包）
    node editor160.e2e.cjs 页面...                            （需 Playwright + Chromium）1.60 三项功能：复制轨道、带音符切分、1 秒长按菜单
-   node editor161.e2e.cjs 页面...                            （需 Playwright + Chromium）1.61 三项功能：再循环 N 次、蓝色播放方框、音符锁定
-   1.61 发布前上述测试（offline 除外）在 Win11 页面和从已签名 APK 中取出的页面上全部通过；未在安卓真机和 Windows Edge 上实测。
+   node editor161.e2e.cjs 页面...                            （需 Playwright + Chromium）1.61/1.62 功能：再循环次数（自由输入）、竖向蓝色播放方框、音符锁定
+   1.62 发布前上述测试（offline 除外）在 Win11 页面和从已签名 APK 中取出的页面上全部通过；未在安卓真机和 Windows Edge 上实测。
 
 5. 版本记录
    1.59  接手版本（2026-11-17）。安卓 versionCode 159。
    1.60  2026-11-21：复制本轨道；写入音符状态下直接切分；双击菜单支持长按 1 秒并避开按压位置。versionCode 160。
    1.61  2026-11-22：循环「再循环 N 次后继续」按钮；所有轨道蓝色方框显示播放位置；长按音符键锁定点按输入。versionCode 161。
+   1.62  2026-11-22：再循环次数自由输入（1–999）；播放位置改为竖向蓝色长方框覆盖符杆；说明文件核对同步；修复剩余次数不刷新。versionCode 162。
 
 ==============================================================================
 二、提示词汇总
@@ -68,6 +69,14 @@
   需求 2：播放时所有轨道显示音符播放位置，显示方式改为蓝色方框框住音符。
   需求 3：音符键盘上长按音符键，切换为锁定该音符、点按谱面输入该音符的模式。
   需求 4：整理本交接文档（本文件）。
+
+第 3 段提示词（产出 1.62，并更新本文档）：
+功能完善的很好，有3个小修改：1.循环次数可以自由填写，不用设定成固定次数。2.核对修改后的说明文件，有不同同步更新。3.播放时跟随显示的蓝色方框要竖的长方形，覆盖住竖线部分
+
+  拆分为三项需求：
+  需求 1：循环次数可以自由填写，不用设定成固定次数。
+  需求 2：核对修改后的说明文件，不一致处同步更新。
+  需求 3：播放时跟随显示的蓝色方框改为竖向长方形，覆盖住竖线（符杆）部分。
 
 ==============================================================================
 三、第 1 段提示词的程序修改（1.59 → 1.60）
@@ -2400,7 +2409,899 @@ assets/index.html
   · 音符锁定复用了 1.60 的 bindMenuHold（1 秒、移动取消、松手不触发单击），与菜单长按的手感一致。
 
 ==============================================================================
-五、后续开发建议
+五、第 3 段提示词的程序修改（1.61 → 1.62）
+==============================================================================
+说明：「修改前」取自 1.61 文件，「修改后」取自 1.62 文件，行号为各自文件中的行号；路径相对于 RhythmDesk-Win11/。
+本轮补丁清单：tools/patch162.py（24 处修改）。
+
+==============================================================================
+需求 1：循环次数自由填写（取代固定的 1–8 次菜单）（1.61 → 1.62）
+==============================================================================
+
+修改说明：
+  循环次数改为自由填写，取代 1.61 的固定 1–8 次菜单。
+  · app.js：openLoopRepeatMenu（1–8 次菜单）替换为 openLoopRepeatDialog()。点「↻ 再循环…」打开与速度弹窗同样式的对话框：
+    数字输入框（1–999；默认显示当前剩余次数，没有待执行的继续时为 1；打开后全选，便于直接输入），−／＋ 微调，
+    「完成」或回车确认，「取消」不作改动；已设定继续时多出「取消继续，保持循环」。非整数、小于 1 或大于 999 时提示并保持弹窗。
+    新增常量 LOOP_REPEAT_MAX = 999。弹窗打开期间播放继续进行。
+  · changeLoopRelease()：若弹窗打开期间循环已经结束，提示「循环已经结束，未作更改」。refreshControls()：循环结束或暂停时自动关闭次数弹窗。
+  · 去掉 1.61 为弹出菜单加的 transport-menu 相关代码（closePopups、谱面滚动处理、refreshControls 三处），因为不再使用弹出菜单。
+  · 修复 1.61 遗留问题：方块上方按钮和停止按钮提示里的剩余次数不会逐次递减。原因是循环状态对象在调度时原地 repeats--，
+    回调里用同一批对象重新计算「旧状态」，与新状态永远相同，所以不刷新。新增 playingLoopState 保存上次显示的状态串并用它比较，
+    stopPlayback() 时清空；测试 playback162.cjs 的沙箱同步预置 playingLoopState。
+  · i18n.js：删除 loop.repeatTimes，新增 loop.repeatTitle / loop.repeatHint / loop.repeatGone（中英文）；style.css 新增
+    .loop-repeat-hint、.loop-keep；说明书两处「1–8 次」改为自由输入的说明。
+
+本需求共 16 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 1：source/ui/app.js
+  安卓 assets/index.html：修改前 第 6187–6199 行；修改后 第 6198–6234 行
+【修改前 1.61】第 1981–1993 行
+------------------------------------------------------------------------------
+1981 | // 1.61: repeat the playing loop 1-8 more times, then continue; or cancel a pending continue.
+1982 | function openLoopRepeatMenu(anchor) {
+1983 |   const gates = engine.paused ? [] : playingLoops;
+1984 |   if (!gates.length) return;
+1985 |   const released = gates.every(gate => gate.released);
+1986 |   const left = Math.max(0, ...gates.map(gate => gate.released ? gate.repeats || 0 : 0));
+1987 |   popup(anchor, [
+1988 |     ...[1, 2, 3, 4, 5, 6, 7, 8].map(times =>
+1989 |       [(released && left === times ? '✓ ' : '') + t('loop.repeatTimes', {n: times}), () => changeLoopRelease(times)]),
+1990 |     [t('loop.keepLooping'), () => changeLoopRelease(null), !released]
+1991 |   ]);
+1992 |   el.menu.classList.add('transport-menu');
+1993 | }
+------------------------------------------------------------------------------
+【修改后 1.62】第 1984–2020 行
+------------------------------------------------------------------------------
+1984 | // 1.62: type how many more passes (1-999) the playing loop plays before continuing, instead of
+1985 | // choosing from a fixed list; the same box can cancel a pending continue. Playback keeps running.
+1986 | const LOOP_REPEAT_MAX = 999;
+1987 | function openLoopRepeatDialog() {
+1988 |   const gates = engine.paused ? [] : playingLoops;
+1989 |   if (!gates.length) return;
+1990 |   closePopups();
+1991 |   const released = gates.every(gate => gate.released);
+1992 |   const left = Math.max(0, ...gates.map(gate => gate.released ? gate.repeats || 0 : 0));
+1993 |   const panel = document.createElement('dialog'); panel.className = 'tempo-editor loop-repeat-editor';
+1994 |   const form = document.createElement('form'); form.className = 'tempo-form';
+1995 |   const title = document.createElement('h3'); title.textContent = t('loop.repeatTitle');
+1996 |   const controls = document.createElement('div'); controls.className = 'tempo-controls';
+1997 |   const input = document.createElement('input'); input.type = 'number'; input.min = 1; input.max = LOOP_REPEAT_MAX;
+1998 |   input.step = 1; input.required = true; input.inputMode = 'numeric'; input.value = left || 1;
+1999 |   input.setAttribute('aria-label', t('loop.repeatTitle'));
+2000 |   const bump = n => { input.value = clamp(Math.round(Number(input.value) || 1) + n, 1, LOOP_REPEAT_MAX); };
+2001 |   controls.append(button('−', () => bump(-1)), input, button('+', () => bump(1)));
+2002 |   const hint = document.createElement('p'); hint.className = 'loop-repeat-hint'; hint.textContent = t('loop.repeatHint');
+2003 |   const actions = document.createElement('div'); actions.className = 'tempo-actions';
+2004 |   const confirm = document.createElement('button'); confirm.type = 'submit'; confirm.className = 'tempo-confirm';
+2005 |   confirm.textContent = t('dialog.done');
+2006 |   actions.append(button(t('dialog.cancel'), () => panel.close(), 'tempo-cancel'), confirm);
+2007 |   form.append(title, controls, hint, actions);
+2008 |   if (released) form.append(button(t('loop.keepLooping'), () => { panel.close(); changeLoopRelease(null); }, 'loop-keep'));
+2009 |   form.addEventListener('submit', event => {
+2010 |     event.preventDefault();
+2011 |     const times = Number(input.value);
+2012 |     if (!Number.isInteger(times) || times < 1 || times > LOOP_REPEAT_MAX) { input.reportValidity(); return; }
+2013 |     panel.close();
+2014 |     changeLoopRelease(times);
+2015 |   });
+2016 |   panel.append(form);
+2017 |   panel.addEventListener('close', () => panel.remove(), {once: true});
+2018 |   document.body.append(panel); panel.showModal();
+2019 |   input.select();
+2020 | }
+------------------------------------------------------------------------------
+
+修改 2：source/ui/app.js
+  安卓 assets/index.html：修改前 第 6202 行；修改后 第 6237 行
+【修改前 1.61】第 1996 行
+------------------------------------------------------------------------------
+1996 |   if (!(times === null ? engine.keepLooping() : engine.releaseLoop(times))) return;
+------------------------------------------------------------------------------
+【修改后 1.62】第 2023 行
+------------------------------------------------------------------------------
+2023 |   if (!(times === null ? engine.keepLooping() : engine.releaseLoop(times))) { notify(t('loop.repeatGone')); return; }
+------------------------------------------------------------------------------
+
+修改 3：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4536 行；修改后 第 4547 行
+【修改前 1.61】第 392 行
+------------------------------------------------------------------------------
+392 |   } else if (el.menu.classList.contains('transport-menu')) closePopups();
+------------------------------------------------------------------------------
+【修改后 1.62】第 395 行
+------------------------------------------------------------------------------
+395 |   } else document.querySelector('dialog.loop-repeat-editor[open]')?.close(); // the loop ended or playback paused
+------------------------------------------------------------------------------
+
+修改 4：source/ui/app.js
+  安卓 assets/index.html：修改前 第 5723–5725 行；修改后 第 5734–5735 行
+【修改前 1.61】第 1517–1519 行
+------------------------------------------------------------------------------
+1517 | function closePopups() {
+1518 |   el.menu.classList.remove('transport-menu');
+1519 |   beatMenuAnchor = null;
+------------------------------------------------------------------------------
+【修改后 1.62】第 1520–1521 行
+------------------------------------------------------------------------------
+1520 | function closePopups() {
+1521 |   beatMenuAnchor = null;
+------------------------------------------------------------------------------
+
+修改 5：source/ui/app.js
+  安卓 assets/index.html：修改前 第 7917–7919 行；修改后 第 7952–7953 行
+【修改前 1.61】第 3698–3700 行
+------------------------------------------------------------------------------
+3698 |   if (!el.menu.hidden && handMenuAnchor?.isConnected) positionPopup(handMenuAnchor, true);
+3699 |   // The loop-repeat menu belongs to the transport, so following the playhead does not close it.
+3700 |   else if (!el.menu.classList.contains('transport-menu')) el.menu.hidden = true;
+------------------------------------------------------------------------------
+【修改后 1.62】第 3725–3726 行
+------------------------------------------------------------------------------
+3725 |   if (!el.menu.hidden && handMenuAnchor?.isConnected) positionPopup(handMenuAnchor, true);
+3726 |   else el.menu.hidden = true;
+------------------------------------------------------------------------------
+
+修改 6：source/ui/app.js
+  安卓 assets/index.html：修改前 第 7465 行；修改后 第 7500 行
+【修改前 1.61】第 3254 行
+------------------------------------------------------------------------------
+3254 | el.loopRepeat.addEventListener('click', event => openLoopRepeatMenu(event.currentTarget));
+------------------------------------------------------------------------------
+【修改后 1.62】第 3281 行
+------------------------------------------------------------------------------
+3281 | el.loopRepeat.addEventListener('click', () => openLoopRepeatDialog());
+------------------------------------------------------------------------------
+
+修改 7：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4233 行；修改后 第 4241–4242 行
+【修改前 1.61】第 91 行
+------------------------------------------------------------------------------
+91 | let playingLoops = [];
+------------------------------------------------------------------------------
+【修改后 1.62】第 91–92 行
+------------------------------------------------------------------------------
+91 | let playingLoops = [];
+92 | let playingLoopState = ''; // 1.62: loop state last shown in the transport
+------------------------------------------------------------------------------
+
+修改 8：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4239–4240 行；修改后 第 4248–4251 行
+【修改前 1.61】第 97–98 行
+------------------------------------------------------------------------------
+97 |   const oldGateState = playingLoops.map(g => `${g.from}/${g.to}/${g.released}/${g.repeats}`).join();
+98 |   playingLoops = gates;
+------------------------------------------------------------------------------
+【修改后 1.62】第 98–101 行
+------------------------------------------------------------------------------
+ 98 |   // 1.62: compare with the state last shown; gate objects change in place while repeats count down.
+ 99 |   const oldGateState = playingLoopState;
+100 |   playingLoops = gates;
+101 |   playingLoopState = gates.map(g => `${g.from}/${g.to}/${g.released}/${g.repeats}`).join();
+------------------------------------------------------------------------------
+
+修改 9：source/ui/app.js
+  安卓 assets/index.html：修改前 第 6168–6169 行；修改后 第 6178–6180 行
+【修改前 1.61】第 1962–1963 行
+------------------------------------------------------------------------------
+1962 |   playingLoops = [];
+1963 |   paintPlaySteps(finalPositions instanceof Map ? finalPositions : new Map());
+------------------------------------------------------------------------------
+【修改后 1.62】第 1964–1966 行
+------------------------------------------------------------------------------
+1964 |   playingLoops = [];
+1965 |   playingLoopState = '';
+1966 |   paintPlaySteps(finalPositions instanceof Map ? finalPositions : new Map());
+------------------------------------------------------------------------------
+
+修改 10：source/ui/style.css
+  安卓 assets/index.html：修改前 第 142 行；修改后 第 143–146 行
+【修改前 1.61】第 132 行
+------------------------------------------------------------------------------
+132 | .loop-repeat.pending { background: var(--blue); border-color: var(--blue); color: #fff; }
+------------------------------------------------------------------------------
+【修改后 1.62】第 133–136 行
+------------------------------------------------------------------------------
+133 | .loop-repeat.pending { background: var(--blue); border-color: var(--blue); color: #fff; }
+134 | /* 1.62: repeat-count box (reuses the tempo dialog layout). */
+135 | .loop-repeat-hint { margin: 0; text-align: center; font-size: 13px; line-height: 1.45; color: #5a6878; }
+136 | .loop-keep { display: block; width: 100%; min-height: 44px; margin-top: 12px; border-radius: 9px; background: #f0f5fc; color: var(--blue); font-size: 15px; font-weight: 600; }
+------------------------------------------------------------------------------
+
+修改 11：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1073 行；修改后 第 1077–1079 行
+【修改前 1.61】第 108 行
+------------------------------------------------------------------------------
+108 |     'loop.repeatTimes': '再循环 {n} 次后继续',
+------------------------------------------------------------------------------
+【修改后 1.62】第 108–110 行
+------------------------------------------------------------------------------
+108 |     'loop.repeatTitle': '再循环次数',
+109 |     'loop.repeatHint': '输入本轮之后还要再循环的次数（1–999），播完后自动向后继续。',
+110 |     'loop.repeatGone': '循环已经结束，未作更改。',
+------------------------------------------------------------------------------
+
+修改 12：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1472 行；修改后 第 1478–1480 行
+【修改前 1.61】第 507 行
+------------------------------------------------------------------------------
+507 |     'loop.repeatTimes': 'Loop {n} more time(s), then continue',
+------------------------------------------------------------------------------
+【修改后 1.62】第 509–511 行
+------------------------------------------------------------------------------
+509 |     'loop.repeatTitle': 'Repeat count',
+510 |     'loop.repeatHint': 'How many more times the loop plays after this pass (1–999); then playback continues.',
+511 |     'loop.repeatGone': 'The loop has already ended; nothing changed.',
+------------------------------------------------------------------------------
+
+修改 13：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 802 行；修改后 第 806 行
+【修改前 1.61】第 70 行
+------------------------------------------------------------------------------
+70 |         <dt>回到开头／播放／停止方块</dt><dd>回到当前轨道第一个音符并显示蓝框，仅横向回到左端，纵向位置不变，不开始播放；三角从当前编辑位置播放，再按可暂停或继续；方块在轨道循环中先释放循环并继续往后走，其余情况下停止。循环播放时，方块上方出现「↻ 再循环…」按钮：可选再循环 1–8 次后自动向后继续，按钮显示剩余次数；选「取消继续，保持循环」可撤回；直接按方块仍为播完本轮后继续。可按空格播放或暂停。开始或继续播放额外预留0.25秒，保护首个音符的完整播放。</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 70 行
+------------------------------------------------------------------------------
+70 |         <dt>回到开头／播放／停止方块</dt><dd>回到当前轨道第一个音符并显示蓝色选框，仅横向回到左端，纵向位置不变，不开始播放；三角从当前编辑位置播放，再按可暂停或继续；方块在轨道循环中先释放循环并继续往后走，其余情况下停止。循环播放时，方块上方出现「↻ 再循环…」按钮：点开后直接输入要再循环的次数（1–999，也可用 −／＋ 调整），点「完成」后先播完这些次数再自动向后继续，按钮显示剩余次数；弹窗中的「取消继续，保持循环」可撤回已设定的继续；直接按方块仍为播完本轮后继续。可按空格播放或暂停。开始或继续播放额外预留0.25秒，保护首个音符的完整播放。</dd>
+------------------------------------------------------------------------------
+
+修改 14：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 781 行；修改后 第 785 行
+【修改前 1.61】第 49 行
+------------------------------------------------------------------------------
+49 |         <dt>轨道循环与整曲循环</dt><dd>双击或长按 1 秒小节边界设置轨道循环起点与终点。终点须在起点之后，同轨循环不可重叠或越过下一个循环；已设终点可再次修改。播放时按停止方块，会在本轮终点释放当前循环并继续后面的内容；也可用方块上方的「↻ 再循环…」先再循环 1–8 次再继续。整谱「⋯」只提供「播放一次」和「循环整曲」；分段循环使用小节边界菜单设置。</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 49 行
+------------------------------------------------------------------------------
+49 |         <dt>轨道循环与整曲循环</dt><dd>双击或长按 1 秒小节边界设置轨道循环起点与终点。终点须在起点之后，同轨循环不可重叠或越过下一个循环；已设终点可再次修改。播放时按停止方块，会在本轮终点释放当前循环并继续后面的内容；也可用方块上方的「↻ 再循环…」输入再循环次数（1–999），先播完这些次数再继续。整谱「⋯」只提供「播放一次」和「循环整曲」；分段循环使用小节边界菜单设置。</dd>
+------------------------------------------------------------------------------
+
+修改 15：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 906 行；修改后 第 910 行
+【修改前 1.61】第 63 行
+------------------------------------------------------------------------------
+63 |     <dt>Beginning / Play / Stop</dt><dd>Select the first note of the current track and jump horizontally to its beginning without changing the vertical scroll position or starting playback. Play starts from the edit cursor and toggles pause or resume. During a track loop, the square button releases the loop and lets playback continue; otherwise it stops. While a loop plays, a ↻ Repeat… chip above the square plays the loop 1–8 more times before continuing and shows the passes left; Keep looping cancels a pending continue. The square alone still continues after the current pass. Space toggles play or pause.</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 63 行
+------------------------------------------------------------------------------
+63 |     <dt>Beginning / Play / Stop</dt><dd>Select the first note of the current track and jump horizontally to its beginning without changing the vertical scroll position or starting playback. Play starts from the edit cursor and toggles pause or resume. During a track loop, the square button releases the loop and lets playback continue; otherwise it stops. While a loop plays, a ↻ Repeat… chip above the square opens a box: type how many more times the loop plays (1–999, or use −/+), choose Done, and playback continues once those passes finish; the chip shows the passes left. Keep looping in that box cancels a pending continue. The square alone still continues after the current pass. Space toggles play or pause.</dd>
+------------------------------------------------------------------------------
+
+修改 16：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 885 行；修改后 第 889 行
+【修改前 1.61】第 42 行
+------------------------------------------------------------------------------
+42 |     <dt>Track loops and whole-score looping</dt><dd>Double-tap barlines, or hold them for 1 second, to set a track loop start and end. The end must follow the start; loops on a track cannot overlap or pass the next loop. Existing loop ends can be changed. During playback, the Stop square releases the active loop at the end of its current pass and continues into the following section; the ↻ Repeat… chip above it first plays the loop 1–8 more times. The score ⋯ menu offers Play Once and Loop Score; configure section loops in barline menus.</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 42 行
+------------------------------------------------------------------------------
+42 |     <dt>Track loops and whole-score looping</dt><dd>Double-tap barlines, or hold them for 1 second, to set a track loop start and end. The end must follow the start; loops on a track cannot overlap or pass the next loop. Existing loop ends can be changed. During playback, the Stop square releases the active loop at the end of its current pass and continues into the following section; the ↻ Repeat… chip above it lets you type how many more times (1–999) the loop plays first. The score ⋯ menu offers Play Once and Loop Score; configure section loops in barline menus.</dd>
+------------------------------------------------------------------------------
+
+==============================================================================
+需求 2：核对说明文件，不一致处同步更新（1.61 → 1.62）
+==============================================================================
+
+修改说明：
+  核对修改后的说明文件（中英文说明书、关于页、Readme、仓库 README、本交接文档），不一致处同步更新：
+  · 说明书与关于页中「再循环 1–8 次」「蓝色方框」的描述按 1.62 行为改写（见需求 1、需求 3 的修改）。
+  · 选中框与播放框都是蓝色，容易混淆：说明书中指选中框的「蓝框」改称「蓝色选框」（回到开头、跟随按钮两处）。
+  · 英文说明书「Score and group meters」补上中文版已有的规定：更换组拍号前需先清空该组音符（软件行为未变，原英文漏写）。
+  · Readme.txt 与 source/Readme-Win11.txt 首行版本改为 1.62 并新增「1.62 更新」；仓库 README.md 增加 1.62 段落；
+    本交接文档加入第 3 段提示词与全部修改对照，并更新版本记录、构建与测试命令。
+  · 其余说明（复制本轨道、带音符切分、长按 1 秒菜单、音符锁定、再循环的边界规则）已逐条对照软件行为，无需改动。
+
+本需求共 3 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 17：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 802 行；修改后 第 806 行
+【修改前 1.61】第 70 行
+------------------------------------------------------------------------------
+70 |         <dt>回到开头／播放／停止方块</dt><dd>回到当前轨道第一个音符并显示蓝框，仅横向回到左端，纵向位置不变，不开始播放；三角从当前编辑位置播放，再按可暂停或继续；方块在轨道循环中先释放循环并继续往后走，其余情况下停止。循环播放时，方块上方出现「↻ 再循环…」按钮：可选再循环 1–8 次后自动向后继续，按钮显示剩余次数；选「取消继续，保持循环」可撤回；直接按方块仍为播完本轮后继续。可按空格播放或暂停。开始或继续播放额外预留0.25秒，保护首个音符的完整播放。</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 70 行
+------------------------------------------------------------------------------
+70 |         <dt>回到开头／播放／停止方块</dt><dd>回到当前轨道第一个音符并显示蓝色选框，仅横向回到左端，纵向位置不变，不开始播放；三角从当前编辑位置播放，再按可暂停或继续；方块在轨道循环中先释放循环并继续往后走，其余情况下停止。循环播放时，方块上方出现「↻ 再循环…」按钮：点开后直接输入要再循环的次数（1–999，也可用 −／＋ 调整），点「完成」后先播完这些次数再自动向后继续，按钮显示剩余次数；弹窗中的「取消继续，保持循环」可撤回已设定的继续；直接按方块仍为播完本轮后继续。可按空格播放或暂停。开始或继续播放额外预留0.25秒，保护首个音符的完整播放。</dd>
+------------------------------------------------------------------------------
+
+修改 18：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 804 行；修改后 第 808 行
+【修改前 1.61】第 72 行
+------------------------------------------------------------------------------
+72 |         <dt>跟随按钮与画面拖动</dt><dd>打开跟随后，默认跟随第一条轨道；点选符杆后，以蓝框所在轨道为跟随目标，不因其他轨道的循环或结束而切换。开始播放时先定位指定轨道；暂停保留画面位置，继续播放时从停留处衔接。光标到达画面宽度约 70% 的位置后开始横向跟随，按横线组的实际播放时长连续移动，空拍、细分和律动不会让画面逐音符起停。首次进入后续循环区间时保持连续跟随；循环回跳瞬间对齐该循环起点，随后在光标达到约 70% 时继续移动。换行时自动定位到相应行。普通横向跟随保留纵向位置，支持播放中调节速度和 50%–500% 缩放。手指或鼠标拖动优先，松开后在选定的纵向位置恢复横向跟随。再次点跟随按钮可关闭。</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 72 行
+------------------------------------------------------------------------------
+72 |         <dt>跟随按钮与画面拖动</dt><dd>打开跟随后，默认跟随第一条轨道；点选符杆后，以蓝色选框所在轨道为跟随目标，不因其他轨道的循环或结束而切换。开始播放时先定位指定轨道；暂停保留画面位置，继续播放时从停留处衔接。光标到达画面宽度约 70% 的位置后开始横向跟随，按横线组的实际播放时长连续移动，空拍、细分和律动不会让画面逐音符起停。首次进入后续循环区间时保持连续跟随；循环回跳瞬间对齐该循环起点，随后在光标达到约 70% 时继续移动。换行时自动定位到相应行。普通横向跟随保留纵向位置，支持播放中调节速度和 50%–500% 缩放。手指或鼠标拖动优先，松开后在选定的纵向位置恢复横向跟随。再次点跟随按钮可关闭。</dd>
+------------------------------------------------------------------------------
+
+修改 19：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 867 行；修改后 第 871 行
+【修改前 1.61】第 24 行
+------------------------------------------------------------------------------
+24 |     <dt>Score and group meters</dt><dd>Score meter buttons reset the score to 4/4, 5/8, 6/8, 7/8, 9/8, 11/8, 13/8, 17/8, 19/8 or 23/8. Clear any notes in the affected range first. Clear Score opens the score-clear confirmation. The meter button above a group changes only that group.</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 24 行
+------------------------------------------------------------------------------
+24 |     <dt>Score and group meters</dt><dd>Score meter buttons reset the score to 4/4, 5/8, 6/8, 7/8, 9/8, 11/8, 13/8, 17/8, 19/8 or 23/8. Clear any notes in the affected range first. Clear Score opens the score-clear confirmation. The meter button above a group changes only that group; clear that group’s notes first.</dd>
+------------------------------------------------------------------------------
+
+==============================================================================
+需求 3：播放位置改为竖向蓝色长方框，覆盖符杆（1.61 → 1.62）
+==============================================================================
+
+修改说明：
+  播放位置标记由 1.61 的 28×28 px 方框改为竖向长方框，覆盖整根符杆和音头。
+  · style.css .slot.playing::after：top 19%、bottom 5%（从横梁处到音头下方，约 45 px 高），宽 22 px（切分很密时不超过格宽 + 4 px），
+    3 px 蓝色边框、半透明蓝底、圆角 5 px，水平中心对齐符杆（--stem-offset）；休止处同样罩住该位置的竖线。方框随谱面缩放。
+  · 说明书「播放位置」条目改为竖向长方框的描述。
+
+本需求共 3 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 20：source/ui/style.css
+  安卓 assets/index.html：修改前 第 118–119 行；修改后 第 118–120 行
+【修改前 1.61】第 108–109 行
+------------------------------------------------------------------------------
+108 | /* 1.61: every track marks its playing note with a blue box over the note head (was a 2px line). */
+109 | .slot.playing::after { content: ""; position: absolute; top: calc(72% - 14px); left: var(--stem-offset, 50%); width: 28px; max-width: calc(100% + 6px); height: 28px; box-sizing: border-box; transform: translateX(-50%); border: 3px solid var(--blue); border-radius: 4px; background: #2876e824; pointer-events: none; }
+------------------------------------------------------------------------------
+【修改后 1.62】第 108–110 行
+------------------------------------------------------------------------------
+108 | /* 1.62: every track marks its playing note with a tall blue box that covers the whole stem (from the beam)
+109 |    and the note head; 1.61 used a square over the note head, 1.59 a 2px line. */
+110 | .slot.playing::after { content: ""; position: absolute; top: 19%; bottom: 5%; left: var(--stem-offset, 50%); width: 22px; max-width: calc(100% + 4px); box-sizing: border-box; transform: translateX(-50%); border: 3px solid var(--blue); border-radius: 5px; background: #2876e824; pointer-events: none; }
+------------------------------------------------------------------------------
+
+修改 21：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 803 行；修改后 第 807 行
+【修改前 1.61】第 71 行
+------------------------------------------------------------------------------
+71 |         <dt>播放位置</dt><dd>播放时每条轨道都用蓝色方框框住正在播放的音符（休止处框住该位置），各轨道按自己的速度与循环独立移动；暂停时方框停在原处，停止后消失。</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 71 行
+------------------------------------------------------------------------------
+71 |         <dt>播放位置</dt><dd>播放时每条轨道都用竖向的蓝色长方框罩住正在播放的音符，覆盖整根符杆和音头（休止处罩住该位置的竖线），各轨道按自己的速度与循环独立移动；暂停时方框停在原处，停止后消失。</dd>
+------------------------------------------------------------------------------
+
+修改 22：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 907 行；修改后 第 911 行
+【修改前 1.61】第 64 行
+------------------------------------------------------------------------------
+64 |     <dt>Playback position</dt><dd>During playback every track frames its playing note (or rest position) with a blue box. Each track moves with its own tempo and loops. Pausing keeps the boxes in place; stopping removes them.</dd>
+------------------------------------------------------------------------------
+【修改后 1.62】第 64 行
+------------------------------------------------------------------------------
+64 |     <dt>Playback position</dt><dd>During playback every track covers its playing note with a tall blue box spanning the stem and note head (at a rest, the stem position). Each track moves with its own tempo and loops. Pausing keeps the boxes in place; stopping removes them.</dd>
+------------------------------------------------------------------------------
+
+==============================================================================
+版本说明（三项修改共用）（1.61 → 1.62）
+==============================================================================
+
+修改说明：
+  关于页「本版更新」文字（help.aboutUpdate）按 1.62 改写。
+
+本需求共 2 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 23：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 995 行；修改后 第 999 行
+【修改前 1.61】第 30 行
+------------------------------------------------------------------------------
+30 |     'help.aboutUpdate': '本版新增：循环播放时可用方块上方的「↻ 再循环…」选择再循环 1–8 次后继续；播放时每条轨道用蓝色方框标出正在播放的音符；长按音符键 1 秒可锁定该音符，点按谱面即可连续输入。',
+------------------------------------------------------------------------------
+【修改后 1.62】第 30 行
+------------------------------------------------------------------------------
+30 |     'help.aboutUpdate': '本版：循环播放时可在方块上方的「↻ 再循环…」中自由输入再循环次数（1–999），播完后继续；播放时每条轨道用竖向蓝色长方框罩住正在播放音符的符杆和音头；长按音符键 1 秒可锁定该音符，点按谱面即可连续输入。',
+------------------------------------------------------------------------------
+
+修改 24：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1395 行；修改后 第 1401 行
+【修改前 1.61】第 430 行
+------------------------------------------------------------------------------
+430 |     'help.aboutUpdate': 'This release adds a ↻ Repeat… chip that plays a loop 1–8 more times before continuing, marks the playing note of every track with a blue box, and lets you hold a note key for 1 second to lock it and enter it by tapping the score.',
+------------------------------------------------------------------------------
+【修改后 1.62】第 432 行
+------------------------------------------------------------------------------
+432 |     'help.aboutUpdate': 'This release lets you type in the ↻ Repeat… chip how many more times (1–999) a loop plays before continuing, covers the stem and note head of every track’s playing note with a tall blue box, and lets you hold a note key for 1 second to lock it and enter it by tapping the score.',
+------------------------------------------------------------------------------
+
+==============================================================================
+版本号、说明文件、测试与其他文件（1.61 → 1.62）
+==============================================================================
+以下改动不属于上面的功能修改清单，按文件逐段列出修改前／修改后。
+
+■ source/ui/app.js：版本号与日期（功能修改之外的差异）
+
+app.js
+【修改前 1.61】第 1128 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+1128 |     version: '1.61', userAgent: navigator.userAgent,
+------------------------------------------------------------------------------
+【修改后 1.62】第 1128 行
+------------------------------------------------------------------------------
+1128 |     version: '1.62', userAgent: navigator.userAgent,
+------------------------------------------------------------------------------
+
+app.js
+【修改前 1.61】第 1134 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+1134 |     const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.61.json')]);
+------------------------------------------------------------------------------
+【修改后 1.62】第 1134 行
+------------------------------------------------------------------------------
+1134 |     const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.62.json')]);
+------------------------------------------------------------------------------
+
+■ source/ui/index.html：版本号与日期（功能修改之外的差异）
+
+index.html
+【修改前 1.61】第 32 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+32 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.61 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 32 行
+------------------------------------------------------------------------------
+32 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+■ source/ui/help/guide.html：版本号与日期（功能修改之外的差异）
+
+help/guide.html
+【修改前 1.61】第 16 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+16 |       <p><small>适用版本 1.61 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 16 行
+------------------------------------------------------------------------------
+16 |       <p><small>适用版本 1.62 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+help/guide.html
+【修改前 1.61】第 120 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+120 |     <p><span data-i18n="browse.release">版本</span> 1.61 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 120 行
+------------------------------------------------------------------------------
+120 |     <p><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+■ source/ui/help/guide.en.html：版本号与日期（功能修改之外的差异）
+
+help/guide.en.html
+【修改前 1.61】第 6 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+6 |       <p><small>For version 1.61 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 6 行
+------------------------------------------------------------------------------
+6 |       <p><small>For version 1.62 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+■ Readme.txt
+
+Readme.txt
+【修改前 1.61】第 1 行
+------------------------------------------------------------------------------
+1 | ﻿Rhythm Desk 1.61 · 鼓谱工作台 · Windows 11 x64
+------------------------------------------------------------------------------
+【修改后 1.62】第 1–2 行
+------------------------------------------------------------------------------
+1 | ﻿Rhythm Desk 1.62 · 鼓谱工作台 · Windows 11 x64
+2 | 1.62 更新：「↻ 再循环…」改为自由输入再循环次数（1–999，可用 −／＋ 调整，也可取消继续），按钮每轮递减显示剩余次数；播放位置改为竖向蓝色长方框，罩住正在播放音符的整根符杆和音头；说明书已同步核对更新。
+------------------------------------------------------------------------------
+
+■ source/Readme-Win11.txt
+
+Readme-Win11.txt
+【修改前 1.61】第 1 行
+------------------------------------------------------------------------------
+1 | Rhythm Desk 1.61 · 鼓谱工作台 · Windows 11 x64
+------------------------------------------------------------------------------
+【修改后 1.62】第 1–2 行
+------------------------------------------------------------------------------
+1 | Rhythm Desk 1.62 · 鼓谱工作台 · Windows 11 x64
+2 | 1.62 更新：「↻ 再循环…」改为自由输入再循环次数（1–999，可用 −／＋ 调整，也可取消继续），按钮每轮递减显示剩余次数；播放位置改为竖向蓝色长方框，罩住正在播放音符的整根符杆和音头；说明书已同步核对更新。
+------------------------------------------------------------------------------
+
+■ source/tests/interaction162.cjs（由 interaction161.cjs 改名）
+
+interaction162.cjs
+【修改前 1.61】第 66 行
+------------------------------------------------------------------------------
+66 |   await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.61');assert.equal(record.events.at(-1).event,'export');
+------------------------------------------------------------------------------
+【修改后 1.62】第 66 行
+------------------------------------------------------------------------------
+66 |   await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.62');assert.equal(record.events.at(-1).event,'export');
+------------------------------------------------------------------------------
+
+■ source/tests/playback162.cjs（由 playback161.cjs 改名）
+
+playback162.cjs
+【修改前 1.61】第 99 行
+------------------------------------------------------------------------------
+99 |     designatedFollowTrack: id, playingLoops: [], followedLine: null, followGroupGeometry: null, playingPositions: new Map(),
+------------------------------------------------------------------------------
+【修改后 1.62】第 99 行
+------------------------------------------------------------------------------
+99 |     designatedFollowTrack: id, playingLoops: [], playingLoopState: '', followedLine: null, followGroupGeometry: null, playingPositions: new Map(),
+------------------------------------------------------------------------------
+
+playback162.cjs
+【修改前 1.61】第 168 行
+------------------------------------------------------------------------------
+168 |   if(!browserPage) throw Error('Usage: node playback161.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
+------------------------------------------------------------------------------
+【修改后 1.62】第 168 行
+------------------------------------------------------------------------------
+168 |   if(!browserPage) throw Error('Usage: node playback162.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
+------------------------------------------------------------------------------
+
+■ source/tests/offline162.cjs（由 offline161.cjs 改名）
+
+offline162.cjs
+【修改前 1.61】第 31–32 行
+------------------------------------------------------------------------------
+31 |   assert.deepEqual(await check.json(),{version:'1.61',ready:true});
+32 |   console.log('PASS service-worker install, corrupt cache rejection, scope-safe upgrade, offline launch, standalone HTML and 1.61 integrity check.');
+------------------------------------------------------------------------------
+【修改后 1.62】第 31–32 行
+------------------------------------------------------------------------------
+31 |   assert.deepEqual(await check.json(),{version:'1.62',ready:true});
+32 |   console.log('PASS service-worker install, corrupt cache rejection, scope-safe upgrade, offline launch, standalone HTML and 1.62 integrity check.');
+------------------------------------------------------------------------------
+
+■ source/tests/editor161.e2e.cjs
+
+editor161.e2e.cjs
+【修改前 1.61】第 1–3 行
+------------------------------------------------------------------------------
+1 | // 1.61 editor checks in a real Chromium page (Playwright): the loop-repeat chip (play the loop N more
+2 | // times, then continue; or keep looping), the blue box on the playing note of every track, and the
+3 | // note-key lock for tap entry. Run once per built page:
+------------------------------------------------------------------------------
+【修改后 1.62】第 1–3 行
+------------------------------------------------------------------------------
+1 | // 1.61 editor checks in a real Chromium page (Playwright), updated for 1.62: the loop-repeat chip (type
+2 | // how many more passes, then continue; or keep looping), the tall blue box over the playing note of
+3 | // every track, and the note-key lock for tap entry. Run once per built page:
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 52–56 行
+------------------------------------------------------------------------------
+52 |   const items = await page.locator('#menu button').allTextContents();
+53 |   assert.equal(items.length, 9);
+54 |   assert.match(items[1], /再循环 2 次后继续|Loop 2 more/);
+55 |   assert(await page.locator('#menu button').nth(8).isDisabled(), 'keep looping is disabled until a continue is pending');
+56 |   await page.locator('#menu button').nth(1).click();
+------------------------------------------------------------------------------
+【修改后 1.62】第 52–58 行
+------------------------------------------------------------------------------
+52 |   const box = page.locator('dialog.loop-repeat-editor[open]');
+53 |   assert.equal(await box.count(), 1, 'the chip opens the repeat-count box');
+54 |   assert.equal(await box.locator('input').inputValue(), '1');
+55 |   assert.equal(await box.locator('.loop-keep').count(), 0, 'keep looping appears only once a continue is pending');
+56 |   await box.locator('input').fill('2');
+57 |   await box.locator('.tempo-confirm').click();
+58 |   assert.equal(await box.count(), 0);
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】（第 58 行之后，原无此内容）
+------------------------------------------------------------------------------
+（无）
+------------------------------------------------------------------------------
+【修改后 1.62】第 61–62 行
+------------------------------------------------------------------------------
+61 |   // The chip and the Stop tooltip count down at each return to the loop start.
+62 |   await page.waitForFunction(() => /再循环 1 次|1 more/.test(el.loopRepeat.textContent) && /1/.test(el.stop.title), null, {timeout: 3000});
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 67 行
+------------------------------------------------------------------------------
+67 |   // Choose 1 more, then cancel: the loop keeps repeating; the square still continues after this pass.
+------------------------------------------------------------------------------
+【修改后 1.62】第 71–72 行
+------------------------------------------------------------------------------
+71 |   // Any count: values outside 1–999, fractions and blanks are refused; Cancel changes nothing;
+72 |   // 37 is accepted with Enter; −/+ adjust; Keep looping cancels the pending continue.
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 70 行
+------------------------------------------------------------------------------
+70 |   await earlyInPass(page);
+------------------------------------------------------------------------------
+【修改后 1.62】（删除）
+------------------------------------------------------------------------------
+（删除）
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 72 行
+------------------------------------------------------------------------------
+72 |   await page.locator('#menu button').nth(0).click();
+------------------------------------------------------------------------------
+【修改后 1.62】第 76–80 行
+------------------------------------------------------------------------------
+76 |   await box.locator('input').fill('5');
+77 |   await box.locator('.tempo-cancel').click();
+78 |   assert.equal(await box.count(), 0);
+79 |   assert.match(await page.textContent('#loopRepeat'), /再循环…|Repeat…/, 'Cancel changes nothing');
+80 |   assert(await page.evaluate(() => playingLoops.every(gate => !gate.released)));
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 74 行
+------------------------------------------------------------------------------
+74 |   await page.locator('#menu button').nth(8).click();
+------------------------------------------------------------------------------
+【修改后 1.62】第 82–100 行
+------------------------------------------------------------------------------
+ 82 |   for (const bad of ['0', '1000', '2.5', '']) {
+ 83 |     await box.locator('input').fill(bad);
+ 84 |     await box.locator('.tempo-confirm').click();
+ 85 |     assert.equal(await box.count(), 1, 'refuses ' + JSON.stringify(bad));
+ 86 |   }
+ 87 |   await box.locator('input').fill('37');
+ 88 |   await box.locator('input').press('Enter');
+ 89 |   assert.equal(await box.count(), 0, 'Enter confirms');
+ 90 |   assert.match(await page.textContent('#loopRepeat'), /再循环 3[67] 次|3[67] more/);
+ 91 |   await page.click('#loopRepeat');
+ 92 |   assert.match(await box.locator('input').inputValue(), /^3[67]$/, 'the box shows the passes left');
+ 93 |   const shown = Number(await box.locator('input').inputValue());
+ 94 |   await box.locator('.tempo-controls button').nth(1).click();
+ 95 |   assert.equal(await box.locator('input').inputValue(), String(shown + 1), '+ adds one');
+ 96 |   await box.locator('.tempo-controls button').nth(0).click();
+ 97 |   await box.locator('.tempo-controls button').nth(0).click();
+ 98 |   assert.equal(await box.locator('input').inputValue(), String(shown - 1), '− removes one');
+ 99 |   await box.locator('.loop-keep').click();
+100 |   assert.equal(await box.count(), 0);
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 77 行
+------------------------------------------------------------------------------
+77 |   assert(returns(steps) >= 3 && steps.every(step => step < 12), 'keeps looping after cancel: ' + steps);
+------------------------------------------------------------------------------
+【修改后 1.62】第 103 行
+------------------------------------------------------------------------------
+103 |   assert(returns(steps) >= 2 && steps.every(step => step < 12), 'keeps looping after cancel: ' + steps);
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 84 行
+------------------------------------------------------------------------------
+84 |   console.log('  PASS loop repeat: chip above square, 2 more passes then continue, cancel keeps looping, square unchanged.');
+------------------------------------------------------------------------------
+【修改后 1.62】第 110 行
+------------------------------------------------------------------------------
+110 |   console.log('  PASS loop repeat: chip above square, typed count (2 → exactly 2 passes, chip counts down; 37 accepted; 0/1000/2.5/blank refused), −/+, Cancel, keep looping, square unchanged.');
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 94 行
+------------------------------------------------------------------------------
+94 |     const box = getComputedStyle(document.querySelector('.slot.playing'), '::after');
+------------------------------------------------------------------------------
+【修改后 1.62】第 120–121 行
+------------------------------------------------------------------------------
+120 |     const slot = document.querySelector('.slot.playing');
+121 |     const box = getComputedStyle(slot, '::after');
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 96 行
+------------------------------------------------------------------------------
+96 |       border: box.borderTopColor, width: box.width, height: box.height, style: box.borderTopStyle};
+------------------------------------------------------------------------------
+【修改后 1.62】第 123–124 行
+------------------------------------------------------------------------------
+123 |       border: box.borderTopColor, width: parseFloat(box.width), height: parseFloat(box.height),
+124 |       top: parseFloat(box.top), slot: slot.offsetHeight, style: box.borderTopStyle};
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 100 行
+------------------------------------------------------------------------------
+100 |   assert.equal(state.height, '28px');
+------------------------------------------------------------------------------
+【修改后 1.62】第 128–130 行
+------------------------------------------------------------------------------
+128 |   // Tall rectangle: from the beam (stem top at 15/61 of the beat) to below the note head (bass head ends near 56/61).
+129 |   assert(state.height > 2 * state.width, 'the box is a tall rectangle: ' + JSON.stringify(state));
+130 |   assert(state.top <= state.slot * 15 / 61 && state.top + state.height >= state.slot * 56 / 61, 'the box covers the stem and note head: ' + JSON.stringify(state));
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.61】第 108 行
+------------------------------------------------------------------------------
+108 |   console.log(`  PASS playing box: ${state.rows} tracks each show one ${state.width}×${state.height} blue box; pause keeps, stop clears.`);
+------------------------------------------------------------------------------
+【修改后 1.62】第 138 行
+------------------------------------------------------------------------------
+138 |   console.log(`  PASS playing box: ${state.rows} tracks each show one ${state.width}×${state.height.toFixed(1)} px tall blue box over stem and note head; pause keeps, stop clears.`);
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/sw.js
+
+sw.js
+【修改前 1.61】第 62 行
+------------------------------------------------------------------------------
+62 |       return new Response(JSON.stringify({version: '1.61', ready: results.every(Boolean)}), {
+------------------------------------------------------------------------------
+【修改后 1.62】第 62 行
+------------------------------------------------------------------------------
+62 |       return new Response(JSON.stringify({version: '1.62', ready: results.every(Boolean)}), {
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/install.html
+
+install.html
+【修改前 1.61】第 21–22 行
+------------------------------------------------------------------------------
+21 |       preparing: '正在准备离线资源…', ready: '1.61 离线资源已校验。可从同一地址或主屏幕离线打开。',
+22 |       failed: '1.61 离线校验未完成。请保持联网，在同一浏览器重新打开本页。',
+------------------------------------------------------------------------------
+【修改后 1.62】第 21–22 行
+------------------------------------------------------------------------------
+21 |       preparing: '正在准备离线资源…', ready: '1.62 离线资源已校验。可从同一地址或主屏幕离线打开。',
+22 |       failed: '1.62 离线校验未完成。请保持联网，在同一浏览器重新打开本页。',
+------------------------------------------------------------------------------
+
+install.html
+【修改前 1.61】第 25–26 行
+------------------------------------------------------------------------------
+25 |       preparing: 'Preparing offline files…', ready: 'Offline files for 1.61 are verified. Reopen this address or Home Screen app offline.',
+26 |       failed: 'Offline files for 1.61 are not ready. Stay online and reopen this page in the same browser.',
+------------------------------------------------------------------------------
+【修改后 1.62】第 25–26 行
+------------------------------------------------------------------------------
+25 |       preparing: 'Preparing offline files…', ready: 'Offline files for 1.62 are verified. Reopen this address or Home Screen app offline.',
+26 |       failed: 'Offline files for 1.62 are not ready. Stay online and reopen this page in the same browser.',
+------------------------------------------------------------------------------
+
+install.html
+【修改前 1.61】第 52 行
+------------------------------------------------------------------------------
+52 |         ready = result.version === '1.61' && result.ready === true;
+------------------------------------------------------------------------------
+【修改后 1.62】第 52 行
+------------------------------------------------------------------------------
+52 |         ready = result.version === '1.62' && result.ready === true;
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/local-fallback.html
+
+local-fallback.html
+【修改前 1.61】第 2–4 行
+------------------------------------------------------------------------------
+2 |   <strong>鼓谱工作台 1.61 · 本地文件预览</strong>
+3 |   <p>请在支持 JavaScript 的浏览器打开此 HTML。在 iPhone「文件」中只看到预览时，请用 Safari 打开已部署的 1.61 离线网页，等待「离线资源已校验」后添加到主屏幕。</p>
+4 |   <p lang="en">Open this HTML in a browser that runs JavaScript. In iPhone Files preview, use the installed 1.61 offline web app or open its hosted offline page in Safari and complete the cache check.</p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 2–4 行
+------------------------------------------------------------------------------
+2 |   <strong>鼓谱工作台 1.62 · 本地文件预览</strong>
+3 |   <p>请在支持 JavaScript 的浏览器打开此 HTML。在 iPhone「文件」中只看到预览时，请用 Safari 打开已部署的 1.62 离线网页，等待「离线资源已校验」后添加到主屏幕。</p>
+4 |   <p lang="en">Open this HTML in a browser that runs JavaScript. In iPhone Files preview, use the installed 1.62 offline web app or open its hosted offline page in Safari and complete the cache check.</p>
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/Readme.txt
+
+Readme.txt
+【修改前 1.61】第 1 行
+------------------------------------------------------------------------------
+1 | RhythmDesk 1.61 · iPhone 离线版
+------------------------------------------------------------------------------
+【修改后 1.62】第 1 行
+------------------------------------------------------------------------------
+1 | RhythmDesk 1.62 · iPhone 离线版
+------------------------------------------------------------------------------
+
+Readme.txt
+【修改前 1.61】第 4 行
+------------------------------------------------------------------------------
+4 | 联网用 Safari 打开地址，进入「离线使用」，等待「1.61 离线资源已校验」。
+------------------------------------------------------------------------------
+【修改后 1.62】第 4 行
+------------------------------------------------------------------------------
+4 | 联网用 Safari 打开地址，进入「离线使用」，等待「1.62 离线资源已校验」。
+------------------------------------------------------------------------------
+
+Readme.txt
+【修改前 1.61】第 6 行
+------------------------------------------------------------------------------
+6 | 首次从主屏幕打开时保持联网，在该窗口再次确认「1.61 离线资源已校验」。
+------------------------------------------------------------------------------
+【修改后 1.62】第 6 行
+------------------------------------------------------------------------------
+6 | 首次从主屏幕打开时保持联网，在该窗口再次确认「1.62 离线资源已校验」。
+------------------------------------------------------------------------------
+
+Readme.txt
+【修改前 1.61】第 17 行
+------------------------------------------------------------------------------
+17 | 升级已有主屏幕版本时在原 HTTPS 地址覆盖完整目录，保留原作用域；联网重新打开，看到 1.61 的首页版本与离线校验提示后再断网。
+------------------------------------------------------------------------------
+【修改后 1.62】第 17 行
+------------------------------------------------------------------------------
+17 | 升级已有主屏幕版本时在原 HTTPS 地址覆盖完整目录，保留原作用域；联网重新打开，看到 1.62 的首页版本与离线校验提示后再断网。
+------------------------------------------------------------------------------
+
+■ 安卓 assets/index.html：版本号与日期（功能修改之外的差异）
+
+assets/index.html
+【修改前 1.61】第 393 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+393 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.61 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 393 行
+------------------------------------------------------------------------------
+393 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.61】第 752 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+752 |       <p><small>适用版本 1.61 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 752 行
+------------------------------------------------------------------------------
+752 |       <p><small>适用版本 1.62 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.61】第 853 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+853 |       <p><small>For version 1.61 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 853 行
+------------------------------------------------------------------------------
+853 |       <p><small>For version 1.62 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.61】第 958 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+958 |     <p><span data-i18n="browse.release">版本</span> 1.61 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.62】第 958 行
+------------------------------------------------------------------------------
+958 |     <p><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.61】第 5275–5276 行（1.62 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+5275 |   const data={version:'1.61',userAgent:navigator.userAgent,viewport:{width:el.paper.clientWidth,height:el.paper.clientHeight},events:androidFollowLog.slice()};
+5276 |   download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),'RhythmDesk-follow-diagnostics-1.61.json');
+------------------------------------------------------------------------------
+【修改后 1.62】第 5275–5276 行
+------------------------------------------------------------------------------
+5275 |   const data={version:'1.62',userAgent:navigator.userAgent,viewport:{width:el.paper.clientWidth,height:el.paper.clientHeight},events:androidFollowLog.slice()};
+5276 |   download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),'RhythmDesk-follow-diagnostics-1.62.json');
+------------------------------------------------------------------------------
+
+■ 安卓 AndroidManifest.xml（二进制）
+------------------------------------------------------------------------------
+修改前 1.61：versionCode = 161，versionName = "1.61"
+修改后 1.62：versionCode = 162，versionName = "1.62"
+------------------------------------------------------------------------------
+
+■ 新增文件：tools/patch162.py。发布日期与 1.61 同为 2026-11-22，因此日期字符串未改。
+
+■ 本轮开发中的注意点
+  · 剩余次数不刷新的问题是在 1.62 截图核对时发现的（弹窗显示 11 次、按钮仍显示 12 次），已修复并加入测试：
+    editor161.e2e.cjs 现在检查「再循环 2 次」后按钮会变为「再循环 1 次」，停止按钮提示同步变化。
+  · 测试 playback162.cjs 在沙箱中逐个预置应用的全局状态，新增全局变量时需要同步加入（本轮加入 playingLoopState）。
+
+==============================================================================
+六、后续开发建议
 ==============================================================================
   · 新一轮修改沿用同样做法：先在 Win11 源码 source/ui 上设计修改，写成 tools/patchXXX.py 清单同时作用于安卓 index.html，
     构建后比对两平台页面差异，确认只剩原有安卓专用部分；然后重打包、签名、校验、跑测试。
@@ -2411,7 +3312,7 @@ assets/index.html
 ==============================================================================
 附录 A：新增测试 editor160.e2e.cjs（1.60）
 ==============================================================================
-文件：/tmp/claude-0/-home-user-contributed-by-me/2dd8c7ad-cc81-5fdb-a320-139dd279500b/scratchpad/v160tree/RhythmDesk-Win11/source/tests/editor160.e2e.cjs
+文件：RhythmDesk-Win11/source/tests/editor160.e2e.cjs
 ------------------------------------------------------------------------------
   1 | // 1.60 editor checks in a real Chromium page (Playwright): Duplicate Track, splitting cells and
   2 | // changing subdivisions with notes in place, and the one-second hold that opens every double-tap
@@ -2686,13 +3587,13 @@ assets/index.html
 ------------------------------------------------------------------------------
 
 ==============================================================================
-附录 B：新增测试 editor161.e2e.cjs（1.61）
+附录 B：测试 editor161.e2e.cjs（1.61 新增，1.62 更新后的全文）
 ==============================================================================
-文件：/tmp/claude-0/-home-user-contributed-by-me/2dd8c7ad-cc81-5fdb-a320-139dd279500b/scratchpad/w161/RhythmDesk-Win11/source/tests/editor161.e2e.cjs
+文件：RhythmDesk-Win11/source/tests/editor161.e2e.cjs
 ------------------------------------------------------------------------------
-  1 | // 1.61 editor checks in a real Chromium page (Playwright): the loop-repeat chip (play the loop N more
-  2 | // times, then continue; or keep looping), the blue box on the playing note of every track, and the
-  3 | // note-key lock for tap entry. Run once per built page:
+  1 | // 1.61 editor checks in a real Chromium page (Playwright), updated for 1.62: the loop-repeat chip (type
+  2 | // how many more passes, then continue; or keep looping), the tall blue box over the playing note of
+  3 | // every track, and the note-key lock for tap entry. Run once per built page:
   4 | //   node editor161.e2e.cjs ../../RhythmDesk.html ANDROID_ASSETS/index.html
   5 | const assert = require('node:assert/strict');
   6 | const path = require('node:path');
@@ -2741,171 +3642,201 @@ assets/index.html
  49 |   assert(returns(steps) >= 1, 'the section loops: ' + steps);
  50 |   await earlyInPass(page);
  51 |   await page.click('#loopRepeat');
- 52 |   const items = await page.locator('#menu button').allTextContents();
- 53 |   assert.equal(items.length, 9);
- 54 |   assert.match(items[1], /再循环 2 次后继续|Loop 2 more/);
- 55 |   assert(await page.locator('#menu button').nth(8).isDisabled(), 'keep looping is disabled until a continue is pending');
- 56 |   await page.locator('#menu button').nth(1).click();
- 57 |   assert.match(await page.textContent('#loopRepeat'), /再循环 2 次|2 more/);
- 58 |   assert.match(await page.getAttribute('#stop', 'title'), /再循环 2 次|2 more/);
- 59 |   // Exactly two more returns to the loop start, then playback continues into measure 2 (step 12+).
- 60 |   steps = await watchSteps(page, 2, 6000);
- 61 |   const pastLoop = steps.findIndex(step => step >= 12);
- 62 |   assert(pastLoop > 0, 'playback continued past the loop: ' + steps);
- 63 |   assert.equal(returns(steps.slice(0, pastLoop)), 2, 'two more passes before continuing: ' + steps);
- 64 |   assert(await page.evaluate(() => el.loopRepeat.hidden || !engine.running), 'chip hides after the loop');
- 65 |   await page.evaluate(() => stopPlayback());
- 66 | 
- 67 |   // Choose 1 more, then cancel: the loop keeps repeating; the square still continues after this pass.
- 68 |   await page.click('#play');
- 69 |   await page.waitForFunction(() => !el.loopRepeat.hidden, null, {timeout: 5000});
- 70 |   await earlyInPass(page);
- 71 |   await page.click('#loopRepeat');
- 72 |   await page.locator('#menu button').nth(0).click();
- 73 |   await page.click('#loopRepeat');
- 74 |   await page.locator('#menu button').nth(8).click();
- 75 |   assert.match(await page.textContent('#loopRepeat'), /再循环…|Repeat…/);
- 76 |   steps = await watchSteps(page, 2, 3500);
- 77 |   assert(returns(steps) >= 3 && steps.every(step => step < 12), 'keeps looping after cancel: ' + steps);
- 78 |   await earlyInPass(page);
- 79 |   await page.click('#stop');
- 80 |   steps = await watchSteps(page, 2, 3000);
- 81 |   const after = steps.findIndex(step => step >= 12);
- 82 |   assert(after > 0 && returns(steps.slice(0, after)) <= 1, 'square continues after the current pass: ' + steps);
- 83 |   await page.evaluate(() => stopPlayback());
- 84 |   console.log('  PASS loop repeat: chip above square, 2 more passes then continue, cancel keeps looping, square unchanged.');
- 85 | }
- 86 | 
- 87 | async function playingBoxChecks(page, shot) {
- 88 |   await openDemo(page);
- 89 |   await page.click('#play');
- 90 |   await page.waitForFunction(() => document.querySelectorAll('.slot.playing').length > 0, null, {timeout: 5000});
- 91 |   await page.waitForTimeout(400);
- 92 |   const state = await page.evaluate(() => {
- 93 |     const rows = [...document.querySelectorAll('.staff')];
- 94 |     const box = getComputedStyle(document.querySelector('.slot.playing'), '::after');
- 95 |     return {rows: rows.length, marked: rows.map(row => row.querySelectorAll('.slot.playing').length),
- 96 |       border: box.borderTopColor, width: box.width, height: box.height, style: box.borderTopStyle};
- 97 |   });
- 98 |   assert(state.marked.every(count => count === 1), 'every track marks exactly one playing note: ' + state.marked);
- 99 |   assert.equal(state.style, 'solid');
-100 |   assert.equal(state.height, '28px');
-101 |   assert.match(state.border, /rgb\(40, 118, 232\)|rgb\(\d+, \d+, \d+\)/);
-102 |   if (shot) await page.screenshot({path: shot});
-103 |   await page.click('#play'); // pause keeps the boxes
-104 |   await page.waitForTimeout(400);
-105 |   assert(await page.evaluate(() => document.querySelectorAll('.slot.playing').length === doc.tracks.length), 'pause keeps boxes');
-106 |   await page.evaluate(() => stopPlayback());
-107 |   assert.equal(await page.evaluate(() => document.querySelectorAll('.slot.playing').length), 0, 'stop removes boxes');
-108 |   console.log(`  PASS playing box: ${state.rows} tracks each show one ${state.width}×${state.height} blue box; pause keeps, stop clears.`);
-109 | }
-110 | 
-111 | async function lockChecks(page, touch) {
-112 |   await openDemo(page);
-113 |   const cdp = touch ? await page.context().newCDPSession(page) : null;
-114 |   const hold = async (locator, ms = 1100) => {
-115 |     const box = await locator.boundingBox();
-116 |     const x = box.x + box.width / 2, y = box.y + box.height / 2;
-117 |     if (touch) {
-118 |       await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [{x, y}]});
-119 |       await page.waitForTimeout(ms);
-120 |       await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
-121 |     } else { await page.mouse.move(x, y); await page.mouse.down(); await page.waitForTimeout(ms); await page.mouse.up(); }
-122 |     await page.waitForTimeout(450);
-123 |   };
-124 |   const tap = async locator => {
-125 |     if (touch) await locator.tap(); else await locator.click();
-126 |     await page.waitForTimeout(300);
-127 |   };
-128 |   const djembe = await page.evaluate(() => doc.tracks[2].id);
-129 |   const slots = page.locator(`.staff[data-track-id="${djembe}"] .slot`);
-130 |   await tap(slots.nth(0));
-131 |   const cellsOf = () => page.evaluate(id => doc.tracks.find(track => track.id === id).cells.slice(0, 12), djembe);
-132 |   const before = await cellsOf();
-133 |   const undo = await page.evaluate(() => undoStack.length);
-134 |   // Hold B for 1 s: locked, nothing written at the cursor.
-135 |   await hold(page.locator('#keys .key[data-stroke="B"]'));
-136 |   assert.deepEqual(await page.evaluate(() => noteLock && {stroke: noteLock.stroke}), {stroke: 'B'});
-137 |   assert(await page.locator('#keys .key[data-stroke="B"]').evaluate(node => node.classList.contains('locked')));
-138 |   assert.deepEqual(await cellsOf(), before, 'locking writes nothing');
-139 |   assert.equal(await page.evaluate(() => undoStack.length), undo);
-140 |   // Tap empty stems: B is written there and the cursor stays.
-141 |   await tap(slots.nth(1));
-142 |   await tap(slots.nth(4));
-143 |   let cells = await cellsOf();
-144 |   assert.equal(cells[1], 'B'); assert.equal(cells[4], 'B');
-145 |   assert.deepEqual(await page.evaluate(() => [cursor.beat, cursor.slot]), [1, 1], 'cursor stays on the tapped stem');
-146 |   // Tap the same stem again: cleared. A quick double tap writes and clears without opening the beat menu.
-147 |   await tap(slots.nth(4));
-148 |   assert.equal((await cellsOf())[4], null);
-149 |   if (!touch) { await slots.nth(5).click(); await slots.nth(5).click(); await page.waitForTimeout(300); }
-150 |   assert.equal(await page.evaluate(() => el.beatMenu.hidden), true, 'double tap does not open the beat menu while locked');
-151 |   // A 1 s hold on a stem still opens the beat menu and writes nothing.
-152 |   cells = await cellsOf();
-153 |   await hold(slots.nth(7));
-154 |   assert.equal(await page.evaluate(() => el.beatMenu.hidden), false, 'hold still opens the beat menu');
-155 |   assert.deepEqual(await cellsOf(), cells);
-156 |   await page.evaluate(() => closePopups());
-157 |   // Another instrument without B: only selects.
-158 |   const kenkeni = await page.evaluate(() => doc.tracks.find(track => track.type === 'kenkeni').id);
-159 |   const kenkeniCells = await page.evaluate(id => doc.tracks.find(track => track.id === id).cells.join(), kenkeni);
-160 |   await tap(page.locator(`.staff[data-track-id="${kenkeni}"] .slot`).nth(1));
-161 |   assert.equal(await page.evaluate(id => doc.tracks.find(track => track.id === id).cells.join(), kenkeni), kenkeniCells);
-162 |   assert.match(await page.textContent('#status'), /没有锁定的音符|has no/);
-163 |   // Back on Djembe the rebuilt keyboard still shows the lock.
-164 |   await tap(slots.nth(2));
-165 |   assert.equal((await cellsOf())[2], 'B');
-166 |   assert(await page.locator('#keys .key[data-stroke="B"]').evaluate(node => node.classList.contains('locked')));
-167 |   // Hold Rest: the lock moves; tapping clears notes.
-168 |   await hold(page.locator('#keys .key[data-stroke=""]'));
-169 |   assert.deepEqual(await page.evaluate(() => noteLock && {stroke: noteLock.stroke}), {stroke: null});
-170 |   await tap(slots.nth(2));
-171 |   assert.equal((await cellsOf())[2], null);
-172 |   // Tap the locked key: unlock, nothing written.
-173 |   cells = await cellsOf();
-174 |   await tap(page.locator('#keys .key[data-stroke=""]'));
-175 |   assert.equal(await page.evaluate(() => noteLock), undefined);
-176 |   assert.deepEqual(await cellsOf(), cells, 'unlocking tap writes nothing');
-177 |   // Normal taps work again (stem selects; key writes and advances).
-178 |   await tap(slots.nth(9));
-179 |   await tap(page.locator('#keys .key[data-stroke="T"]'));
-180 |   assert.equal((await cellsOf())[9], 'T');
-181 |   assert.deepEqual(await page.evaluate(() => [cursor.beat, cursor.slot]), [3, 1], 'normal entry advances');
-182 |   if (!touch) {
-183 |     // Esc and closing the keyboard both unlock.
-184 |     await hold(page.locator('#keys .key[data-stroke="S"]'));
-185 |     await page.keyboard.press('Escape');
-186 |     assert.equal(await page.evaluate(() => noteLock), undefined, 'Esc unlocks');
-187 |     await hold(page.locator('#keys .key[data-stroke="S"]'));
-188 |     await page.click('#showKeys');
-189 |     assert.equal(await page.evaluate(() => noteLock), undefined, 'closing the keyboard unlocks');
-190 |   }
-191 |   console.log(`  PASS ${touch ? 'touch' : 'mouse'} note lock: hold to lock, tap to enter/clear, cursor stays, beat menu by hold, other instruments, Rest lock, unlock.`);
-192 | }
-193 | 
-194 | (async () => {
-195 |   const pages = process.argv.slice(2);
-196 |   if (!pages.length) throw Error('Usage: node editor161.e2e.cjs PAGE.html [PAGE.html ...]');
-197 |   const browser = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
-198 |   try {
-199 |     for (const file of pages) {
-200 |       console.log('Page ' + path.resolve(file));
-201 |       const url = 'file://' + path.resolve(file);
-202 |       for (const [label, options] of [['desktop', {viewport: {width: 1280, height: 800}}],
-203 |         ['phone', {viewport: {width: 390, height: 780}, hasTouch: true, isMobile: true, deviceScaleFactor: 1}]]) {
-204 |         const context = await browser.newContext({...options, locale: 'zh-CN'});
-205 |         const page = await context.newPage();
-206 |         const errors = [];
-207 |         page.on('pageerror', error => errors.push(error.message));
-208 |         await page.goto(url);
-209 |         await page.waitForSelector('#rhythmGrid');
-210 |         if (label === 'desktop') { await repeatChecks(page); await playingBoxChecks(page, process.env.SHOT); await lockChecks(page, false); }
-211 |         else { await playingBoxChecks(page, process.env.SHOT_PHONE); await lockChecks(page, true); }
-212 |         assert.deepEqual(errors, [], 'no page errors on ' + label);
-213 |         await context.close();
-214 |       }
-215 |     }
-216 |   } finally { await browser.close(); }
-217 |   console.log('PASS 1.61 editor checks on ' + pages.length + ' page(s).');
-218 | })().catch(error => { console.error(error); process.exitCode = 1; });
+ 52 |   const box = page.locator('dialog.loop-repeat-editor[open]');
+ 53 |   assert.equal(await box.count(), 1, 'the chip opens the repeat-count box');
+ 54 |   assert.equal(await box.locator('input').inputValue(), '1');
+ 55 |   assert.equal(await box.locator('.loop-keep').count(), 0, 'keep looping appears only once a continue is pending');
+ 56 |   await box.locator('input').fill('2');
+ 57 |   await box.locator('.tempo-confirm').click();
+ 58 |   assert.equal(await box.count(), 0);
+ 59 |   assert.match(await page.textContent('#loopRepeat'), /再循环 2 次|2 more/);
+ 60 |   assert.match(await page.getAttribute('#stop', 'title'), /再循环 2 次|2 more/);
+ 61 |   // The chip and the Stop tooltip count down at each return to the loop start.
+ 62 |   await page.waitForFunction(() => /再循环 1 次|1 more/.test(el.loopRepeat.textContent) && /1/.test(el.stop.title), null, {timeout: 3000});
+ 63 |   // Exactly two more returns to the loop start, then playback continues into measure 2 (step 12+).
+ 64 |   steps = await watchSteps(page, 2, 6000);
+ 65 |   const pastLoop = steps.findIndex(step => step >= 12);
+ 66 |   assert(pastLoop > 0, 'playback continued past the loop: ' + steps);
+ 67 |   assert.equal(returns(steps.slice(0, pastLoop)), 2, 'two more passes before continuing: ' + steps);
+ 68 |   assert(await page.evaluate(() => el.loopRepeat.hidden || !engine.running), 'chip hides after the loop');
+ 69 |   await page.evaluate(() => stopPlayback());
+ 70 | 
+ 71 |   // Any count: values outside 1–999, fractions and blanks are refused; Cancel changes nothing;
+ 72 |   // 37 is accepted with Enter; −/+ adjust; Keep looping cancels the pending continue.
+ 73 |   await page.click('#play');
+ 74 |   await page.waitForFunction(() => !el.loopRepeat.hidden, null, {timeout: 5000});
+ 75 |   await page.click('#loopRepeat');
+ 76 |   await box.locator('input').fill('5');
+ 77 |   await box.locator('.tempo-cancel').click();
+ 78 |   assert.equal(await box.count(), 0);
+ 79 |   assert.match(await page.textContent('#loopRepeat'), /再循环…|Repeat…/, 'Cancel changes nothing');
+ 80 |   assert(await page.evaluate(() => playingLoops.every(gate => !gate.released)));
+ 81 |   await page.click('#loopRepeat');
+ 82 |   for (const bad of ['0', '1000', '2.5', '']) {
+ 83 |     await box.locator('input').fill(bad);
+ 84 |     await box.locator('.tempo-confirm').click();
+ 85 |     assert.equal(await box.count(), 1, 'refuses ' + JSON.stringify(bad));
+ 86 |   }
+ 87 |   await box.locator('input').fill('37');
+ 88 |   await box.locator('input').press('Enter');
+ 89 |   assert.equal(await box.count(), 0, 'Enter confirms');
+ 90 |   assert.match(await page.textContent('#loopRepeat'), /再循环 3[67] 次|3[67] more/);
+ 91 |   await page.click('#loopRepeat');
+ 92 |   assert.match(await box.locator('input').inputValue(), /^3[67]$/, 'the box shows the passes left');
+ 93 |   const shown = Number(await box.locator('input').inputValue());
+ 94 |   await box.locator('.tempo-controls button').nth(1).click();
+ 95 |   assert.equal(await box.locator('input').inputValue(), String(shown + 1), '+ adds one');
+ 96 |   await box.locator('.tempo-controls button').nth(0).click();
+ 97 |   await box.locator('.tempo-controls button').nth(0).click();
+ 98 |   assert.equal(await box.locator('input').inputValue(), String(shown - 1), '− removes one');
+ 99 |   await box.locator('.loop-keep').click();
+100 |   assert.equal(await box.count(), 0);
+101 |   assert.match(await page.textContent('#loopRepeat'), /再循环…|Repeat…/);
+102 |   steps = await watchSteps(page, 2, 3500);
+103 |   assert(returns(steps) >= 2 && steps.every(step => step < 12), 'keeps looping after cancel: ' + steps);
+104 |   await earlyInPass(page);
+105 |   await page.click('#stop');
+106 |   steps = await watchSteps(page, 2, 3000);
+107 |   const after = steps.findIndex(step => step >= 12);
+108 |   assert(after > 0 && returns(steps.slice(0, after)) <= 1, 'square continues after the current pass: ' + steps);
+109 |   await page.evaluate(() => stopPlayback());
+110 |   console.log('  PASS loop repeat: chip above square, typed count (2 → exactly 2 passes, chip counts down; 37 accepted; 0/1000/2.5/blank refused), −/+, Cancel, keep looping, square unchanged.');
+111 | }
+112 | 
+113 | async function playingBoxChecks(page, shot) {
+114 |   await openDemo(page);
+115 |   await page.click('#play');
+116 |   await page.waitForFunction(() => document.querySelectorAll('.slot.playing').length > 0, null, {timeout: 5000});
+117 |   await page.waitForTimeout(400);
+118 |   const state = await page.evaluate(() => {
+119 |     const rows = [...document.querySelectorAll('.staff')];
+120 |     const slot = document.querySelector('.slot.playing');
+121 |     const box = getComputedStyle(slot, '::after');
+122 |     return {rows: rows.length, marked: rows.map(row => row.querySelectorAll('.slot.playing').length),
+123 |       border: box.borderTopColor, width: parseFloat(box.width), height: parseFloat(box.height),
+124 |       top: parseFloat(box.top), slot: slot.offsetHeight, style: box.borderTopStyle};
+125 |   });
+126 |   assert(state.marked.every(count => count === 1), 'every track marks exactly one playing note: ' + state.marked);
+127 |   assert.equal(state.style, 'solid');
+128 |   // Tall rectangle: from the beam (stem top at 15/61 of the beat) to below the note head (bass head ends near 56/61).
+129 |   assert(state.height > 2 * state.width, 'the box is a tall rectangle: ' + JSON.stringify(state));
+130 |   assert(state.top <= state.slot * 15 / 61 && state.top + state.height >= state.slot * 56 / 61, 'the box covers the stem and note head: ' + JSON.stringify(state));
+131 |   assert.match(state.border, /rgb\(40, 118, 232\)|rgb\(\d+, \d+, \d+\)/);
+132 |   if (shot) await page.screenshot({path: shot});
+133 |   await page.click('#play'); // pause keeps the boxes
+134 |   await page.waitForTimeout(400);
+135 |   assert(await page.evaluate(() => document.querySelectorAll('.slot.playing').length === doc.tracks.length), 'pause keeps boxes');
+136 |   await page.evaluate(() => stopPlayback());
+137 |   assert.equal(await page.evaluate(() => document.querySelectorAll('.slot.playing').length), 0, 'stop removes boxes');
+138 |   console.log(`  PASS playing box: ${state.rows} tracks each show one ${state.width}×${state.height.toFixed(1)} px tall blue box over stem and note head; pause keeps, stop clears.`);
+139 | }
+140 | 
+141 | async function lockChecks(page, touch) {
+142 |   await openDemo(page);
+143 |   const cdp = touch ? await page.context().newCDPSession(page) : null;
+144 |   const hold = async (locator, ms = 1100) => {
+145 |     const box = await locator.boundingBox();
+146 |     const x = box.x + box.width / 2, y = box.y + box.height / 2;
+147 |     if (touch) {
+148 |       await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [{x, y}]});
+149 |       await page.waitForTimeout(ms);
+150 |       await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+151 |     } else { await page.mouse.move(x, y); await page.mouse.down(); await page.waitForTimeout(ms); await page.mouse.up(); }
+152 |     await page.waitForTimeout(450);
+153 |   };
+154 |   const tap = async locator => {
+155 |     if (touch) await locator.tap(); else await locator.click();
+156 |     await page.waitForTimeout(300);
+157 |   };
+158 |   const djembe = await page.evaluate(() => doc.tracks[2].id);
+159 |   const slots = page.locator(`.staff[data-track-id="${djembe}"] .slot`);
+160 |   await tap(slots.nth(0));
+161 |   const cellsOf = () => page.evaluate(id => doc.tracks.find(track => track.id === id).cells.slice(0, 12), djembe);
+162 |   const before = await cellsOf();
+163 |   const undo = await page.evaluate(() => undoStack.length);
+164 |   // Hold B for 1 s: locked, nothing written at the cursor.
+165 |   await hold(page.locator('#keys .key[data-stroke="B"]'));
+166 |   assert.deepEqual(await page.evaluate(() => noteLock && {stroke: noteLock.stroke}), {stroke: 'B'});
+167 |   assert(await page.locator('#keys .key[data-stroke="B"]').evaluate(node => node.classList.contains('locked')));
+168 |   assert.deepEqual(await cellsOf(), before, 'locking writes nothing');
+169 |   assert.equal(await page.evaluate(() => undoStack.length), undo);
+170 |   // Tap empty stems: B is written there and the cursor stays.
+171 |   await tap(slots.nth(1));
+172 |   await tap(slots.nth(4));
+173 |   let cells = await cellsOf();
+174 |   assert.equal(cells[1], 'B'); assert.equal(cells[4], 'B');
+175 |   assert.deepEqual(await page.evaluate(() => [cursor.beat, cursor.slot]), [1, 1], 'cursor stays on the tapped stem');
+176 |   // Tap the same stem again: cleared. A quick double tap writes and clears without opening the beat menu.
+177 |   await tap(slots.nth(4));
+178 |   assert.equal((await cellsOf())[4], null);
+179 |   if (!touch) { await slots.nth(5).click(); await slots.nth(5).click(); await page.waitForTimeout(300); }
+180 |   assert.equal(await page.evaluate(() => el.beatMenu.hidden), true, 'double tap does not open the beat menu while locked');
+181 |   // A 1 s hold on a stem still opens the beat menu and writes nothing.
+182 |   cells = await cellsOf();
+183 |   await hold(slots.nth(7));
+184 |   assert.equal(await page.evaluate(() => el.beatMenu.hidden), false, 'hold still opens the beat menu');
+185 |   assert.deepEqual(await cellsOf(), cells);
+186 |   await page.evaluate(() => closePopups());
+187 |   // Another instrument without B: only selects.
+188 |   const kenkeni = await page.evaluate(() => doc.tracks.find(track => track.type === 'kenkeni').id);
+189 |   const kenkeniCells = await page.evaluate(id => doc.tracks.find(track => track.id === id).cells.join(), kenkeni);
+190 |   await tap(page.locator(`.staff[data-track-id="${kenkeni}"] .slot`).nth(1));
+191 |   assert.equal(await page.evaluate(id => doc.tracks.find(track => track.id === id).cells.join(), kenkeni), kenkeniCells);
+192 |   assert.match(await page.textContent('#status'), /没有锁定的音符|has no/);
+193 |   // Back on Djembe the rebuilt keyboard still shows the lock.
+194 |   await tap(slots.nth(2));
+195 |   assert.equal((await cellsOf())[2], 'B');
+196 |   assert(await page.locator('#keys .key[data-stroke="B"]').evaluate(node => node.classList.contains('locked')));
+197 |   // Hold Rest: the lock moves; tapping clears notes.
+198 |   await hold(page.locator('#keys .key[data-stroke=""]'));
+199 |   assert.deepEqual(await page.evaluate(() => noteLock && {stroke: noteLock.stroke}), {stroke: null});
+200 |   await tap(slots.nth(2));
+201 |   assert.equal((await cellsOf())[2], null);
+202 |   // Tap the locked key: unlock, nothing written.
+203 |   cells = await cellsOf();
+204 |   await tap(page.locator('#keys .key[data-stroke=""]'));
+205 |   assert.equal(await page.evaluate(() => noteLock), undefined);
+206 |   assert.deepEqual(await cellsOf(), cells, 'unlocking tap writes nothing');
+207 |   // Normal taps work again (stem selects; key writes and advances).
+208 |   await tap(slots.nth(9));
+209 |   await tap(page.locator('#keys .key[data-stroke="T"]'));
+210 |   assert.equal((await cellsOf())[9], 'T');
+211 |   assert.deepEqual(await page.evaluate(() => [cursor.beat, cursor.slot]), [3, 1], 'normal entry advances');
+212 |   if (!touch) {
+213 |     // Esc and closing the keyboard both unlock.
+214 |     await hold(page.locator('#keys .key[data-stroke="S"]'));
+215 |     await page.keyboard.press('Escape');
+216 |     assert.equal(await page.evaluate(() => noteLock), undefined, 'Esc unlocks');
+217 |     await hold(page.locator('#keys .key[data-stroke="S"]'));
+218 |     await page.click('#showKeys');
+219 |     assert.equal(await page.evaluate(() => noteLock), undefined, 'closing the keyboard unlocks');
+220 |   }
+221 |   console.log(`  PASS ${touch ? 'touch' : 'mouse'} note lock: hold to lock, tap to enter/clear, cursor stays, beat menu by hold, other instruments, Rest lock, unlock.`);
+222 | }
+223 | 
+224 | (async () => {
+225 |   const pages = process.argv.slice(2);
+226 |   if (!pages.length) throw Error('Usage: node editor161.e2e.cjs PAGE.html [PAGE.html ...]');
+227 |   const browser = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
+228 |   try {
+229 |     for (const file of pages) {
+230 |       console.log('Page ' + path.resolve(file));
+231 |       const url = 'file://' + path.resolve(file);
+232 |       for (const [label, options] of [['desktop', {viewport: {width: 1280, height: 800}}],
+233 |         ['phone', {viewport: {width: 390, height: 780}, hasTouch: true, isMobile: true, deviceScaleFactor: 1}]]) {
+234 |         const context = await browser.newContext({...options, locale: 'zh-CN'});
+235 |         const page = await context.newPage();
+236 |         const errors = [];
+237 |         page.on('pageerror', error => errors.push(error.message));
+238 |         await page.goto(url);
+239 |         await page.waitForSelector('#rhythmGrid');
+240 |         if (label === 'desktop') { await repeatChecks(page); await playingBoxChecks(page, process.env.SHOT); await lockChecks(page, false); }
+241 |         else { await playingBoxChecks(page, process.env.SHOT_PHONE); await lockChecks(page, true); }
+242 |         assert.deepEqual(errors, [], 'no page errors on ' + label);
+243 |         await context.close();
+244 |       }
+245 |     }
+246 |   } finally { await browser.close(); }
+247 |   console.log('PASS 1.61 editor checks on ' + pages.length + ' page(s).');
+248 | })().catch(error => { console.error(error); process.exitCode = 1; });
 ------------------------------------------------------------------------------

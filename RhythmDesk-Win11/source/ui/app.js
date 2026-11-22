@@ -89,13 +89,16 @@ let paperPinch;
 let scoreZoom = DEFAULT_SCORE_ZOOM;
 let loopStart = null;
 let playingLoops = [];
+let playingLoopState = ''; // 1.62: loop state last shown in the transport
 let designatedFollowTrack = null;
 let followedLine = null;
 
 
 const engine = new Transport((positions, gates, playbackStarts, jumps = new Map()) => {
-  const oldGateState = playingLoops.map(g => `${g.from}/${g.to}/${g.released}/${g.repeats}`).join();
+  // 1.62: compare with the state last shown; gate objects change in place while repeats count down.
+  const oldGateState = playingLoopState;
   playingLoops = gates;
+  playingLoopState = gates.map(g => `${g.from}/${g.to}/${g.released}/${g.repeats}`).join();
   if (oldGateState !== gates.map(g => `${g.from}/${g.to}/${g.released}/${g.repeats}`).join()) refreshControls();
   positions = new Map(positions);
   for (const lane of engine.lanes) {
@@ -389,7 +392,7 @@ function refreshControls() {
     el.loopRepeat.textContent = repeats ? t('loop.repeatLeft', {n: repeats}) : t('loop.repeatChip');
     el.loopRepeat.classList.toggle('pending', repeats > 0);
     el.loopRepeat.style.left = el.stop.offsetLeft + el.stop.offsetWidth / 2 + 'px';
-  } else if (el.menu.classList.contains('transport-menu')) closePopups();
+  } else document.querySelector('dialog.loop-repeat-editor[open]')?.close(); // the loop ended or playback paused
 }
 
 function syncTempo() {
@@ -1122,13 +1125,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.61', userAgent: navigator.userAgent,
+    version: '1.62', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.61.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.62.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));
@@ -1515,7 +1518,6 @@ function paintPlaySteps(positions) {
 
 let beatMenuAnchor = null;
 function closePopups() {
-  el.menu.classList.remove('transport-menu');
   beatMenuAnchor = null;
   handMenuAnchor = undefined;
   el.menu.hidden = el.beatMenu.hidden = true;
@@ -1960,6 +1962,7 @@ function stopPlayback(finalPositions) {
   pauseChanging = false;
   engine.stop();
   playingLoops = [];
+  playingLoopState = '';
   paintPlaySteps(finalPositions instanceof Map ? finalPositions : new Map());
   refreshControls();
 }
@@ -1978,22 +1981,46 @@ function useSquareButton() {
   notify(t('stop.released'));
 }
 
-// 1.61: repeat the playing loop 1-8 more times, then continue; or cancel a pending continue.
-function openLoopRepeatMenu(anchor) {
+// 1.62: type how many more passes (1-999) the playing loop plays before continuing, instead of
+// choosing from a fixed list; the same box can cancel a pending continue. Playback keeps running.
+const LOOP_REPEAT_MAX = 999;
+function openLoopRepeatDialog() {
   const gates = engine.paused ? [] : playingLoops;
   if (!gates.length) return;
+  closePopups();
   const released = gates.every(gate => gate.released);
   const left = Math.max(0, ...gates.map(gate => gate.released ? gate.repeats || 0 : 0));
-  popup(anchor, [
-    ...[1, 2, 3, 4, 5, 6, 7, 8].map(times =>
-      [(released && left === times ? '✓ ' : '') + t('loop.repeatTimes', {n: times}), () => changeLoopRelease(times)]),
-    [t('loop.keepLooping'), () => changeLoopRelease(null), !released]
-  ]);
-  el.menu.classList.add('transport-menu');
+  const panel = document.createElement('dialog'); panel.className = 'tempo-editor loop-repeat-editor';
+  const form = document.createElement('form'); form.className = 'tempo-form';
+  const title = document.createElement('h3'); title.textContent = t('loop.repeatTitle');
+  const controls = document.createElement('div'); controls.className = 'tempo-controls';
+  const input = document.createElement('input'); input.type = 'number'; input.min = 1; input.max = LOOP_REPEAT_MAX;
+  input.step = 1; input.required = true; input.inputMode = 'numeric'; input.value = left || 1;
+  input.setAttribute('aria-label', t('loop.repeatTitle'));
+  const bump = n => { input.value = clamp(Math.round(Number(input.value) || 1) + n, 1, LOOP_REPEAT_MAX); };
+  controls.append(button('−', () => bump(-1)), input, button('+', () => bump(1)));
+  const hint = document.createElement('p'); hint.className = 'loop-repeat-hint'; hint.textContent = t('loop.repeatHint');
+  const actions = document.createElement('div'); actions.className = 'tempo-actions';
+  const confirm = document.createElement('button'); confirm.type = 'submit'; confirm.className = 'tempo-confirm';
+  confirm.textContent = t('dialog.done');
+  actions.append(button(t('dialog.cancel'), () => panel.close(), 'tempo-cancel'), confirm);
+  form.append(title, controls, hint, actions);
+  if (released) form.append(button(t('loop.keepLooping'), () => { panel.close(); changeLoopRelease(null); }, 'loop-keep'));
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const times = Number(input.value);
+    if (!Number.isInteger(times) || times < 1 || times > LOOP_REPEAT_MAX) { input.reportValidity(); return; }
+    panel.close();
+    changeLoopRelease(times);
+  });
+  panel.append(form);
+  panel.addEventListener('close', () => panel.remove(), {once: true});
+  document.body.append(panel); panel.showModal();
+  input.select();
 }
 
 function changeLoopRelease(times) {
-  if (!(times === null ? engine.keepLooping() : engine.releaseLoop(times))) return;
+  if (!(times === null ? engine.keepLooping() : engine.releaseLoop(times))) { notify(t('loop.repeatGone')); return; }
   if (canFollow()) {
     // Re-plan the camera for the new loop end, as the square button does.
     stopFollowing('release');
@@ -3251,7 +3278,7 @@ el.undo.addEventListener('click', () => historyMove(undoStack, redoStack));
 el.redo.addEventListener('click', () => historyMove(redoStack, undoStack));
 el.play.addEventListener('click', togglePlayback);
 el.stop.addEventListener('click', useSquareButton);
-el.loopRepeat.addEventListener('click', event => openLoopRepeatMenu(event.currentTarget));
+el.loopRepeat.addEventListener('click', () => openLoopRepeatDialog());
 el.restartPlayback.addEventListener('click', () => {
   const track = selectedTrack();
   const top = el.paper.scrollTop;
@@ -3696,8 +3723,7 @@ for (const name of ['gesturestart', 'gesturechange']) {
 el.paper.addEventListener('scroll', () => {
   positionBeatMenu();
   if (!el.menu.hidden && handMenuAnchor?.isConnected) positionPopup(handMenuAnchor, true);
-  // The loop-repeat menu belongs to the transport, so following the playhead does not close it.
-  else if (!el.menu.classList.contains('transport-menu')) el.menu.hidden = true;
+  else el.menu.hidden = true;
 });
 window.addEventListener('resize', () => {
   if (!el.beatMenu.hidden) positionBeatMenu();

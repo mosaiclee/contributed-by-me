@@ -96,7 +96,7 @@ function simulate(code, {android, width, zoom, scale, compositor = true, termina
     requestAnimationFrame(cb) { const n = ++nextId; raf.set(n, cb); return n; }, cancelAnimationFrame(n) { raf.delete(n); },
     setTimeout(cb) { cb(); return 1; }, setInterval() { return 1; }, clearInterval() {},
     scoreZoom: zoom, followFrame: 0, follow: true, paperPan: null, paperTouch: false, manualFollowUntil: 0, editOwnsViewport: false,
-    designatedFollowTrack: id, playingLoops: [], followedLine: null, followGroupGeometry: null, playingPositions: new Map(),
+    designatedFollowTrack: id, playingLoops: [], playingLoopState: '', followedLine: null, followGroupGeometry: null, playingPositions: new Map(),
     cursor: {track:id,beat:0,slot:0}, cursorAtPause:null, request:0, pending:false, pauseChanging:false, loopMode:'once',
     scoreIndex:()=>0, currentBar:()=>0, refreshControls(){}, notify(){}, t:k=>k, cancelNoteReveal(){}, setFollowGutter(){},
     strokeBuffer(){}, percussionBuffers(){}, makeChannel:()=>({gain:{disconnect(){}},pan:{disconnect(){}}}), applyMix(){}, strike:()=>[]};
@@ -165,7 +165,7 @@ async function scenario(code, opts) {
 }
 (async()=>{
   const [apkPage,browserPage] = process.argv.slice(2);
-  if(!browserPage) throw Error('Usage: node playback161.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
+  if(!browserPage) throw Error('Usage: node playback162.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
   const android = editor(apkPage), browser = editor(browserPage);
   for(const [width,zoom,scale] of [[360,.5,.5],[360,.5,1],[960,1,1],[960,2.5,2.5],[390,5,5]]) {
     const options={width,zoom,scale};

@@ -1,6 +1,6 @@
-// 1.61 editor checks in a real Chromium page (Playwright): the loop-repeat chip (play the loop N more
-// times, then continue; or keep looping), the blue box on the playing note of every track, and the
-// note-key lock for tap entry. Run once per built page:
+// 1.61 editor checks in a real Chromium page (Playwright), updated for 1.62: the loop-repeat chip (type
+// how many more passes, then continue; or keep looping), the tall blue box over the playing note of
+// every track, and the note-key lock for tap entry. Run once per built page:
 //   node editor161.e2e.cjs ../../RhythmDesk.html ANDROID_ASSETS/index.html
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -49,13 +49,17 @@ async function repeatChecks(page) {
   assert(returns(steps) >= 1, 'the section loops: ' + steps);
   await earlyInPass(page);
   await page.click('#loopRepeat');
-  const items = await page.locator('#menu button').allTextContents();
-  assert.equal(items.length, 9);
-  assert.match(items[1], /再循环 2 次后继续|Loop 2 more/);
-  assert(await page.locator('#menu button').nth(8).isDisabled(), 'keep looping is disabled until a continue is pending');
-  await page.locator('#menu button').nth(1).click();
+  const box = page.locator('dialog.loop-repeat-editor[open]');
+  assert.equal(await box.count(), 1, 'the chip opens the repeat-count box');
+  assert.equal(await box.locator('input').inputValue(), '1');
+  assert.equal(await box.locator('.loop-keep').count(), 0, 'keep looping appears only once a continue is pending');
+  await box.locator('input').fill('2');
+  await box.locator('.tempo-confirm').click();
+  assert.equal(await box.count(), 0);
   assert.match(await page.textContent('#loopRepeat'), /再循环 2 次|2 more/);
   assert.match(await page.getAttribute('#stop', 'title'), /再循环 2 次|2 more/);
+  // The chip and the Stop tooltip count down at each return to the loop start.
+  await page.waitForFunction(() => /再循环 1 次|1 more/.test(el.loopRepeat.textContent) && /1/.test(el.stop.title), null, {timeout: 3000});
   // Exactly two more returns to the loop start, then playback continues into measure 2 (step 12+).
   steps = await watchSteps(page, 2, 6000);
   const pastLoop = steps.findIndex(step => step >= 12);
@@ -64,24 +68,46 @@ async function repeatChecks(page) {
   assert(await page.evaluate(() => el.loopRepeat.hidden || !engine.running), 'chip hides after the loop');
   await page.evaluate(() => stopPlayback());
 
-  // Choose 1 more, then cancel: the loop keeps repeating; the square still continues after this pass.
+  // Any count: values outside 1–999, fractions and blanks are refused; Cancel changes nothing;
+  // 37 is accepted with Enter; −/+ adjust; Keep looping cancels the pending continue.
   await page.click('#play');
   await page.waitForFunction(() => !el.loopRepeat.hidden, null, {timeout: 5000});
-  await earlyInPass(page);
   await page.click('#loopRepeat');
-  await page.locator('#menu button').nth(0).click();
+  await box.locator('input').fill('5');
+  await box.locator('.tempo-cancel').click();
+  assert.equal(await box.count(), 0);
+  assert.match(await page.textContent('#loopRepeat'), /再循环…|Repeat…/, 'Cancel changes nothing');
+  assert(await page.evaluate(() => playingLoops.every(gate => !gate.released)));
   await page.click('#loopRepeat');
-  await page.locator('#menu button').nth(8).click();
+  for (const bad of ['0', '1000', '2.5', '']) {
+    await box.locator('input').fill(bad);
+    await box.locator('.tempo-confirm').click();
+    assert.equal(await box.count(), 1, 'refuses ' + JSON.stringify(bad));
+  }
+  await box.locator('input').fill('37');
+  await box.locator('input').press('Enter');
+  assert.equal(await box.count(), 0, 'Enter confirms');
+  assert.match(await page.textContent('#loopRepeat'), /再循环 3[67] 次|3[67] more/);
+  await page.click('#loopRepeat');
+  assert.match(await box.locator('input').inputValue(), /^3[67]$/, 'the box shows the passes left');
+  const shown = Number(await box.locator('input').inputValue());
+  await box.locator('.tempo-controls button').nth(1).click();
+  assert.equal(await box.locator('input').inputValue(), String(shown + 1), '+ adds one');
+  await box.locator('.tempo-controls button').nth(0).click();
+  await box.locator('.tempo-controls button').nth(0).click();
+  assert.equal(await box.locator('input').inputValue(), String(shown - 1), '− removes one');
+  await box.locator('.loop-keep').click();
+  assert.equal(await box.count(), 0);
   assert.match(await page.textContent('#loopRepeat'), /再循环…|Repeat…/);
   steps = await watchSteps(page, 2, 3500);
-  assert(returns(steps) >= 3 && steps.every(step => step < 12), 'keeps looping after cancel: ' + steps);
+  assert(returns(steps) >= 2 && steps.every(step => step < 12), 'keeps looping after cancel: ' + steps);
   await earlyInPass(page);
   await page.click('#stop');
   steps = await watchSteps(page, 2, 3000);
   const after = steps.findIndex(step => step >= 12);
   assert(after > 0 && returns(steps.slice(0, after)) <= 1, 'square continues after the current pass: ' + steps);
   await page.evaluate(() => stopPlayback());
-  console.log('  PASS loop repeat: chip above square, 2 more passes then continue, cancel keeps looping, square unchanged.');
+  console.log('  PASS loop repeat: chip above square, typed count (2 → exactly 2 passes, chip counts down; 37 accepted; 0/1000/2.5/blank refused), −/+, Cancel, keep looping, square unchanged.');
 }
 
 async function playingBoxChecks(page, shot) {
@@ -91,13 +117,17 @@ async function playingBoxChecks(page, shot) {
   await page.waitForTimeout(400);
   const state = await page.evaluate(() => {
     const rows = [...document.querySelectorAll('.staff')];
-    const box = getComputedStyle(document.querySelector('.slot.playing'), '::after');
+    const slot = document.querySelector('.slot.playing');
+    const box = getComputedStyle(slot, '::after');
     return {rows: rows.length, marked: rows.map(row => row.querySelectorAll('.slot.playing').length),
-      border: box.borderTopColor, width: box.width, height: box.height, style: box.borderTopStyle};
+      border: box.borderTopColor, width: parseFloat(box.width), height: parseFloat(box.height),
+      top: parseFloat(box.top), slot: slot.offsetHeight, style: box.borderTopStyle};
   });
   assert(state.marked.every(count => count === 1), 'every track marks exactly one playing note: ' + state.marked);
   assert.equal(state.style, 'solid');
-  assert.equal(state.height, '28px');
+  // Tall rectangle: from the beam (stem top at 15/61 of the beat) to below the note head (bass head ends near 56/61).
+  assert(state.height > 2 * state.width, 'the box is a tall rectangle: ' + JSON.stringify(state));
+  assert(state.top <= state.slot * 15 / 61 && state.top + state.height >= state.slot * 56 / 61, 'the box covers the stem and note head: ' + JSON.stringify(state));
   assert.match(state.border, /rgb\(40, 118, 232\)|rgb\(\d+, \d+, \d+\)/);
   if (shot) await page.screenshot({path: shot});
   await page.click('#play'); // pause keeps the boxes
@@ -105,7 +135,7 @@ async function playingBoxChecks(page, shot) {
   assert(await page.evaluate(() => document.querySelectorAll('.slot.playing').length === doc.tracks.length), 'pause keeps boxes');
   await page.evaluate(() => stopPlayback());
   assert.equal(await page.evaluate(() => document.querySelectorAll('.slot.playing').length), 0, 'stop removes boxes');
-  console.log(`  PASS playing box: ${state.rows} tracks each show one ${state.width}×${state.height} blue box; pause keeps, stop clears.`);
+  console.log(`  PASS playing box: ${state.rows} tracks each show one ${state.width}×${state.height.toFixed(1)} px tall blue box over stem and note head; pause keeps, stop clears.`);
 }
 
 async function lockChecks(page, touch) {
