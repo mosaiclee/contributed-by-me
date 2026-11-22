@@ -1,5 +1,5 @@
 // 1.60 editor checks in a real Chromium page (Playwright): Duplicate Track, splitting cells and
-// changing subdivisions with notes in place, and the hold (0.5 s since 1.63) that opens every double-tap
+// changing subdivisions with notes in place, and the hold (0.2 s since 1.65) that opens every double-tap
 // menu clear of the held point. Run once per built page:
 //   node editor160.e2e.cjs ../../RhythmDesk.html ANDROID_ASSETS/index.html
 const assert = require('node:assert/strict');
@@ -175,9 +175,9 @@ async function holdChecks(page, touch) {
   // Short press (0.5 s) opens nothing.
   const slot = row.locator('.slot').nth(4);
   let point = await centerOf(slot);
-  await hold(point, 250); await release(); await page.waitForTimeout(450);
-  assert.equal(await beatMenuOpen(page), false, 'a 0.25 s press does not open the beat menu');
-  // A 0.5 s hold (1 s before 1.63) on a stem opens the beat menu clear of the finger; releasing chooses nothing.
+  await hold(point, 80); await release(); await page.waitForTimeout(450);
+  assert.equal(await beatMenuOpen(page), false, 'a 0.08 s press does not open the beat menu');
+  // A 0.2 s hold (1 s before 1.63, 0.5 s in 1.63–1.64) on a stem opens the beat menu clear of the finger; releasing chooses nothing.
   await page.evaluate(() => closePopups());
   point = await centerOf(slot);
   await hold(point, 650);
@@ -240,7 +240,7 @@ async function holdChecks(page, touch) {
   assert.equal(await beatMenuOpen(page), false, 'multi-selection hold opens no beat menu');
   assert(await page.evaluate(() => multiGroups?.picks.length > 0), 'multi-selection hold still picks the group');
   await page.evaluate(() => finishMultiGroups());
-  console.log(`  PASS ${touch ? 'touch' : 'mouse'} 0.5 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
+  console.log(`  PASS ${touch ? 'touch' : 'mouse'} 0.2 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
 }
 
 (async () => {

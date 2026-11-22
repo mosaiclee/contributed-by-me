@@ -142,7 +142,11 @@ document.addEventListener('click', event => {
 // mouse button). The menu then keeps clear of the held point, and the click that ends the hold is
 // dropped, so lifting the finger never chooses a menu item.
 // 1.63: the hold takes 0.5 s (was 1 s), and a menu opened by a double-tap keeps clear of the tap too.
-const MENU_HOLD_MS = 500;
+// 1.65: menus open after a 0.2 s hold. Locking a note key keeps 0.5 s: ordinary key presses often last
+// 0.2 s, so a shorter lock hold would lock keys while notes are being entered. For the same reason a
+// stem keeps 0.5 s while a note is locked, so tapping stems to enter notes never opens the beat menu.
+const MENU_HOLD_MS = 200;
+const NOTE_LOCK_HOLD_MS = 500;
 const MENU_HOLD_SLOP = 10;
 const MENU_HOLD_CLEARANCE = 40;
 let menuHold = null;
@@ -152,10 +156,11 @@ function cancelMenuHold() {
   if (menuHold) clearTimeout(menuHold.timer);
   menuHold = null;
 }
-function bindMenuHold(node, open, allowed = () => true) {
+function bindMenuHold(node, open, allowed = () => true, delay = MENU_HOLD_MS) {
   node.addEventListener('pointerdown', event => {
     cancelMenuHold();
     if (!event.isPrimary || event.button !== 0 || !allowed()) return;
+    const ms = typeof delay === 'function' ? delay(event) : delay; // 1.65: per-control hold time
     const press = {node, id: event.pointerId, x: event.clientX, y: event.clientY, target: event.target};
     press.timer = setTimeout(() => {
       if (menuHold !== press) return;
@@ -165,7 +170,7 @@ function bindMenuHold(node, open, allowed = () => true) {
       setMenuAvoidPoint(node, press.x, press.y, press.id);
       menuHoldClickUntil = Infinity;
       open(press);
-    }, MENU_HOLD_MS);
+    }, ms);
     menuHold = press;
   });
   node.addEventListener('contextmenu', event => event.preventDefault());
@@ -752,7 +757,8 @@ function renderScore(updatedTrack) {
           el.paper.scrollTo({left: scrollLeft, top: scrollTop, behavior: 'instant'});
           if (hand) openHandMenu(item);
           else openBeatMenu(box);
-        }, () => !multiGroups);
+        }, () => !multiGroups,
+        event => noteLock && !event.target.classList?.contains('hand-dot') ? NOTE_LOCK_HOLD_MS : MENU_HOLD_MS);
         slotList.append(item);
         return item;
       });
@@ -948,7 +954,7 @@ function updateKeyboard() {
 function lockableKey(node, stroke) {
   node.dataset.stroke = stroke ?? '';
   if (!stroke) node.title = t('keys.rest') + ' · ' + t('keys.lockHint');
-  bindMenuHold(node, () => toggleNoteLock(stroke), () => !multiGroups);
+  bindMenuHold(node, () => toggleNoteLock(stroke), () => !multiGroups, NOTE_LOCK_HOLD_MS);
   return node;
 }
 
@@ -1163,13 +1169,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.64', userAgent: navigator.userAgent,
+    version: '1.65', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.64.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.65.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));
@@ -2990,8 +2996,9 @@ function saveScore() {
   }
 }
 
-// 0.18: long press (mouse or touch, 500 ms) or right-click on a rhythm card shows 复制 / 删除.
-const LONG_PRESS_MS = 500;
+// 0.18: long press (mouse or touch) or right-click on a rhythm card shows 复制 / 删除.
+// 1.65: the card menu opens after 0.2 s like the editor menus (was 0.5 s).
+const LONG_PRESS_MS = 200;
 let cardPress = null;
 let suppressCardClick = null;
 
