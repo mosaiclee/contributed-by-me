@@ -63,7 +63,7 @@ async function saves() {
     logFollow:event=>s.followEvents.push({event}),followEvents:[],navigator:{userAgent:'Test'},
     el:{paper:{clientWidth:390,clientHeight:338}},saveScoreExport:async(f,name)=>{pickerSawPause=s.engine.paused;record=JSON.parse(await f.text());return name}});
   vm.runInContext(section('async function exportFollowDiagnostics()', 'function measureMotionScale()'),s);
-  await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.62');assert.equal(record.events.at(-1).event,'export');
+  await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.63');assert.equal(record.events.at(-1).event,'export');
   console.log('PASS Windows save/overwrite/keep-both/cancel, Safari share/Save to Files/cancel, download fallback, diagnostic JSON.');
 }
 gestures();saves().catch(e=>{console.error(e);process.exitCode=1});

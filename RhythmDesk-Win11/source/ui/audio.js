@@ -311,7 +311,9 @@ class PlaybackCursor {
 
   restart(step = this.first) {
     this.step = step;
-    this.gates = this.loops.map(range => ({...range, released: false, repeats: 0}));
+    // 1.63: a loop with a preset count starts released with (times - 1) extra passes, so it plays
+    // `times` passes in all and then continues; the repeat chip or the square can still change that.
+    this.gates = this.loops.map(range => ({...range, released: range.times > 0, repeats: Math.max(0, (range.times || 0) - 1)}));
     this.index = this.gates.findIndex(gate => gate.to > step);
     if (this.index < 0) this.index = this.gates.length;
   }
@@ -456,7 +458,7 @@ class Transport {
       for (const stroke of TYPES[track.type].strokes) {
         if (stroke.length === 1) strokeBuffer(this.context, this.buffers, track, stroke, doc);
       }
-      const loops = track.loops.map(({from, to}) => ({from: barSteps[from], to: barSteps[to]}))
+      const loops = track.loops.map(({from, to, times}) => ({from: barSteps[from], to: barSteps[to], times}))
         .filter(loop => loop.from >= first && loop.to <= end);
       const startTick = ticks[first] + offset;
       const next = ticks.findIndex((tick, step) => step >= first && step < end && tick >= startTick);

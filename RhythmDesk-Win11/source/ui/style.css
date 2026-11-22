@@ -134,6 +134,8 @@ h2 { margin: 0; font-size: 19px; white-space: nowrap; }
 /* 1.62: repeat-count box (reuses the tempo dialog layout). */
 .loop-repeat-hint { margin: 0; text-align: center; font-size: 13px; line-height: 1.45; color: #5a6878; }
 .loop-keep { display: block; width: 100%; min-height: 44px; margin-top: 12px; border-radius: 9px; background: #f0f5fc; color: var(--blue); font-size: 15px; font-weight: 600; }
+/* 1.63: preset loop count beside a loop's closing barline. */
+.loop-times { position: absolute; right: calc(100% - 4px); top: -19px; padding: 0 2px; color: var(--blue); font-size: 17px; font-weight: 800; line-height: 1; white-space: nowrap; pointer-events: none; }
 .transport .icon { width: min(100%, 48px); min-height: 44px; }
 .tool-group { display: flex; align-items: center; gap: 3px; }
 #play svg, #stop svg { width: 33px; height: 33px; }

@@ -1,5 +1,5 @@
 // 1.60 editor checks in a real Chromium page (Playwright): Duplicate Track, splitting cells and
-// changing subdivisions with notes in place, and the one-second hold that opens every double-tap
+// changing subdivisions with notes in place, and the hold (0.5 s since 1.63) that opens every double-tap
 // menu clear of the held point. Run once per built page:
 //   node editor160.e2e.cjs ../../RhythmDesk.html ANDROID_ASSETS/index.html
 const assert = require('node:assert/strict');
@@ -175,12 +175,12 @@ async function holdChecks(page, touch) {
   // Short press (0.5 s) opens nothing.
   const slot = row.locator('.slot').nth(4);
   let point = await centerOf(slot);
-  await hold(point, 500); await release(); await page.waitForTimeout(450);
-  assert.equal(await beatMenuOpen(page), false, 'a 0.5 s press does not open the beat menu');
-  // 1 s hold on a stem opens the beat menu clear of the finger; releasing chooses nothing.
+  await hold(point, 250); await release(); await page.waitForTimeout(450);
+  assert.equal(await beatMenuOpen(page), false, 'a 0.25 s press does not open the beat menu');
+  // A 0.5 s hold (1 s before 1.63) on a stem opens the beat menu clear of the finger; releasing chooses nothing.
   await page.evaluate(() => closePopups());
   point = await centerOf(slot);
-  await hold(point, 1100);
+  await hold(point, 650);
   assert(await beatMenuOpen(page), 'held stem opens the beat menu');
   assertClear(await rectOf(page, '#beatMenu'), point, 'beat menu');
   const selected = await page.evaluate(() => ({beat: cursor.beat, slot: cursor.slot, undo: undoStack.length}));
@@ -200,7 +200,7 @@ async function holdChecks(page, touch) {
   // Blue sticking dot -> sticking menu.
   await page.evaluate(() => closePopups());
   point = await centerOf(row.locator('.slot').nth(5).locator('.hand-dot'));
-  await hold(point, 1100);
+  await hold(point, 650);
   assert(await menuOpen(page), 'held sticking dot opens the sticking menu');
   assert(await page.locator('#menu button', {hasText: /左手|Left/}).count() > 0, 'it is the sticking menu');
   assertClear(await rectOf(page, '#menu'), point, 'sticking menu');
@@ -209,7 +209,7 @@ async function holdChecks(page, touch) {
   // Barline -> measure menu.
   await page.evaluate(() => closePopups());
   point = await centerOf(row.locator('.barline').nth(1));
-  await hold(point, 1100);
+  await hold(point, 650);
   assert(await menuOpen(page), 'held barline opens the barline menu');
   assertClear(await rectOf(page, '#menu'), point, 'barline menu');
   const items = await page.locator('#menu button').count();
@@ -220,14 +220,14 @@ async function holdChecks(page, touch) {
   const meter = row.locator('.group-meter').nth(2);
   await meter.scrollIntoViewIfNeeded();
   point = await centerOf(meter);
-  await hold(point, 1100);
+  await hold(point, 650);
   assert(await menuOpen(page), 'held group meter opens the meter menu');
   assertClear(await rectOf(page, '#menu'), point, 'group meter menu');
   await release(); await page.waitForTimeout(450);
   // Group tempo -> tempo dialog away from the finger.
   await page.evaluate(() => closePopups());
   point = await centerOf(row.locator('.group-tempo').nth(2));
-  await hold(point, 1100);
+  await hold(point, 650);
   assert(await page.locator('dialog.tempo-editor[open]').count() === 1, 'held group tempo opens the tempo editor');
   assertClear(await rectOf(page, 'dialog.tempo-editor[open]'), point, 'tempo editor');
   await release(); await page.waitForTimeout(450);
@@ -236,11 +236,11 @@ async function holdChecks(page, touch) {
   // Multi-selection keeps its 0.5 s whole-group hold and opens no beat menu.
   await page.evaluate(id => startMultiGroups(doc.tracks.find(track => track.id === id)), track);
   point = await centerOf(row.locator('.slot').nth(4));
-  await hold(point, 1100); await release(); await page.waitForTimeout(450);
+  await hold(point, 650); await release(); await page.waitForTimeout(450);
   assert.equal(await beatMenuOpen(page), false, 'multi-selection hold opens no beat menu');
   assert(await page.evaluate(() => multiGroups?.picks.length > 0), 'multi-selection hold still picks the group');
   await page.evaluate(() => finishMultiGroups());
-  console.log(`  PASS ${touch ? 'touch' : 'mouse'} 1 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
+  console.log(`  PASS ${touch ? 'touch' : 'mouse'} 0.5 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
 }
 
 (async () => {

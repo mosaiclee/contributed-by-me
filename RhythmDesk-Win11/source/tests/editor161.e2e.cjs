@@ -141,7 +141,7 @@ async function playingBoxChecks(page, shot) {
 async function lockChecks(page, touch) {
   await openDemo(page);
   const cdp = touch ? await page.context().newCDPSession(page) : null;
-  const hold = async (locator, ms = 1100) => {
+  const hold = async (locator, ms = 650) => {
     const box = await locator.boundingBox();
     const x = box.x + box.width / 2, y = box.y + box.height / 2;
     if (touch) {
@@ -178,7 +178,7 @@ async function lockChecks(page, touch) {
   assert.equal((await cellsOf())[4], null);
   if (!touch) { await slots.nth(5).click(); await slots.nth(5).click(); await page.waitForTimeout(300); }
   assert.equal(await page.evaluate(() => el.beatMenu.hidden), true, 'double tap does not open the beat menu while locked');
-  // A 1 s hold on a stem still opens the beat menu and writes nothing.
+  // A 0.5 s hold on a stem still opens the beat menu and writes nothing.
   cells = await cellsOf();
   await hold(slots.nth(7));
   assert.equal(await page.evaluate(() => el.beatMenu.hidden), false, 'hold still opens the beat menu');

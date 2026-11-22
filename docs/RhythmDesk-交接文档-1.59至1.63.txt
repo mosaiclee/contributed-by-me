@@ -1,5 +1,5 @@
 ﻿RhythmDesk（鼓谱工作台）开发交接文档
-覆盖范围：1.59（接手时的版本）→ 1.60 → 1.61 → 1.62
+覆盖范围：1.59（接手时的版本）→ 1.60 → 1.61 → 1.62 → 1.63
 编写日期：2026-11-22
 
 ==============================================================================
@@ -16,7 +16,7 @@
 2. 安卓版（RhythmDesk-Android-x.xx.apk，包名 org.rhythmdesk.app，minSdk 26，targetSdk 34）
    · 外壳 classes.dex（WebView）未改动；编辑器是 APK 内的 assets/index.html，它和 Win11 页面使用同一套脚本、样式和说明书，
      另含安卓专用代码（rhythmDeskAndroid 标志、系统保存窗口桥接、androidFollow* 跟随实现、内嵌音色数据、安卓版说明书文字）。
-   · 接手的压缩包没有安卓 index.html 的拆分源码，因此每轮修改都写成补丁清单（tools/patch160.py、tools/patch161.py、tools/patch162.py），
+   · 接手的压缩包没有安卓 index.html 的拆分源码，因此每轮修改都写成补丁清单（tools/patch160.py、tools/patch161.py、tools/patch162.py、tools/patch163.py），
      同一份清单同时作用于 Win11 源码和安卓 index.html：每处修改必须在两边都恰好匹配规定次数，否则整个补丁不写入。
      这保证两个平台的改动完全一致。生成后还比对了「Win11 页面 与 安卓页面」的差异，确认只剩原有的安卓专用部分。
    · APK 重新打包：tools/repack_apk.py 以上一版已签名 APK 为基础，只替换 assets/index.html 和二进制 AndroidManifest.xml 中的
@@ -29,25 +29,27 @@
 
 3. 构建命令
    python3 RhythmDesk-Win11/source/build_ui.py
-   python3 tools/patch162.py RhythmDesk-Win11/source/ui android/index.html      （在 1.61 源码上应用 1.62 修改，已应用过的不要重复执行）
-   python3 tools/repack_apk.py 上一版.apk android/index.html unsigned.apk 1.62
+   python3 tools/patch163.py RhythmDesk-Win11/source/ui android/index.html      （在 1.62 源码上应用 1.63 修改，已应用过的不要重复执行）
+   python3 tools/repack_apk.py 上一版.apk android/index.html unsigned.apk 1.63
    java --add-exports java.base/sun.security.x509=ALL-UNNAMED --add-exports java.base/sun.security.pkcs=ALL-UNNAMED \
-        --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java 签名.pem unsigned.apk RhythmDesk-Android-1.62.apk
-   python3 tools/verify_v2.py RhythmDesk-Android-1.62.apk
+        --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java 签名.pem unsigned.apk RhythmDesk-Android-1.63.apk
+   python3 tools/verify_v2.py RhythmDesk-Android-1.63.apk
 
 4. 测试（RhythmDesk-Win11/source/tests）
-   node interaction162.cjs                                  双击计时、滚轮缩放、拖动、保存流程、诊断文件版本
-   node playback162.cjs 安卓index.html ../../RhythmDesk.html  安卓页面与浏览器页面播放跟随轨迹一致、循环释放规则
-   node offline162.cjs 解压后的iPhone离线包目录                 iPhone 离线版 service worker（需要先生成 iPhone 包）
-   node editor160.e2e.cjs 页面...                            （需 Playwright + Chromium）1.60 三项功能：复制轨道、带音符切分、1 秒长按菜单
+   node interaction163.cjs                                  双击计时、滚轮缩放、拖动、保存流程、诊断文件版本
+   node playback163.cjs 安卓index.html ../../RhythmDesk.html  安卓页面与浏览器页面播放跟随轨迹一致、循环释放规则
+   node offline163.cjs 解压后的iPhone离线包目录                 iPhone 离线版 service worker（需要先生成 iPhone 包）
+   node editor160.e2e.cjs 页面...                            （需 Playwright + Chromium）1.60 三项功能：复制轨道、带音符切分、长按菜单（1.63 起为 0.5 秒）
    node editor161.e2e.cjs 页面...                            （需 Playwright + Chromium）1.61/1.62 功能：再循环次数（自由输入）、竖向蓝色播放方框、音符锁定
-   1.62 发布前上述测试（offline 除外）在 Win11 页面和从已签名 APK 中取出的页面上全部通过；未在安卓真机和 Windows Edge 上实测。
+   node editor163.e2e.cjs 页面...                            （需 Playwright + Chromium）1.63 功能：每个循环预设次数、0.5 秒长按、双击菜单避让
+   1.63 发布前上述测试（offline 除外）在 Win11 页面和从已签名 APK 中取出的页面上全部通过；未在安卓真机和 Windows Edge 上实测。
 
 5. 版本记录
    1.59  接手版本（2026-11-17）。安卓 versionCode 159。
    1.60  2026-11-21：复制本轨道；写入音符状态下直接切分；双击菜单支持长按 1 秒并避开按压位置。versionCode 160。
    1.61  2026-11-22：循环「再循环 N 次后继续」按钮；所有轨道蓝色方框显示播放位置；长按音符键锁定点按输入。versionCode 161。
    1.62  2026-11-22：再循环次数自由输入（1–999）；播放位置改为竖向蓝色长方框覆盖符杆；说明文件核对同步；修复剩余次数不刷新。versionCode 162。
+   1.63  2026-11-22：每个循环区间预设循环次数并自动继续；所有长按改为 0.5 秒；双击打开的菜单避开点按位置；说明书同步。versionCode 163。
 
 ==============================================================================
 二、提示词汇总
@@ -77,6 +79,15 @@
   需求 1：循环次数可以自由填写，不用设定成固定次数。
   需求 2：核对修改后的说明文件，不一致处同步更新。
   需求 3：播放时跟随显示的蓝色方框改为竖向长方形，覆盖住竖线（符杆）部分。
+
+第 4 段提示词（产出 1.63，并延续本文档）：
+循环设定可以在每个循环区域预设，如同一轨道出现多个循环，则可以在每个循环预设循环次数自动向后播放，所有长按激活的菜单长按激活时长改成0.5秒，另外双击激活的模式弹出菜单也要让开点击位置避免误点，同步说明书修正及延续交接内容
+
+  拆分为四项需求：
+  需求 1：每个循环区域可预设循环次数；同一轨道有多个循环时各自预设，播完自动向后播放。
+  需求 2：所有长按激活的菜单，长按时长改为 0.5 秒。
+  需求 3：双击激活弹出的菜单也要让开点击位置，避免误点。
+  需求 4：同步修正说明书，并延续交接文档。
 
 ==============================================================================
 三、第 1 段提示词的程序修改（1.59 → 1.60）
@@ -2688,8 +2699,9 @@ assets/index.html
   · 说明书与关于页中「再循环 1–8 次」「蓝色方框」的描述按 1.62 行为改写（见需求 1、需求 3 的修改）。
   · 选中框与播放框都是蓝色，容易混淆：说明书中指选中框的「蓝框」改称「蓝色选框」（回到开头、跟随按钮两处）。
   · 英文说明书「Score and group meters」补上中文版已有的规定：更换组拍号前需先清空该组音符（软件行为未变，原英文漏写）。
-  · Readme.txt 与 source/Readme-Win11.txt 首行版本改为 1.62 并新增「1.62 更新」；仓库 README.md 增加 1.62 段落；
-    本交接文档加入第 3 段提示词与全部修改对照，并更新版本记录、构建与测试命令。
+  · Readme.txt 与 source/Readme-Win11.txt 首行版本改为 1.62 并新增「1.62 更新」；本交接文档加入第 3 段提示词与全部修改对照，
+    并更新版本记录、构建与测试命令。（仓库 README.md 的 1.62 段落本应同时加入，但当时的更新命令因前一步比对失败而未执行，
+    1.63 时发现并补上，见第 4 段提示词的需求 4。）
   · 其余说明（复制本轨道、带音符切分、长按 1 秒菜单、音符锁定、再循环的边界规则）已逐条对照软件行为，无需改动。
 
 本需求共 3 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
@@ -3301,21 +3313,1306 @@ assets/index.html
   · 测试 playback162.cjs 在沙箱中逐个预置应用的全局状态，新增全局变量时需要同步加入（本轮加入 playingLoopState）。
 
 ==============================================================================
-六、后续开发建议
+六、第 4 段提示词的程序修改（1.62 → 1.63）
+==============================================================================
+说明：「修改前」取自 1.62 文件，「修改后」取自 1.63 文件，行号为各自文件中的行号；路径相对于 RhythmDesk-Win11/。
+本轮补丁清单：tools/patch163.py（56 处修改）。
+
+==============================================================================
+需求 1：每个循环区间预设循环次数，播完自动向后播放（1.62 → 1.63）
+==============================================================================
+
+修改说明：
+  每个循环区间可以预设循环次数，播放到该循环时播完预设遍数便自动向后播放；同一轨道的多个循环各自设定。
+  · 次数的含义：该循环一共播放几遍（含第一遍，1–999）。不设次数（留空）＝与以前一样一直循环，直到按方块。
+  · 数据：track.loops 的每一项可带 times 字段（如 {from: 0, to: 1, times: 3}），随 .rhythm.json 保存。model.js 新增常量
+    LOOP_TIMES_MAX = 999；readLoops() 读取并校验 times（非 1–999 的整数一律忽略，视为一直循环）。旧版本软件读取新文件时
+    会忽略 times（只读 from/to），即退回一直循环，不会报错。
+  · 编辑小节时保留次数：deleteBar() 的 afterRemoval、insertTrackBarAt()（在第 1 小节前插入）、deleteTrackBar() 原来重建
+    循环对象时只复制 from/to，改为 {...range, from, to}，避免插入／删除小节后丢失次数（shiftTrackLoopsAfterInsert 原地修改，无需改）。
+  · 播放引擎（audio.js）：start() 把 times 一并传入 PlaybackCursor；restart() 创建 gate 时，有预设次数的循环直接
+    released = true、repeats = times − 1，于是播完 times 遍自动继续。整曲循环（wrap）重新开始时会再次按预设执行。
+    方块上方的「↻ 再循环…」和方块按钮仍可在本次播放中改写或取消（取消继续＝一直循环），不修改预设本身。
+  · 界面（app.js）：小节边界菜单在「更改此循环终点」之后新增「设置结束于此的循环次数…（当前状态）」和
+    「设置起始于此的循环次数…（当前状态）」；轨道「⋯」在「移除本小节的循环」之后新增「设置本小节循环次数…（当前状态）」。
+    新增 loopTimesState()、openLoopTimesDialog()（与速度弹窗同样式：数字输入 1–999、−／＋、完成／取消、
+    已设次数时显示「一直循环（清除次数）」；留空确认＝清除）、setLoopTimes()（按 id 与 from/to 找回当前循环，
+    通过 change(…, true) 修改，可撤销，修改时停止播放，与其他循环编辑一致）。
+  · 谱面标记：boundaryAt() 在设有次数的循环结束竖线左上方显示「×N」（.loop-times，17 px 粗体蓝字，随谱面缩放），
+    并在该竖线的提示文字中加上「共 N 遍」。
+  · i18n.js 新增 loop.timesIncoming / loop.timesOutgoing / track.loopTimes / loop.timesState / loop.timesUnset / loop.bars /
+    loop.timesTitle / loop.timesHint / loop.timesClear / loop.timesSet / loop.timesCleared（中英文）；说明书「轨道循环与整曲循环」
+    和「回到开头／播放／停止方块」条目补充说明。
+
+本需求共 18 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 1：source/ui/model.js
+  安卓 assets/index.html：修改前 第 1794 行；修改后 第 1818–1819 行
+【修改前 1.62】第 4 行
+------------------------------------------------------------------------------
+4 | const TRACK_LIMIT = 100;
+------------------------------------------------------------------------------
+【修改后 1.63】第 4–5 行
+------------------------------------------------------------------------------
+4 | const TRACK_LIMIT = 100;
+5 | const LOOP_TIMES_MAX = 999; // 1.63: most passes a loop can be preset to play
+------------------------------------------------------------------------------
+
+修改 2：source/ui/model.js
+  安卓 assets/index.html：修改前 第 1972–1975 行；修改后 第 1997–2003 行
+【修改前 1.62】第 182–185 行
+------------------------------------------------------------------------------
+182 |   const loops = ranges.map(range => {
+183 |     if (!range) throw new Error(t('err.loops'));
+184 |     return readRepeat(range, bars);
+185 |   }).sort((a, b) => a.from - b.from);
+------------------------------------------------------------------------------
+【修改后 1.63】第 183–189 行
+------------------------------------------------------------------------------
+183 |   const loops = ranges.map(range => {
+184 |     if (!range) throw new Error(t('err.loops'));
+185 |     // 1.63: keep a loop's preset `times` (total passes, 1-999); any other value means "loop until stopped".
+186 |     const loop = readRepeat(range, bars);
+187 |     if (Number.isInteger(range.times) && range.times >= 1 && range.times <= LOOP_TIMES_MAX) loop.times = range.times;
+188 |     return loop;
+189 |   }).sort((a, b) => a.from - b.from);
+------------------------------------------------------------------------------
+
+修改 3：source/ui/model.js
+  安卓 assets/index.html：修改前 第 2522–2524 行；修改后 第 2550–2552 行
+【修改前 1.62】第 732–734 行
+------------------------------------------------------------------------------
+732 |   const afterRemoval = range => ({
+733 |     from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)
+734 |   });
+------------------------------------------------------------------------------
+【修改后 1.63】第 736–738 行
+------------------------------------------------------------------------------
+736 |   const afterRemoval = range => ({ // 1.63: ...range keeps a loop's preset times
+737 |     ...range, from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)
+738 |   });
+------------------------------------------------------------------------------
+
+修改 4：source/ui/model.js
+  安卓 assets/index.html：修改前 第 2580 行；修改后 第 2608 行
+【修改前 1.62】第 790 行
+------------------------------------------------------------------------------
+790 |     const loops = track.loops.map(range => ({from: range.from + 1, to: range.to + 1}));
+------------------------------------------------------------------------------
+【修改后 1.63】第 794 行
+------------------------------------------------------------------------------
+794 |     const loops = track.loops.map(range => ({...range, from: range.from + 1, to: range.to + 1}));
+------------------------------------------------------------------------------
+
+修改 5：source/ui/model.js
+  安卓 assets/index.html：修改前 第 2601 行；修改后 第 2629 行
+【修改前 1.62】第 811 行
+------------------------------------------------------------------------------
+811 |   track.loops = track.loops.map(range => ({from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)}))
+------------------------------------------------------------------------------
+【修改后 1.63】第 815 行
+------------------------------------------------------------------------------
+815 |   track.loops = track.loops.map(range => ({...range, from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)}))
+------------------------------------------------------------------------------
+
+修改 6：source/ui/audio.js
+  安卓 assets/index.html：修改前 第 3394 行；修改后 第 3422–3424 行
+【修改前 1.62】第 314 行
+------------------------------------------------------------------------------
+314 |     this.gates = this.loops.map(range => ({...range, released: false, repeats: 0}));
+------------------------------------------------------------------------------
+【修改后 1.63】第 314–316 行
+------------------------------------------------------------------------------
+314 |     // 1.63: a loop with a preset count starts released with (times - 1) extra passes, so it plays
+315 |     // `times` passes in all and then continues; the repeat chip or the square can still change that.
+316 |     this.gates = this.loops.map(range => ({...range, released: range.times > 0, repeats: Math.max(0, (range.times || 0) - 1)}));
+------------------------------------------------------------------------------
+
+修改 7：source/ui/audio.js
+  安卓 assets/index.html：修改前 第 3539 行；修改后 第 3569 行
+【修改前 1.62】第 459 行
+------------------------------------------------------------------------------
+459 |       const loops = track.loops.map(({from, to}) => ({from: barSteps[from], to: barSteps[to]}))
+------------------------------------------------------------------------------
+【修改后 1.63】第 461 行
+------------------------------------------------------------------------------
+461 |       const loops = track.loops.map(({from, to, times}) => ({from: barSteps[from], to: barSteps[to], times}))
+------------------------------------------------------------------------------
+
+修改 8：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4699 行；修改后 第 4755–4766 行
+【修改前 1.62】第 547 行
+------------------------------------------------------------------------------
+547 |   line.dataset.barBoundary = bar;
+------------------------------------------------------------------------------
+【修改后 1.63】第 573–584 行
+------------------------------------------------------------------------------
+573 |   line.dataset.barBoundary = bar;
+574 |   // 1.63: a loop with a preset count shows ×N beside its closing barline.
+575 |   const timed = side !== 'start' && track.loops.find(range => range.to === bar && range.times);
+576 |   if (timed) {
+577 |     const mark = document.createElement('span');
+578 |     mark.className = 'loop-times';
+579 |     mark.textContent = '×' + timed.times;
+580 |     mark.setAttribute('aria-hidden', 'true');
+581 |     line.append(mark);
+582 |     line.title += ' · ' + t('loop.timesState', {n: timed.times});
+583 |     line.setAttribute('aria-label', line.title);
+584 |   }
+------------------------------------------------------------------------------
+
+修改 9：source/ui/app.js
+  安卓 assets/index.html：修改前 第 6953 行；修改后 第 7022–7024 行
+【修改前 1.62】第 2735 行
+------------------------------------------------------------------------------
+2735 |     ...(incoming ? [[t('loop.editEnd'), () => { loopStart = {id: track.id, bar: incoming.from}; notify(t('bar.pickEnd')); }]] : []),
+------------------------------------------------------------------------------
+【修改后 1.63】第 2774–2776 行
+------------------------------------------------------------------------------
+2774 |     ...(incoming ? [[t('loop.editEnd'), () => { loopStart = {id: track.id, bar: incoming.from}; notify(t('bar.pickEnd')); }]] : []),
+2775 |     ...(incoming ? [[t('loop.timesIncoming', {state: loopTimesState(incoming)}), () => openLoopTimesDialog(track, incoming)]] : []),
+2776 |     ...(outgoing ? [[t('loop.timesOutgoing', {state: loopTimesState(outgoing)}), () => openLoopTimesDialog(track, outgoing)]] : []),
+------------------------------------------------------------------------------
+
+修改 10：source/ui/app.js
+  安卓 assets/index.html：修改前 第 6903–6906 行；修改后 第 6971–6975 行
+【修改前 1.62】第 2685–2688 行
+------------------------------------------------------------------------------
+2685 |     [range ? t('track.loopOff') : t('track.loopOn'), () => {
+2686 |       if (range) removeTrackLoop(track, range);
+2687 |       else addTrackLoop(track, bar, bar + 1);
+2688 |     }],
+------------------------------------------------------------------------------
+【修改后 1.63】第 2723–2727 行
+------------------------------------------------------------------------------
+2723 |     [range ? t('track.loopOff') : t('track.loopOn'), () => {
+2724 |       if (range) removeTrackLoop(track, range);
+2725 |       else addTrackLoop(track, bar, bar + 1);
+2726 |     }],
+2727 |     ...(range ? [[t('track.loopTimes', {state: loopTimesState(range)}), () => openLoopTimesDialog(track, range)]] : []),
+------------------------------------------------------------------------------
+
+修改 11：source/ui/app.js
+  安卓 assets/index.html：修改前 第 7048 行；修改后 第 7119–7167 行
+【修改前 1.62】第 2830 行
+------------------------------------------------------------------------------
+2830 | function removeTrackLoop(track, range) {
+------------------------------------------------------------------------------
+【修改后 1.63】第 2871–2919 行
+------------------------------------------------------------------------------
+2871 | // 1.63: preset how many times a track loop plays in total (1-999, including the first pass) before
+2872 | // playback continues by itself. Blank or "Loop until stopped" keeps looping until the square is pressed.
+2873 | function loopTimesState(range) {
+2874 |   return range.times ? t('loop.timesState', {n: range.times}) : t('loop.timesUnset');
+2875 | }
+2876 | 
+2877 | function openLoopTimesDialog(source, range) {
+2878 |   closePopups();
+2879 |   const panel = document.createElement('dialog'); panel.className = 'tempo-editor loop-times-editor';
+2880 |   const form = document.createElement('form'); form.className = 'tempo-form';
+2881 |   const title = document.createElement('h3');
+2882 |   const bars = range.to - range.from > 1 ? t('loop.bars', {from: range.from + 1, to: range.to}) : t('bar.measure', {bar: range.to});
+2883 |   title.textContent = t('loop.timesTitle', {track: source.name, bars});
+2884 |   const controls = document.createElement('div'); controls.className = 'tempo-controls';
+2885 |   const input = document.createElement('input'); input.type = 'number'; input.min = 1; input.max = LOOP_TIMES_MAX;
+2886 |   input.step = 1; input.inputMode = 'numeric'; input.value = range.times ?? ''; input.placeholder = t('loop.timesUnset');
+2887 |   input.setAttribute('aria-label', title.textContent);
+2888 |   const bump = n => { input.value = clamp(Math.round(Number(input.value) || 1) + n, 1, LOOP_TIMES_MAX); };
+2889 |   controls.append(button('−', () => bump(-1)), input, button('+', () => bump(1)));
+2890 |   const hint = document.createElement('p'); hint.className = 'loop-repeat-hint'; hint.textContent = t('loop.timesHint');
+2891 |   const actions = document.createElement('div'); actions.className = 'tempo-actions';
+2892 |   const confirm = document.createElement('button'); confirm.type = 'submit'; confirm.className = 'tempo-confirm';
+2893 |   confirm.textContent = t('dialog.done');
+2894 |   actions.append(button(t('dialog.cancel'), () => panel.close(), 'tempo-cancel'), confirm);
+2895 |   form.append(title, controls, hint, actions);
+2896 |   if (range.times) form.append(button(t('loop.timesClear'), () => { panel.close(); setLoopTimes(source, range, null); }, 'loop-keep'));
+2897 |   form.addEventListener('submit', event => {
+2898 |     event.preventDefault();
+2899 |     if (input.value.trim() === '' && !input.validity.badInput) { panel.close(); setLoopTimes(source, range, null); return; }
+2900 |     const times = Number(input.value);
+2901 |     if (!Number.isInteger(times) || times < 1 || times > LOOP_TIMES_MAX) { input.reportValidity(); return; }
+2902 |     panel.close();
+2903 |     setLoopTimes(source, range, times);
+2904 |   });
+2905 |   panel.append(form);
+2906 |   panel.addEventListener('close', () => panel.remove(), {once: true});
+2907 |   document.body.append(panel); panel.showModal();
+2908 |   input.select();
+2909 | }
+2910 | 
+2911 | function setLoopTimes(source, range, times) {
+2912 |   const track = doc.tracks.find(item => item.id === source.id);
+2913 |   const loop = track?.loops.find(item => item.from === range.from && item.to === range.to);
+2914 |   if (!loop || (loop.times ?? null) === times) return;
+2915 |   change(() => { if (times) loop.times = times; else delete loop.times; }, true);
+2916 |   notify(times ? t('loop.timesSet', {n: times}) : t('loop.timesCleared'));
+2917 | }
+2918 | 
+2919 | function removeTrackLoop(track, range) {
+------------------------------------------------------------------------------
+
+修改 12：source/ui/style.css
+  安卓 assets/index.html：修改前 第 146 行；修改后 第 146–148 行
+【修改前 1.62】第 136 行
+------------------------------------------------------------------------------
+136 | .loop-keep { display: block; width: 100%; min-height: 44px; margin-top: 12px; border-radius: 9px; background: #f0f5fc; color: var(--blue); font-size: 15px; font-weight: 600; }
+------------------------------------------------------------------------------
+【修改后 1.63】第 136–138 行
+------------------------------------------------------------------------------
+136 | .loop-keep { display: block; width: 100%; min-height: 44px; margin-top: 12px; border-radius: 9px; background: #f0f5fc; color: var(--blue); font-size: 15px; font-weight: 600; }
+137 | /* 1.63: preset loop count beside a loop's closing barline. */
+138 | .loop-times { position: absolute; right: calc(100% - 4px); top: -19px; padding: 0 2px; color: var(--blue); font-size: 17px; font-weight: 800; line-height: 1; white-space: nowrap; pointer-events: none; }
+------------------------------------------------------------------------------
+
+修改 13：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1079 行；修改后 第 1081–1092 行
+【修改前 1.62】第 110 行
+------------------------------------------------------------------------------
+110 |     'loop.repeatGone': '循环已经结束，未作更改。',
+------------------------------------------------------------------------------
+【修改后 1.63】第 110–121 行
+------------------------------------------------------------------------------
+110 |     'loop.repeatGone': '循环已经结束，未作更改。',
+111 |     'loop.timesIncoming': '设置结束于此的循环次数…（{state}）',
+112 |     'loop.timesOutgoing': '设置起始于此的循环次数…（{state}）',
+113 |     'track.loopTimes': '设置本小节循环次数…（{state}）',
+114 |     'loop.timesState': '共 {n} 遍',
+115 |     'loop.timesUnset': '一直循环',
+116 |     'loop.bars': '第 {from}–{to} 小节',
+117 |     'loop.timesTitle': '「{track}」{bars}循环次数',
+118 |     'loop.timesHint': '填写该循环一共播放几遍（含第一遍，1–999），播放到这里时播完这些遍数自动向后继续。留空表示一直循环，直到按方块。',
+119 |     'loop.timesClear': '一直循环（清除次数）',
+120 |     'loop.timesSet': '该循环将共播放 {n} 遍，然后自动向后继续。',
+121 |     'loop.timesCleared': '该循环已改为一直循环，按方块才向后继续。',
+------------------------------------------------------------------------------
+
+修改 14：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1480 行；修改后 第 1493–1504 行
+【修改前 1.62】第 511 行
+------------------------------------------------------------------------------
+511 |     'loop.repeatGone': 'The loop has already ended; nothing changed.',
+------------------------------------------------------------------------------
+【修改后 1.63】第 522–533 行
+------------------------------------------------------------------------------
+522 |     'loop.repeatGone': 'The loop has already ended; nothing changed.',
+523 |     'loop.timesIncoming': 'Times for Loop Ending Here… ({state})',
+524 |     'loop.timesOutgoing': 'Times for Loop Starting Here… ({state})',
+525 |     'track.loopTimes': 'Loop Times for This Measure… ({state})',
+526 |     'loop.timesState': '{n}×',
+527 |     'loop.timesUnset': 'until stopped',
+528 |     'loop.bars': 'Measures {from}–{to}',
+529 |     'loop.timesTitle': '“{track}” {bars} loop times',
+530 |     'loop.timesHint': 'How many times the loop plays in total (including the first pass, 1–999); after that many passes playback continues by itself. Leave blank to loop until the square is pressed.',
+531 |     'loop.timesClear': 'Loop until stopped (clear count)',
+532 |     'loop.timesSet': 'This loop plays {n} times in total, then playback continues.',
+533 |     'loop.timesCleared': 'This loop now repeats until the square is pressed.',
+------------------------------------------------------------------------------
+
+修改 15：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 785 行；修改后 第 787 行
+【修改前 1.62】第 49 行
+------------------------------------------------------------------------------
+49 |         <dt>轨道循环与整曲循环</dt><dd>双击或长按 1 秒小节边界设置轨道循环起点与终点。终点须在起点之后，同轨循环不可重叠或越过下一个循环；已设终点可再次修改。播放时按停止方块，会在本轮终点释放当前循环并继续后面的内容；也可用方块上方的「↻ 再循环…」输入再循环次数（1–999），先播完这些次数再继续。整谱「⋯」只提供「播放一次」和「循环整曲」；分段循环使用小节边界菜单设置。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 49 行
+------------------------------------------------------------------------------
+49 |         <dt>轨道循环与整曲循环</dt><dd>双击或长按 0.5 秒小节边界设置轨道循环起点与终点。终点须在起点之后，同轨循环不可重叠或越过下一个循环；已设终点可再次修改。每个循环都可预设循环次数：在小节边界菜单的「设置起始／结束于此的循环次数…」或轨道「⋯」的「设置本小节循环次数…」中填写共播放几遍（1–999，含第一遍），播放到该循环时播完这些遍数便自动向后继续；同一轨道的多个循环各自独立设定。有预设次数的循环在结束竖线左上方显示「×N」；留空或选「一直循环（清除次数）」则一直循环，直到按方块。次数随鼓谱保存。播放时按停止方块，会在本轮终点释放当前循环并继续后面的内容；也可用方块上方的「↻ 再循环…」输入再循环次数（1–999），先播完这些次数再继续。整谱「⋯」只提供「播放一次」和「循环整曲」；分段循环使用小节边界菜单设置。</dd>
+------------------------------------------------------------------------------
+
+修改 16：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 806 行；修改后 第 808 行
+【修改前 1.62】第 70 行
+------------------------------------------------------------------------------
+70 |         <dt>回到开头／播放／停止方块</dt><dd>回到当前轨道第一个音符并显示蓝色选框，仅横向回到左端，纵向位置不变，不开始播放；三角从当前编辑位置播放，再按可暂停或继续；方块在轨道循环中先释放循环并继续往后走，其余情况下停止。循环播放时，方块上方出现「↻ 再循环…」按钮：点开后直接输入要再循环的次数（1–999，也可用 −／＋ 调整），点「完成」后先播完这些次数再自动向后继续，按钮显示剩余次数；弹窗中的「取消继续，保持循环」可撤回已设定的继续；直接按方块仍为播完本轮后继续。可按空格播放或暂停。开始或继续播放额外预留0.25秒，保护首个音符的完整播放。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 70 行
+------------------------------------------------------------------------------
+70 |         <dt>回到开头／播放／停止方块</dt><dd>回到当前轨道第一个音符并显示蓝色选框，仅横向回到左端，纵向位置不变，不开始播放；三角从当前编辑位置播放，再按可暂停或继续；方块在轨道循环中先释放循环并继续往后走，其余情况下停止。循环播放时，方块上方出现「↻ 再循环…」按钮：点开后直接输入要再循环的次数（1–999，也可用 −／＋ 调整），点「完成」后先播完这些次数再自动向后继续，按钮显示剩余次数；弹窗中的「取消继续，保持循环」可撤回已设定的继续；直接按方块仍为播完本轮后继续。有预设次数的循环从进入时起就显示剩余次数，也可用此按钮临时改写或取消（只影响本次播放）。可按空格播放或暂停。开始或继续播放额外预留0.25秒，保护首个音符的完整播放。</dd>
+------------------------------------------------------------------------------
+
+修改 17：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 889 行；修改后 第 891 行
+【修改前 1.62】第 42 行
+------------------------------------------------------------------------------
+42 |     <dt>Track loops and whole-score looping</dt><dd>Double-tap barlines, or hold them for 1 second, to set a track loop start and end. The end must follow the start; loops on a track cannot overlap or pass the next loop. Existing loop ends can be changed. During playback, the Stop square releases the active loop at the end of its current pass and continues into the following section; the ↻ Repeat… chip above it lets you type how many more times (1–999) the loop plays first. The score ⋯ menu offers Play Once and Loop Score; configure section loops in barline menus.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 42 行
+------------------------------------------------------------------------------
+42 |     <dt>Track loops and whole-score looping</dt><dd>Double-tap barlines, or hold them for 0.5 seconds, to set a track loop start and end. The end must follow the start; loops on a track cannot overlap or pass the next loop. Existing loop ends can be changed. Each loop can preset how many times it plays in total (1–999, including the first pass) from Times for Loop Starting/Ending Here… in the barline menu or Loop Times for This Measure… in the track ⋯ menu; when playback reaches the loop it plays that many passes and then continues by itself. Several loops on one track keep their own counts. A loop with a preset count shows ×N above its closing barline; leave the count blank, or choose Loop until stopped, to loop until the square is pressed. Counts are saved with the score. During playback, the Stop square releases the active loop at the end of its current pass and continues into the following section; the ↻ Repeat… chip above it lets you type how many more times (1–999) the loop plays first. The score ⋯ menu offers Play Once and Loop Score; configure section loops in barline menus.</dd>
+------------------------------------------------------------------------------
+
+修改 18：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 910 行；修改后 第 912 行
+【修改前 1.62】第 63 行
+------------------------------------------------------------------------------
+63 |     <dt>Beginning / Play / Stop</dt><dd>Select the first note of the current track and jump horizontally to its beginning without changing the vertical scroll position or starting playback. Play starts from the edit cursor and toggles pause or resume. During a track loop, the square button releases the loop and lets playback continue; otherwise it stops. While a loop plays, a ↻ Repeat… chip above the square opens a box: type how many more times the loop plays (1–999, or use −/+), choose Done, and playback continues once those passes finish; the chip shows the passes left. Keep looping in that box cancels a pending continue. The square alone still continues after the current pass. Space toggles play or pause.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 63 行
+------------------------------------------------------------------------------
+63 |     <dt>Beginning / Play / Stop</dt><dd>Select the first note of the current track and jump horizontally to its beginning without changing the vertical scroll position or starting playback. Play starts from the edit cursor and toggles pause or resume. During a track loop, the square button releases the loop and lets playback continue; otherwise it stops. While a loop plays, a ↻ Repeat… chip above the square opens a box: type how many more times the loop plays (1–999, or use −/+), choose Done, and playback continues once those passes finish; the chip shows the passes left. Keep looping in that box cancels a pending continue. The square alone still continues after the current pass. A loop with a preset count shows its remaining passes as soon as it starts; the chip can change or cancel them for the current playback only. Space toggles play or pause.</dd>
+------------------------------------------------------------------------------
+
+==============================================================================
+需求 2：所有长按激活改为 0.5 秒（1.62 → 1.63）
+==============================================================================
+
+修改说明：
+  所有长按激活改为 0.5 秒（原 1 秒）。
+  · app.js：MENU_HOLD_MS 由 1000 改为 500。它同时用于五类菜单（符杆拍菜单、蓝点左右手菜单、小节线菜单、组拍号菜单、组速度弹窗）
+    和 1.61 的音符键锁定，所以锁定音符也改为长按 0.5 秒（保持所有长按手感一致）。多选模式原有的 0.5 秒长按选整组、首页卡片
+    0.5 秒长按菜单本来就是 0.5 秒，未改。
+  · i18n.js 与中英文说明书中所有「长按 1 秒」改为「长按 0.5 秒」（meter.groupButton、bar.pickEnd、keys.lockHint 及说明书 7 处）；
+    音频导出时长「1 秒至 30 分钟」与长按无关，未改。
+
+本需求共 21 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 19：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4293–4296 行；修改后 第 4323–4327 行
+【修改前 1.62】第 141–144 行
+------------------------------------------------------------------------------
+141 | // 1.60: every control that opens a menu on a double-tap also opens it when held for one second
+142 | // (finger, pen or left mouse button). The menu then keeps clear of the held point, and the click
+143 | // that ends the hold is dropped, so lifting the finger never chooses a menu item.
+144 | const MENU_HOLD_MS = 1000;
+------------------------------------------------------------------------------
+【修改后 1.63】第 141–145 行
+------------------------------------------------------------------------------
+141 | // 1.60: every control that opens a menu on a double-tap also opens it when held (finger, pen or left
+142 | // mouse button). The menu then keeps clear of the held point, and the click that ends the hold is
+143 | // dropped, so lifting the finger never chooses a menu item.
+144 | // 1.63: the hold takes 0.5 s (was 1 s), and a menu opened by a double-tap keeps clear of the tap too.
+145 | const MENU_HOLD_MS = 500;
+------------------------------------------------------------------------------
+
+修改 20：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1048 行；修改后 第 1050 行
+【修改前 1.62】第 79 行
+------------------------------------------------------------------------------
+79 |     'meter.groupButton': '第 {bar} 小节第 {group} 组拍号 {meter}，快速双击或长按 1 秒更换',
+------------------------------------------------------------------------------
+【修改后 1.63】第 79 行
+------------------------------------------------------------------------------
+79 |     'meter.groupButton': '第 {bar} 小节第 {group} 组拍号 {meter}，快速双击或长按 0.5 秒更换',
+------------------------------------------------------------------------------
+
+修改 21：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1449 行；修改后 第 1462 行
+【修改前 1.62】第 480 行
+------------------------------------------------------------------------------
+480 |     'meter.groupButton': 'Measure {bar}, group {group}: {meter}. Double-tap or hold for 1 second to change the group meter.',
+------------------------------------------------------------------------------
+【修改后 1.63】第 491 行
+------------------------------------------------------------------------------
+491 |     'meter.groupButton': 'Measure {bar}, group {group}: {meter}. Double-tap or hold for 0.5 seconds to change the group meter.',
+------------------------------------------------------------------------------
+
+修改 22：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1096 行；修改后 第 1109 行
+【修改前 1.62】第 127 行
+------------------------------------------------------------------------------
+127 |     'keys.lockHint': '长按 1 秒锁定，之后点按谱面符杆即可连续输入该音符',
+------------------------------------------------------------------------------
+【修改后 1.63】第 138 行
+------------------------------------------------------------------------------
+138 |     'keys.lockHint': '长按 0.5 秒锁定，之后点按谱面符杆即可连续输入该音符',
+------------------------------------------------------------------------------
+
+修改 23：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1497 行；修改后 第 1521 行
+【修改前 1.62】第 528 行
+------------------------------------------------------------------------------
+528 |     'keys.lockHint': 'Hold for 1 second to lock, then tap stems to enter this note repeatedly',
+------------------------------------------------------------------------------
+【修改后 1.63】第 550 行
+------------------------------------------------------------------------------
+550 |     'keys.lockHint': 'Hold for 0.5 seconds to lock, then tap stems to enter this note repeatedly',
+------------------------------------------------------------------------------
+
+修改 24：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1140 行；修改后 第 1153 行
+【修改前 1.62】第 171 行
+------------------------------------------------------------------------------
+171 |     'bar.pickEnd': '请快速双击或长按 1 秒同一音轨后面的小节线，设置循环终点。',
+------------------------------------------------------------------------------
+【修改后 1.63】第 182 行
+------------------------------------------------------------------------------
+182 |     'bar.pickEnd': '请快速双击或长按 0.5 秒同一音轨后面的小节线，设置循环终点。',
+------------------------------------------------------------------------------
+
+修改 25：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1539 行；修改后 第 1563 行
+【修改前 1.62】第 570 行
+------------------------------------------------------------------------------
+570 |     'bar.pickEnd': 'Double-tap a later barline on the same track, or hold it for 1 second, to set the loop end.',
+------------------------------------------------------------------------------
+【修改后 1.63】第 592 行
+------------------------------------------------------------------------------
+592 |     'bar.pickEnd': 'Double-tap a later barline on the same track, or hold it for 0.5 seconds, to set the loop end.',
+------------------------------------------------------------------------------
+
+修改 26：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 770 行；修改后 第 772 行
+【修改前 1.62】第 34 行
+------------------------------------------------------------------------------
+34 |         <dt>符杆、左右手与拍菜单</dt><dd>单击符杆移动蓝色选框，画面保持原位。编辑定位后，可重新播放、继续播放或切换跟随按钮来恢复播放跟随。在同一符杆上连续点按两次（间隔小于 0.25 秒）或按住 1 秒打开拍菜单。双击或长按 1 秒符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样可双击或长按 1 秒打开；长按打开的菜单会避开手指所在位置，松手不会误选；菜单打开后，选项单击执行。拍菜单可复制、粘贴、切换三／四分音、细分、改本组拍号或编辑左右手。按拍粘贴要求分音数量匹配且乐器支持复制的音符。多选模式的点选和长按规则不变。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 34 行
+------------------------------------------------------------------------------
+34 |         <dt>符杆、左右手与拍菜单</dt><dd>单击符杆移动蓝色选框，画面保持原位。编辑定位后，可重新播放、继续播放或切换跟随按钮来恢复播放跟随。在同一符杆上连续点按两次（间隔小于 0.25 秒）或按住 0.5 秒打开拍菜单。双击或长按 0.5 秒符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样可双击或长按 0.5 秒打开；无论双击还是长按，弹出的菜单都会避开点按位置，松手或多点一下都不会误选；菜单打开后，选项单击执行。拍菜单可复制、粘贴、切换三／四分音、细分、改本组拍号或编辑左右手。按拍粘贴要求分音数量匹配且乐器支持复制的音符。多选模式的点选和长按规则不变。</dd>
+------------------------------------------------------------------------------
+
+修改 27：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 770 行；修改后 第 772 行
+【修改前 1.62】第 34 行
+------------------------------------------------------------------------------
+34 |         <dt>符杆、左右手与拍菜单</dt><dd>单击符杆移动蓝色选框，画面保持原位。编辑定位后，可重新播放、继续播放或切换跟随按钮来恢复播放跟随。在同一符杆上连续点按两次（间隔小于 0.25 秒）或按住 1 秒打开拍菜单。双击或长按 1 秒符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样可双击或长按 1 秒打开；长按打开的菜单会避开手指所在位置，松手不会误选；菜单打开后，选项单击执行。拍菜单可复制、粘贴、切换三／四分音、细分、改本组拍号或编辑左右手。按拍粘贴要求分音数量匹配且乐器支持复制的音符。多选模式的点选和长按规则不变。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 34 行
+------------------------------------------------------------------------------
+34 |         <dt>符杆、左右手与拍菜单</dt><dd>单击符杆移动蓝色选框，画面保持原位。编辑定位后，可重新播放、继续播放或切换跟随按钮来恢复播放跟随。在同一符杆上连续点按两次（间隔小于 0.25 秒）或按住 0.5 秒打开拍菜单。双击或长按 0.5 秒符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样可双击或长按 0.5 秒打开；无论双击还是长按，弹出的菜单都会避开点按位置，松手或多点一下都不会误选；菜单打开后，选项单击执行。拍菜单可复制、粘贴、切换三／四分音、细分、改本组拍号或编辑左右手。按拍粘贴要求分音数量匹配且乐器支持复制的音符。多选模式的点选和长按规则不变。</dd>
+------------------------------------------------------------------------------
+
+修改 28：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 872 行；修改后 第 874 行
+【修改前 1.62】第 25 行
+------------------------------------------------------------------------------
+25 |     <dt>Stems, sticking and beat menu</dt><dd>Tap a stem once to select it without moving the viewport. Tap the same stem twice within 0.25 seconds, or hold it for 1 second, to open its beat menu. Double-tap or hold the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also open with a double-tap or a 1-second hold. A menu opened by holding appears clear of your finger, so lifting it never picks an item; choose menu items with one tap. The beat menu offers copy, paste, three/four subdivisions, split, group meter and sticking. Beat paste requires matching subdivision counts and compatible strokes. Multi-selection keeps its single-tap and long-press controls.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 25 行
+------------------------------------------------------------------------------
+25 |     <dt>Stems, sticking and beat menu</dt><dd>Tap a stem once to select it without moving the viewport. Tap the same stem twice within 0.25 seconds, or hold it for 0.5 seconds, to open its beat menu. Double-tap or hold the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also open with a double-tap or a 0.5-second hold. Whether opened by a double-tap or a hold, the menu appears clear of the tapped point, so lifting the finger or an extra tap never picks an item; choose menu items with one tap. The beat menu offers copy, paste, three/four subdivisions, split, group meter and sticking. Beat paste requires matching subdivision counts and compatible strokes. Multi-selection keeps its single-tap and long-press controls.</dd>
+------------------------------------------------------------------------------
+
+修改 29：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 771 行；修改后 第 773 行
+【修改前 1.62】第 35 行
+------------------------------------------------------------------------------
+35 |         <dt>鼓音键</dt><dd>Djembe 提供 B 低音、T 中音、S 拍音 X、H 高音 x、G 闷拍、P 轻触和八种装饰音组合 BT、BS、TT、TS、ST、SS、TB、HB（字母为击打顺序）。Dununba、Sangba、Kenkeni 提供 O 开放音、M 闷音、K 鼓棒敲鼓边；Bell、Shekere 使用 X。长按任一鼓音键或「休止」1 秒可锁定该键（键变为蓝色）：之后点按谱面符杆即在该位置写入此音符，光标不前进；再点同一位置可清除，锁定「休止」则点按即清除。锁定期间双击符杆不再打开拍菜单，长按符杆 1 秒仍可打开；轻点被锁定的键或按 Esc 解锁，长按其他键可改锁该键。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 35 行
+------------------------------------------------------------------------------
+35 |         <dt>鼓音键</dt><dd>Djembe 提供 B 低音、T 中音、S 拍音 X、H 高音 x、G 闷拍、P 轻触和八种装饰音组合 BT、BS、TT、TS、ST、SS、TB、HB（字母为击打顺序）。Dununba、Sangba、Kenkeni 提供 O 开放音、M 闷音、K 鼓棒敲鼓边；Bell、Shekere 使用 X。长按任一鼓音键或「休止」0.5 秒可锁定该键（键变为蓝色）：之后点按谱面符杆即在该位置写入此音符，光标不前进；再点同一位置可清除，锁定「休止」则点按即清除。锁定期间双击符杆不再打开拍菜单，长按符杆 0.5 秒仍可打开；轻点被锁定的键或按 Esc 解锁，长按其他键可改锁该键。</dd>
+------------------------------------------------------------------------------
+
+修改 30：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 771 行；修改后 第 773 行
+【修改前 1.62】第 35 行
+------------------------------------------------------------------------------
+35 |         <dt>鼓音键</dt><dd>Djembe 提供 B 低音、T 中音、S 拍音 X、H 高音 x、G 闷拍、P 轻触和八种装饰音组合 BT、BS、TT、TS、ST、SS、TB、HB（字母为击打顺序）。Dununba、Sangba、Kenkeni 提供 O 开放音、M 闷音、K 鼓棒敲鼓边；Bell、Shekere 使用 X。长按任一鼓音键或「休止」1 秒可锁定该键（键变为蓝色）：之后点按谱面符杆即在该位置写入此音符，光标不前进；再点同一位置可清除，锁定「休止」则点按即清除。锁定期间双击符杆不再打开拍菜单，长按符杆 1 秒仍可打开；轻点被锁定的键或按 Esc 解锁，长按其他键可改锁该键。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 35 行
+------------------------------------------------------------------------------
+35 |         <dt>鼓音键</dt><dd>Djembe 提供 B 低音、T 中音、S 拍音 X、H 高音 x、G 闷拍、P 轻触和八种装饰音组合 BT、BS、TT、TS、ST、SS、TB、HB（字母为击打顺序）。Dununba、Sangba、Kenkeni 提供 O 开放音、M 闷音、K 鼓棒敲鼓边；Bell、Shekere 使用 X。长按任一鼓音键或「休止」0.5 秒可锁定该键（键变为蓝色）：之后点按谱面符杆即在该位置写入此音符，光标不前进；再点同一位置可清除，锁定「休止」则点按即清除。锁定期间双击符杆不再打开拍菜单，长按符杆 0.5 秒仍可打开；轻点被锁定的键或按 Esc 解锁，长按其他键可改锁该键。</dd>
+------------------------------------------------------------------------------
+
+修改 31：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 780 行；修改后 第 782 行
+【修改前 1.62】第 44 行
+------------------------------------------------------------------------------
+44 |       <figure><img src="{{editor}}" alt="编辑器实拍，③ 为轨道名称、菜单与小节"><figcaption>点③的轨道标题「⋯」，或双击／长按 1 秒谱面边界线，打开对应菜单。</figcaption></figure>
+------------------------------------------------------------------------------
+【修改后 1.63】第 44 行
+------------------------------------------------------------------------------
+44 |       <figure><img src="{{editor}}" alt="编辑器实拍，③ 为轨道名称、菜单与小节"><figcaption>点③的轨道标题「⋯」，或双击／长按 0.5 秒谱面边界线，打开对应菜单。</figcaption></figure>
+------------------------------------------------------------------------------
+
+修改 32：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 785 行；修改后 第 787 行
+【修改前 1.62】第 49 行
+------------------------------------------------------------------------------
+49 |         <dt>轨道循环与整曲循环</dt><dd>双击或长按 1 秒小节边界设置轨道循环起点与终点。终点须在起点之后，同轨循环不可重叠或越过下一个循环；已设终点可再次修改。播放时按停止方块，会在本轮终点释放当前循环并继续后面的内容；也可用方块上方的「↻ 再循环…」输入再循环次数（1–999），先播完这些次数再继续。整谱「⋯」只提供「播放一次」和「循环整曲」；分段循环使用小节边界菜单设置。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 49 行
+------------------------------------------------------------------------------
+49 |         <dt>轨道循环与整曲循环</dt><dd>双击或长按 0.5 秒小节边界设置轨道循环起点与终点。终点须在起点之后，同轨循环不可重叠或越过下一个循环；已设终点可再次修改。每个循环都可预设循环次数：在小节边界菜单的「设置起始／结束于此的循环次数…」或轨道「⋯」的「设置本小节循环次数…」中填写共播放几遍（1–999，含第一遍），播放到该循环时播完这些遍数便自动向后继续；同一轨道的多个循环各自独立设定。有预设次数的循环在结束竖线左上方显示「×N」；留空或选「一直循环（清除次数）」则一直循环，直到按方块。次数随鼓谱保存。播放时按停止方块，会在本轮终点释放当前循环并继续后面的内容；也可用方块上方的「↻ 再循环…」输入再循环次数（1–999），先播完这些次数再继续。整谱「⋯」只提供「播放一次」和「循环整曲」；分段循环使用小节边界菜单设置。</dd>
+------------------------------------------------------------------------------
+
+修改 33：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 821 行；修改后 第 823 行
+【修改前 1.62】第 85 行
+------------------------------------------------------------------------------
+85 |         <dt>整谱与局部速度</dt><dd>在底部律动面板调节整谱速度，范围 20–360 BPM，−／＋ 每次调整 1 BPM。轨道菜单可设置轨道速度，小节菜单可设置小节速度；双击或长按 1 秒横线组拍号旁的速度可设置该组速度。局部速度随整谱速度按比例变化，并限制在 20–360 BPM。速度弹窗中点蓝色「完成」或按回车保存，「取消」不保存修改；「返回」关闭律动面板。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 85 行
+------------------------------------------------------------------------------
+85 |         <dt>整谱与局部速度</dt><dd>在底部律动面板调节整谱速度，范围 20–360 BPM，−／＋ 每次调整 1 BPM。轨道菜单可设置轨道速度，小节菜单可设置小节速度；双击或长按 0.5 秒横线组拍号旁的速度可设置该组速度。局部速度随整谱速度按比例变化，并限制在 20–360 BPM。速度弹窗中点蓝色「完成」或按回车保存，「取消」不保存修改；「返回」关闭律动面板。</dd>
+------------------------------------------------------------------------------
+
+修改 34：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 872 行；修改后 第 874 行
+【修改前 1.62】第 25 行
+------------------------------------------------------------------------------
+25 |     <dt>Stems, sticking and beat menu</dt><dd>Tap a stem once to select it without moving the viewport. Tap the same stem twice within 0.25 seconds, or hold it for 1 second, to open its beat menu. Double-tap or hold the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also open with a double-tap or a 1-second hold. A menu opened by holding appears clear of your finger, so lifting it never picks an item; choose menu items with one tap. The beat menu offers copy, paste, three/four subdivisions, split, group meter and sticking. Beat paste requires matching subdivision counts and compatible strokes. Multi-selection keeps its single-tap and long-press controls.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 25 行
+------------------------------------------------------------------------------
+25 |     <dt>Stems, sticking and beat menu</dt><dd>Tap a stem once to select it without moving the viewport. Tap the same stem twice within 0.25 seconds, or hold it for 0.5 seconds, to open its beat menu. Double-tap or hold the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also open with a double-tap or a 0.5-second hold. Whether opened by a double-tap or a hold, the menu appears clear of the tapped point, so lifting the finger or an extra tap never picks an item; choose menu items with one tap. The beat menu offers copy, paste, three/four subdivisions, split, group meter and sticking. Beat paste requires matching subdivision counts and compatible strokes. Multi-selection keeps its single-tap and long-press controls.</dd>
+------------------------------------------------------------------------------
+
+修改 35：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 873 行；修改后 第 875 行
+【修改前 1.62】第 26 行
+------------------------------------------------------------------------------
+26 |     <dt>Stroke keys</dt><dd>Djembe offers B (bass), T (tone), S (slap X), H (alternate high x), G (muted slap), P (light touch) and BT, BS, TT, TS, ST, SS, TB, HB grace combinations in playing order. Dununba, Sangba and Kenkeni use O (open), M (muted), K (stick on rim); Bell and Shekere use X. Hold any stroke key or Rest for 1 second to lock it (the key turns blue): tapping a stem then enters that note there without moving on; tap the same stem again to clear it, and a locked Rest clears what you tap. While locked, a double-tap no longer opens the beat menu, but a 1-second hold on a stem still does. Tap the locked key or press Esc to unlock; hold another key to move the lock.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 26 行
+------------------------------------------------------------------------------
+26 |     <dt>Stroke keys</dt><dd>Djembe offers B (bass), T (tone), S (slap X), H (alternate high x), G (muted slap), P (light touch) and BT, BS, TT, TS, ST, SS, TB, HB grace combinations in playing order. Dununba, Sangba and Kenkeni use O (open), M (muted), K (stick on rim); Bell and Shekere use X. Hold any stroke key or Rest for 0.5 seconds to lock it (the key turns blue): tapping a stem then enters that note there without moving on; tap the same stem again to clear it, and a locked Rest clears what you tap. While locked, a double-tap no longer opens the beat menu, but a 0.5-second hold on a stem still does. Tap the locked key or press Esc to unlock; hold another key to move the lock.</dd>
+------------------------------------------------------------------------------
+
+修改 36：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 873 行；修改后 第 875 行
+【修改前 1.62】第 26 行
+------------------------------------------------------------------------------
+26 |     <dt>Stroke keys</dt><dd>Djembe offers B (bass), T (tone), S (slap X), H (alternate high x), G (muted slap), P (light touch) and BT, BS, TT, TS, ST, SS, TB, HB grace combinations in playing order. Dununba, Sangba and Kenkeni use O (open), M (muted), K (stick on rim); Bell and Shekere use X. Hold any stroke key or Rest for 1 second to lock it (the key turns blue): tapping a stem then enters that note there without moving on; tap the same stem again to clear it, and a locked Rest clears what you tap. While locked, a double-tap no longer opens the beat menu, but a 1-second hold on a stem still does. Tap the locked key or press Esc to unlock; hold another key to move the lock.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 26 行
+------------------------------------------------------------------------------
+26 |     <dt>Stroke keys</dt><dd>Djembe offers B (bass), T (tone), S (slap X), H (alternate high x), G (muted slap), P (light touch) and BT, BS, TT, TS, ST, SS, TB, HB grace combinations in playing order. Dununba, Sangba and Kenkeni use O (open), M (muted), K (stick on rim); Bell and Shekere use X. Hold any stroke key or Rest for 0.5 seconds to lock it (the key turns blue): tapping a stem then enters that note there without moving on; tap the same stem again to clear it, and a locked Rest clears what you tap. While locked, a double-tap no longer opens the beat menu, but a 0.5-second hold on a stem still does. Tap the locked key or press Esc to unlock; hold another key to move the lock.</dd>
+------------------------------------------------------------------------------
+
+修改 37：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 884 行；修改后 第 886 行
+【修改前 1.62】第 37 行
+------------------------------------------------------------------------------
+37 |   <figure><img src="{{editor}}" alt="Score editor showing track headers and barlines"><figcaption>③ Open the ⋯ menu on a track header, or double-tap or hold a barline for 1 second for measure actions.</figcaption></figure>
+------------------------------------------------------------------------------
+【修改后 1.63】第 37 行
+------------------------------------------------------------------------------
+37 |   <figure><img src="{{editor}}" alt="Score editor showing track headers and barlines"><figcaption>③ Open the ⋯ menu on a track header, or double-tap or hold a barline for 0.5 seconds for measure actions.</figcaption></figure>
+------------------------------------------------------------------------------
+
+修改 38：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 889 行；修改后 第 891 行
+【修改前 1.62】第 42 行
+------------------------------------------------------------------------------
+42 |     <dt>Track loops and whole-score looping</dt><dd>Double-tap barlines, or hold them for 1 second, to set a track loop start and end. The end must follow the start; loops on a track cannot overlap or pass the next loop. Existing loop ends can be changed. During playback, the Stop square releases the active loop at the end of its current pass and continues into the following section; the ↻ Repeat… chip above it lets you type how many more times (1–999) the loop plays first. The score ⋯ menu offers Play Once and Loop Score; configure section loops in barline menus.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 42 行
+------------------------------------------------------------------------------
+42 |     <dt>Track loops and whole-score looping</dt><dd>Double-tap barlines, or hold them for 0.5 seconds, to set a track loop start and end. The end must follow the start; loops on a track cannot overlap or pass the next loop. Existing loop ends can be changed. Each loop can preset how many times it plays in total (1–999, including the first pass) from Times for Loop Starting/Ending Here… in the barline menu or Loop Times for This Measure… in the track ⋯ menu; when playback reaches the loop it plays that many passes and then continues by itself. Several loops on one track keep their own counts. A loop with a preset count shows ×N above its closing barline; leave the count blank, or choose Loop until stopped, to loop until the square is pressed. Counts are saved with the score. During playback, the Stop square releases the active loop at the end of its current pass and continues into the following section; the ↻ Repeat… chip above it lets you type how many more times (1–999) the loop plays first. The score ⋯ menu offers Play Once and Loop Score; configure section loops in barline menus.</dd>
+------------------------------------------------------------------------------
+
+修改 39：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 925 行；修改后 第 927 行
+【修改前 1.62】第 78 行
+------------------------------------------------------------------------------
+78 |     <dt>Score and local tempo</dt><dd>Adjust score tempo in the bottom Swing panel, within 20–360 BPM; −/+ changes it by 1 BPM. Track and measure menus set their local tempo; double-tap or hold for 1 second the tempo beside a group meter to change that group. Local tempos scale with score tempo and stay within 20–360 BPM. In a tempo dialog, choose the blue Done button or press Enter to save; Cancel discards edits. Back closes the Swing panel.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 78 行
+------------------------------------------------------------------------------
+78 |     <dt>Score and local tempo</dt><dd>Adjust score tempo in the bottom Swing panel, within 20–360 BPM; −/+ changes it by 1 BPM. Track and measure menus set their local tempo; double-tap or hold for 0.5 seconds the tempo beside a group meter to change that group. Local tempos scale with score tempo and stay within 20–360 BPM. In a tempo dialog, choose the blue Done button or press Enter to save; Cancel discards edits. Back closes the Swing panel.</dd>
+------------------------------------------------------------------------------
+
+==============================================================================
+需求 3：双击打开的菜单也避开点击位置（1.62 → 1.63）
+==============================================================================
+
+修改说明：
+  双击打开的弹出菜单（以及速度弹窗）也避开点按位置，避免误点。
+  · 原来只有长按会记录按压点（menuHoldPoint）。现在新增 setMenuAvoidPoint(node, x, y, id)：同时记录屏幕坐标和该点在控件上的
+    相对位置（fx, fy）；新增 markMenuTap(event)：在完成双击的那次 click 中调用（键盘触发的 click 没有坐标，detail 为 0，跳过）；
+    新增 menuAvoidPoint()：手指仍按着时用屏幕坐标，抬起后用控件当前位置换算，使避让点跟随谱面滚动。
+  · 五处双击入口（小节线、符杆拍菜单、蓝点左右手菜单、组拍号、组速度）在打开菜单前调用 markMenuTap(event)。
+  · clearOfMenuHold() 与 menuHoldRoom() 改为读取 menuAvoidPoint()。按压点在下一次按下（任何 pointerdown）时清除；
+    长按松手时不再清除，而是转为跟随控件的相对位置。
+  · 判断与摆放增加 2 px 容差（判断 42 px、摆放 44 px）：开发中发现鼠标事件坐标取整数，菜单被屏幕底边夹住时实际距离只有 39.25 px。
+  · 速度弹窗的避让注释由「一秒长按」改为「长按或双击」。说明书相应句子改为「无论双击还是长按，弹出的菜单都会避开点按位置」。
+
+本需求共 15 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 40：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4300 行；修改后 第 4331 行
+【修改前 1.62】第 148 行
+------------------------------------------------------------------------------
+148 | let menuHoldPoint = null;
+------------------------------------------------------------------------------
+【修改后 1.63】第 149 行
+------------------------------------------------------------------------------
+149 | let menuHoldPoint = null; // point the open menu keeps clear of; `id` is set while that finger is still down
+------------------------------------------------------------------------------
+
+修改 41：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4316 行；修改后 第 4347 行
+【修改前 1.62】第 164 行
+------------------------------------------------------------------------------
+164 |       menuHoldPoint = {id: press.id, x: press.x, y: press.y};
+------------------------------------------------------------------------------
+【修改后 1.63】第 165 行
+------------------------------------------------------------------------------
+165 |       setMenuAvoidPoint(node, press.x, press.y, press.id);
+------------------------------------------------------------------------------
+
+修改 42：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4324–4325 行；修改后 第 4355–4358 行
+【修改前 1.62】第 172–173 行
+------------------------------------------------------------------------------
+172 | document.addEventListener('pointerdown', event => {
+173 |   // A second finger (pinch) or another pointer ends the hold.
+------------------------------------------------------------------------------
+【修改后 1.63】第 173–176 行
+------------------------------------------------------------------------------
+173 | document.addEventListener('pointerdown', event => {
+174 |   // 1.63: a new press is a new request, so forget the point the last menu kept clear of.
+175 |   menuHoldPoint = null;
+176 |   // A second finger (pinch) or another pointer ends the hold.
+------------------------------------------------------------------------------
+
+修改 43：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4335–4337 行；修改后 第 4368–4370 行
+【修改前 1.62】第 183–185 行
+------------------------------------------------------------------------------
+183 |     if (menuHoldPoint?.id !== event.pointerId) return;
+184 |     menuHoldPoint = null;
+185 |     menuHoldClickUntil = performance.now() + 400;
+------------------------------------------------------------------------------
+【修改后 1.63】第 186–188 行
+------------------------------------------------------------------------------
+186 |     if (menuHoldPoint?.id == null || menuHoldPoint.id !== event.pointerId) return;
+187 |     menuHoldPoint.id = null; // 1.63: the finger lifted; the point now moves with the control under it
+188 |     menuHoldClickUntil = performance.now() + 400;
+------------------------------------------------------------------------------
+
+修改 44：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4351–4354 行；修改后 第 4384–4407 行
+【修改前 1.62】第 199–202 行
+------------------------------------------------------------------------------
+199 | // Move a menu box {left, top, width, height} so it does not cover the point still held by a long press.
+200 | // Returns the same object when no move is needed.
+201 | function clearOfMenuHold(box, bounds) {
+202 |   const point = menuHoldPoint;
+------------------------------------------------------------------------------
+【修改后 1.63】第 202–225 行
+------------------------------------------------------------------------------
+202 | // 1.63: remember where a menu was asked for, as a screen point and as a place on the control, so the
+203 | // point follows the score if it scrolls after the finger has lifted.
+204 | function setMenuAvoidPoint(node, x, y, id = null) {
+205 |   const rect = node.getBoundingClientRect();
+206 |   menuHoldPoint = {id, x, y, node, fx: rect.width ? (x - rect.left) / rect.width : .5,
+207 |     fy: rect.height ? (y - rect.top) / rect.height : .5};
+208 | }
+209 | 
+210 | // 1.63: call with the click that completes a double-tap. Keyboard clicks carry no point (detail 0).
+211 | function markMenuTap(event) {
+212 |   if (event.detail && Number.isFinite(event.clientX)) setMenuAvoidPoint(event.currentTarget, event.clientX, event.clientY);
+213 | }
+214 | 
+215 | function menuAvoidPoint() {
+216 |   const point = menuHoldPoint;
+217 |   if (!point || point.id !== null || !point.node.isConnected) return point;
+218 |   const rect = point.node.getBoundingClientRect();
+219 |   return {x: rect.left + point.fx * rect.width, y: rect.top + point.fy * rect.height};
+220 | }
+221 | 
+222 | // Move a menu box {left, top, width, height} so it does not cover the point of the long press or
+223 | // double-tap that opened it. Returns the same object when no move is needed.
+224 | function clearOfMenuHold(box, bounds) {
+225 |   const point = menuAvoidPoint();
+------------------------------------------------------------------------------
+
+修改 45：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4380–4382 行；修改后 第 4434–4436 行
+【修改前 1.62】第 228–230 行
+------------------------------------------------------------------------------
+228 | // The larger free height above or below the held point.
+229 | function menuHoldRoom(bounds) {
+230 |   const point = menuHoldPoint;
+------------------------------------------------------------------------------
+【修改后 1.63】第 252–254 行
+------------------------------------------------------------------------------
+252 | // The larger free height above or below the held or tapped point.
+253 | function menuHoldRoom(bounds) {
+254 |   const point = menuAvoidPoint();
+------------------------------------------------------------------------------
+
+修改 46：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4356–4357 行；修改后 第 4409–4411 行
+【修改前 1.62】第 204–205 行
+------------------------------------------------------------------------------
+204 |   const reach = MENU_HOLD_CLEARANCE;
+205 |   const covers = ({left, top}) => point.x > left - reach && point.x < left + box.width + reach &&
+------------------------------------------------------------------------------
+【修改后 1.63】第 227–229 行
+------------------------------------------------------------------------------
+227 |   // 1.63: 2 px allowance, because event coordinates and layout sizes are rounded to whole pixels.
+228 |   const reach = MENU_HOLD_CLEARANCE + 2;
+229 |   const covers = ({left, top}) => point.x > left - reach && point.x < left + box.width + reach &&
+------------------------------------------------------------------------------
+
+修改 47：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4384 行；修改后 第 4438 行
+【修改前 1.62】第 232 行
+------------------------------------------------------------------------------
+232 |   const gap = MENU_HOLD_CLEARANCE + 2;
+------------------------------------------------------------------------------
+【修改后 1.63】第 256 行
+------------------------------------------------------------------------------
+256 |   const gap = MENU_HOLD_CLEARANCE + 4;
+------------------------------------------------------------------------------
+
+修改 48：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4685 行；修改后 第 4739–4741 行
+【修改前 1.62】第 533 行
+------------------------------------------------------------------------------
+533 |   const line = button('', event => { if (quickDoubleTap(event)) openTrackBoundary(track, bar, event.currentTarget, side); }, 'barline');
+------------------------------------------------------------------------------
+【修改后 1.63】第 557–559 行
+------------------------------------------------------------------------------
+557 |   const line = button('', event => {
+558 |     if (quickDoubleTap(event)) { markMenuTap(event); openTrackBoundary(track, bar, event.currentTarget, side); }
+559 |   }, 'barline');
+------------------------------------------------------------------------------
+
+修改 49：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4821–4822 行；修改后 第 4888–4890 行
+【修改前 1.62】第 669–670 行
+------------------------------------------------------------------------------
+669 |           else if (activate) {
+670 |             if (hand) openHandMenu(event.currentTarget);
+------------------------------------------------------------------------------
+【修改后 1.63】第 706–708 行
+------------------------------------------------------------------------------
+706 |           else if (activate) {
+707 |             markMenuTap(event);
+708 |             if (hand) openHandMenu(event.currentTarget);
+------------------------------------------------------------------------------
+
+修改 50：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4875 行；修改后 第 4943 行
+【修改前 1.62】第 723 行
+------------------------------------------------------------------------------
+723 |         event => { if (quickDoubleTap(event)) openGroupMeterMenu(event.currentTarget, track.id, beat); }, 'group-meter');
+------------------------------------------------------------------------------
+【修改后 1.63】第 761 行
+------------------------------------------------------------------------------
+761 |         event => { if (quickDoubleTap(event)) { markMenuTap(event); openGroupMeterMenu(event.currentTarget, track.id, beat); } }, 'group-meter');
+------------------------------------------------------------------------------
+
+修改 51：source/ui/app.js
+  安卓 assets/index.html：修改前 第 4882 行；修改后 第 4950 行
+【修改前 1.62】第 730 行
+------------------------------------------------------------------------------
+730 |         event => { if (quickDoubleTap(event)) openTempoEditor(track, bar, group); }, 'group-tempo');
+------------------------------------------------------------------------------
+【修改后 1.63】第 768 行
+------------------------------------------------------------------------------
+768 |         event => { if (quickDoubleTap(event)) { markMenuTap(event); openTempoEditor(track, bar, group); } }, 'group-tempo');
+------------------------------------------------------------------------------
+
+修改 52：source/ui/app.js
+  安卓 assets/index.html：修改前 第 8091 行；修改后 第 8210 行
+【修改前 1.62】第 3864 行
+------------------------------------------------------------------------------
+3864 |   // Opened by a one-second hold: keep the dialog's buttons away from the finger that is still down.
+------------------------------------------------------------------------------
+【修改后 1.63】第 3953 行
+------------------------------------------------------------------------------
+3953 |   // Opened by a hold or a double-tap: keep the dialog's buttons away from that point.
+------------------------------------------------------------------------------
+
+修改 53：source/ui/help/guide.html
+  安卓 assets/index.html：修改前 第 770 行；修改后 第 772 行
+【修改前 1.62】第 34 行
+------------------------------------------------------------------------------
+34 |         <dt>符杆、左右手与拍菜单</dt><dd>单击符杆移动蓝色选框，画面保持原位。编辑定位后，可重新播放、继续播放或切换跟随按钮来恢复播放跟随。在同一符杆上连续点按两次（间隔小于 0.25 秒）或按住 1 秒打开拍菜单。双击或长按 1 秒符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样可双击或长按 1 秒打开；长按打开的菜单会避开手指所在位置，松手不会误选；菜单打开后，选项单击执行。拍菜单可复制、粘贴、切换三／四分音、细分、改本组拍号或编辑左右手。按拍粘贴要求分音数量匹配且乐器支持复制的音符。多选模式的点选和长按规则不变。</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 34 行
+------------------------------------------------------------------------------
+34 |         <dt>符杆、左右手与拍菜单</dt><dd>单击符杆移动蓝色选框，画面保持原位。编辑定位后，可重新播放、继续播放或切换跟随按钮来恢复播放跟随。在同一符杆上连续点按两次（间隔小于 0.25 秒）或按住 0.5 秒打开拍菜单。双击或长按 0.5 秒符杆上方蓝点，设置或清除 L（左）、R（右）、LR（双手）。小节边界、横线组拍号与速度入口同样可双击或长按 0.5 秒打开；无论双击还是长按，弹出的菜单都会避开点按位置，松手或多点一下都不会误选；菜单打开后，选项单击执行。拍菜单可复制、粘贴、切换三／四分音、细分、改本组拍号或编辑左右手。按拍粘贴要求分音数量匹配且乐器支持复制的音符。多选模式的点选和长按规则不变。</dd>
+------------------------------------------------------------------------------
+
+修改 54：source/ui/help/guide.en.html
+  安卓 assets/index.html：修改前 第 872 行；修改后 第 874 行
+【修改前 1.62】第 25 行
+------------------------------------------------------------------------------
+25 |     <dt>Stems, sticking and beat menu</dt><dd>Tap a stem once to select it without moving the viewport. Tap the same stem twice within 0.25 seconds, or hold it for 1 second, to open its beat menu. Double-tap or hold the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also open with a double-tap or a 1-second hold. A menu opened by holding appears clear of your finger, so lifting it never picks an item; choose menu items with one tap. The beat menu offers copy, paste, three/four subdivisions, split, group meter and sticking. Beat paste requires matching subdivision counts and compatible strokes. Multi-selection keeps its single-tap and long-press controls.</dd>
+------------------------------------------------------------------------------
+【修改后 1.63】第 25 行
+------------------------------------------------------------------------------
+25 |     <dt>Stems, sticking and beat menu</dt><dd>Tap a stem once to select it without moving the viewport. Tap the same stem twice within 0.25 seconds, or hold it for 0.5 seconds, to open its beat menu. Double-tap or hold the blue dot to set or clear L (left), R (right) or LR (both). Barline, group-meter and group-tempo menus also open with a double-tap or a 0.5-second hold. Whether opened by a double-tap or a hold, the menu appears clear of the tapped point, so lifting the finger or an extra tap never picks an item; choose menu items with one tap. The beat menu offers copy, paste, three/four subdivisions, split, group meter and sticking. Beat paste requires matching subdivision counts and compatible strokes. Multi-selection keeps its single-tap and long-press controls.</dd>
+------------------------------------------------------------------------------
+
+==============================================================================
+需求 4：说明书同步修正（关于页文字；各功能的说明随对应修改一并列出）（1.62 → 1.63）
+==============================================================================
+
+修改说明：
+  说明书同步修正：除上面各需求中列出的说明书与提示文字修改外，关于页「本版更新」文字（help.aboutUpdate）按 1.63 改写；
+  Readme.txt 与 source/Readme-Win11.txt 首行版本改为 1.63 并新增「1.63 更新」；仓库 README.md 重写为 1.60–1.63 的完整说明
+  （补上 1.62 时漏写的段落，并把 1.60/1.61 中已被后续版本改变的描述注明当前做法，如长按时长、再循环次数、播放方框形状）；
+  本交接文档延续加入第 4 段提示词与全部修改对照，并更新版本记录、构建与测试命令。
+
+本需求共 2 处代码修改。每处修改同时写入 Win11 源码与安卓页面 assets/index.html（两者代码相同，行号不同）。
+
+修改 55：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 999 行；修改后 第 1001 行
+【修改前 1.62】第 30 行
+------------------------------------------------------------------------------
+30 |     'help.aboutUpdate': '本版：循环播放时可在方块上方的「↻ 再循环…」中自由输入再循环次数（1–999），播完后继续；播放时每条轨道用竖向蓝色长方框罩住正在播放音符的符杆和音头；长按音符键 1 秒可锁定该音符，点按谱面即可连续输入。',
+------------------------------------------------------------------------------
+【修改后 1.63】第 30 行
+------------------------------------------------------------------------------
+30 |     'help.aboutUpdate': '本版：每个循环区间可预设循环次数（共播放几遍），播完自动向后播放，同一轨道的多个循环各自设定；所有长按操作改为 0.5 秒；双击打开的菜单也会避开点按位置，防止误点。',
+------------------------------------------------------------------------------
+
+修改 56：source/ui/i18n.js
+  安卓 assets/index.html：修改前 第 1401 行；修改后 第 1414 行
+【修改前 1.62】第 432 行
+------------------------------------------------------------------------------
+432 |     'help.aboutUpdate': 'This release lets you type in the ↻ Repeat… chip how many more times (1–999) a loop plays before continuing, covers the stem and note head of every track’s playing note with a tall blue box, and lets you hold a note key for 1 second to lock it and enter it by tapping the score.',
+------------------------------------------------------------------------------
+【修改后 1.63】第 443 行
+------------------------------------------------------------------------------
+443 |     'help.aboutUpdate': 'This release lets every loop preset how many times it plays before playback continues by itself (each loop on a track has its own count), shortens every hold to 0.5 seconds, and places menus opened by a double-tap clear of the tapped point as well.',
+------------------------------------------------------------------------------
+
+==============================================================================
+版本号、说明文件、测试与其他文件（1.62 → 1.63）
+==============================================================================
+以下改动不属于上面的功能修改清单，按文件逐段列出修改前／修改后。
+
+■ source/ui/app.js：版本号与日期（功能修改之外的差异）
+
+app.js
+【修改前 1.62】第 1166 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+1166 |     version: '1.62', userAgent: navigator.userAgent,
+------------------------------------------------------------------------------
+【修改后 1.63】第 1166 行
+------------------------------------------------------------------------------
+1166 |     version: '1.63', userAgent: navigator.userAgent,
+------------------------------------------------------------------------------
+
+app.js
+【修改前 1.62】第 1172 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+1172 |     const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.62.json')]);
+------------------------------------------------------------------------------
+【修改后 1.63】第 1172 行
+------------------------------------------------------------------------------
+1172 |     const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.63.json')]);
+------------------------------------------------------------------------------
+
+■ source/ui/index.html：版本号与日期（功能修改之外的差异）
+
+index.html
+【修改前 1.62】第 32 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+32 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 32 行
+------------------------------------------------------------------------------
+32 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.63 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+■ source/ui/help/guide.html：版本号与日期（功能修改之外的差异）
+
+help/guide.html
+【修改前 1.62】第 16 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+16 |       <p><small>适用版本 1.62 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 16 行
+------------------------------------------------------------------------------
+16 |       <p><small>适用版本 1.63 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+help/guide.html
+【修改前 1.62】第 120 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+120 |     <p><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 120 行
+------------------------------------------------------------------------------
+120 |     <p><span data-i18n="browse.release">版本</span> 1.63 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+■ source/ui/help/guide.en.html：版本号与日期（功能修改之外的差异）
+
+help/guide.en.html
+【修改前 1.62】第 6 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+6 |       <p><small>For version 1.62 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 6 行
+------------------------------------------------------------------------------
+6 |       <p><small>For version 1.63 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+■ Readme.txt
+
+Readme.txt
+【修改前 1.62】第 1 行
+------------------------------------------------------------------------------
+1 | ﻿Rhythm Desk 1.62 · 鼓谱工作台 · Windows 11 x64
+------------------------------------------------------------------------------
+【修改后 1.63】第 1–2 行
+------------------------------------------------------------------------------
+1 | ﻿Rhythm Desk 1.63 · 鼓谱工作台 · Windows 11 x64
+2 | 1.63 更新：每个循环区间可预设循环次数（小节边界菜单或轨道「⋯」中的「设置…循环次数」，填写共播放几遍，1–999），播完自动向后播放，同一轨道的多个循环各自设定，结束竖线旁显示「×N」，次数随鼓谱保存；所有长按操作改为 0.5 秒；双击打开的菜单也会避开点按位置，防止误点。
+------------------------------------------------------------------------------
+
+■ source/Readme-Win11.txt
+
+Readme-Win11.txt
+【修改前 1.62】第 1 行
+------------------------------------------------------------------------------
+1 | Rhythm Desk 1.62 · 鼓谱工作台 · Windows 11 x64
+------------------------------------------------------------------------------
+【修改后 1.63】第 1–2 行
+------------------------------------------------------------------------------
+1 | Rhythm Desk 1.63 · 鼓谱工作台 · Windows 11 x64
+2 | 1.63 更新：每个循环区间可预设循环次数（小节边界菜单或轨道「⋯」中的「设置…循环次数」，填写共播放几遍，1–999），播完自动向后播放，同一轨道的多个循环各自设定，结束竖线旁显示「×N」，次数随鼓谱保存；所有长按操作改为 0.5 秒；双击打开的菜单也会避开点按位置，防止误点。
+------------------------------------------------------------------------------
+
+■ source/tests/interaction163.cjs（由 interaction162.cjs 改名）
+
+interaction163.cjs
+【修改前 1.62】第 66 行
+------------------------------------------------------------------------------
+66 |   await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.62');assert.equal(record.events.at(-1).event,'export');
+------------------------------------------------------------------------------
+【修改后 1.63】第 66 行
+------------------------------------------------------------------------------
+66 |   await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.63');assert.equal(record.events.at(-1).event,'export');
+------------------------------------------------------------------------------
+
+■ source/tests/playback163.cjs（由 playback162.cjs 改名）
+
+playback163.cjs
+【修改前 1.62】第 168 行
+------------------------------------------------------------------------------
+168 |   if(!browserPage) throw Error('Usage: node playback162.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
+------------------------------------------------------------------------------
+【修改后 1.63】第 168 行
+------------------------------------------------------------------------------
+168 |   if(!browserPage) throw Error('Usage: node playback163.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
+------------------------------------------------------------------------------
+
+■ source/tests/offline163.cjs（由 offline162.cjs 改名）
+
+offline163.cjs
+【修改前 1.62】第 31–32 行
+------------------------------------------------------------------------------
+31 |   assert.deepEqual(await check.json(),{version:'1.62',ready:true});
+32 |   console.log('PASS service-worker install, corrupt cache rejection, scope-safe upgrade, offline launch, standalone HTML and 1.62 integrity check.');
+------------------------------------------------------------------------------
+【修改后 1.63】第 31–32 行
+------------------------------------------------------------------------------
+31 |   assert.deepEqual(await check.json(),{version:'1.63',ready:true});
+32 |   console.log('PASS service-worker install, corrupt cache rejection, scope-safe upgrade, offline launch, standalone HTML and 1.63 integrity check.');
+------------------------------------------------------------------------------
+
+■ source/tests/editor160.e2e.cjs
+
+editor160.e2e.cjs
+【修改前 1.62】第 2 行
+------------------------------------------------------------------------------
+2 | // changing subdivisions with notes in place, and the one-second hold that opens every double-tap
+------------------------------------------------------------------------------
+【修改后 1.63】第 2 行
+------------------------------------------------------------------------------
+2 | // changing subdivisions with notes in place, and the hold (0.5 s since 1.63) that opens every double-tap
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 178–180 行
+------------------------------------------------------------------------------
+178 |   await hold(point, 500); await release(); await page.waitForTimeout(450);
+179 |   assert.equal(await beatMenuOpen(page), false, 'a 0.5 s press does not open the beat menu');
+180 |   // 1 s hold on a stem opens the beat menu clear of the finger; releasing chooses nothing.
+------------------------------------------------------------------------------
+【修改后 1.63】第 178–180 行
+------------------------------------------------------------------------------
+178 |   await hold(point, 250); await release(); await page.waitForTimeout(450);
+179 |   assert.equal(await beatMenuOpen(page), false, 'a 0.25 s press does not open the beat menu');
+180 |   // A 0.5 s hold (1 s before 1.63) on a stem opens the beat menu clear of the finger; releasing chooses nothing.
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 183 行
+------------------------------------------------------------------------------
+183 |   await hold(point, 1100);
+------------------------------------------------------------------------------
+【修改后 1.63】第 183 行
+------------------------------------------------------------------------------
+183 |   await hold(point, 650);
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 203 行
+------------------------------------------------------------------------------
+203 |   await hold(point, 1100);
+------------------------------------------------------------------------------
+【修改后 1.63】第 203 行
+------------------------------------------------------------------------------
+203 |   await hold(point, 650);
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 212 行
+------------------------------------------------------------------------------
+212 |   await hold(point, 1100);
+------------------------------------------------------------------------------
+【修改后 1.63】第 212 行
+------------------------------------------------------------------------------
+212 |   await hold(point, 650);
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 223 行
+------------------------------------------------------------------------------
+223 |   await hold(point, 1100);
+------------------------------------------------------------------------------
+【修改后 1.63】第 223 行
+------------------------------------------------------------------------------
+223 |   await hold(point, 650);
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 230 行
+------------------------------------------------------------------------------
+230 |   await hold(point, 1100);
+------------------------------------------------------------------------------
+【修改后 1.63】第 230 行
+------------------------------------------------------------------------------
+230 |   await hold(point, 650);
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 239 行
+------------------------------------------------------------------------------
+239 |   await hold(point, 1100); await release(); await page.waitForTimeout(450);
+------------------------------------------------------------------------------
+【修改后 1.63】第 239 行
+------------------------------------------------------------------------------
+239 |   await hold(point, 650); await release(); await page.waitForTimeout(450);
+------------------------------------------------------------------------------
+
+editor160.e2e.cjs
+【修改前 1.62】第 243 行
+------------------------------------------------------------------------------
+243 |   console.log(`  PASS ${touch ? 'touch' : 'mouse'} 1 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
+------------------------------------------------------------------------------
+【修改后 1.63】第 243 行
+------------------------------------------------------------------------------
+243 |   console.log(`  PASS ${touch ? 'touch' : 'mouse'} 0.5 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
+------------------------------------------------------------------------------
+
+■ source/tests/editor161.e2e.cjs
+
+editor161.e2e.cjs
+【修改前 1.62】第 144 行
+------------------------------------------------------------------------------
+144 |   const hold = async (locator, ms = 1100) => {
+------------------------------------------------------------------------------
+【修改后 1.63】第 144 行
+------------------------------------------------------------------------------
+144 |   const hold = async (locator, ms = 650) => {
+------------------------------------------------------------------------------
+
+editor161.e2e.cjs
+【修改前 1.62】第 181 行
+------------------------------------------------------------------------------
+181 |   // A 1 s hold on a stem still opens the beat menu and writes nothing.
+------------------------------------------------------------------------------
+【修改后 1.63】第 181 行
+------------------------------------------------------------------------------
+181 |   // A 0.5 s hold on a stem still opens the beat menu and writes nothing.
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/sw.js
+
+sw.js
+【修改前 1.62】第 62 行
+------------------------------------------------------------------------------
+62 |       return new Response(JSON.stringify({version: '1.62', ready: results.every(Boolean)}), {
+------------------------------------------------------------------------------
+【修改后 1.63】第 62 行
+------------------------------------------------------------------------------
+62 |       return new Response(JSON.stringify({version: '1.63', ready: results.every(Boolean)}), {
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/install.html
+
+install.html
+【修改前 1.62】第 21–22 行
+------------------------------------------------------------------------------
+21 |       preparing: '正在准备离线资源…', ready: '1.62 离线资源已校验。可从同一地址或主屏幕离线打开。',
+22 |       failed: '1.62 离线校验未完成。请保持联网，在同一浏览器重新打开本页。',
+------------------------------------------------------------------------------
+【修改后 1.63】第 21–22 行
+------------------------------------------------------------------------------
+21 |       preparing: '正在准备离线资源…', ready: '1.63 离线资源已校验。可从同一地址或主屏幕离线打开。',
+22 |       failed: '1.63 离线校验未完成。请保持联网，在同一浏览器重新打开本页。',
+------------------------------------------------------------------------------
+
+install.html
+【修改前 1.62】第 25–26 行
+------------------------------------------------------------------------------
+25 |       preparing: 'Preparing offline files…', ready: 'Offline files for 1.62 are verified. Reopen this address or Home Screen app offline.',
+26 |       failed: 'Offline files for 1.62 are not ready. Stay online and reopen this page in the same browser.',
+------------------------------------------------------------------------------
+【修改后 1.63】第 25–26 行
+------------------------------------------------------------------------------
+25 |       preparing: 'Preparing offline files…', ready: 'Offline files for 1.63 are verified. Reopen this address or Home Screen app offline.',
+26 |       failed: 'Offline files for 1.63 are not ready. Stay online and reopen this page in the same browser.',
+------------------------------------------------------------------------------
+
+install.html
+【修改前 1.62】第 52 行
+------------------------------------------------------------------------------
+52 |         ready = result.version === '1.62' && result.ready === true;
+------------------------------------------------------------------------------
+【修改后 1.63】第 52 行
+------------------------------------------------------------------------------
+52 |         ready = result.version === '1.63' && result.ready === true;
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/local-fallback.html
+
+local-fallback.html
+【修改前 1.62】第 2–4 行
+------------------------------------------------------------------------------
+2 |   <strong>鼓谱工作台 1.62 · 本地文件预览</strong>
+3 |   <p>请在支持 JavaScript 的浏览器打开此 HTML。在 iPhone「文件」中只看到预览时，请用 Safari 打开已部署的 1.62 离线网页，等待「离线资源已校验」后添加到主屏幕。</p>
+4 |   <p lang="en">Open this HTML in a browser that runs JavaScript. In iPhone Files preview, use the installed 1.62 offline web app or open its hosted offline page in Safari and complete the cache check.</p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 2–4 行
+------------------------------------------------------------------------------
+2 |   <strong>鼓谱工作台 1.63 · 本地文件预览</strong>
+3 |   <p>请在支持 JavaScript 的浏览器打开此 HTML。在 iPhone「文件」中只看到预览时，请用 Safari 打开已部署的 1.63 离线网页，等待「离线资源已校验」后添加到主屏幕。</p>
+4 |   <p lang="en">Open this HTML in a browser that runs JavaScript. In iPhone Files preview, use the installed 1.63 offline web app or open its hosted offline page in Safari and complete the cache check.</p>
+------------------------------------------------------------------------------
+
+■ source/iphone-offline/Readme.txt
+
+Readme.txt
+【修改前 1.62】第 1 行
+------------------------------------------------------------------------------
+1 | RhythmDesk 1.62 · iPhone 离线版
+------------------------------------------------------------------------------
+【修改后 1.63】第 1 行
+------------------------------------------------------------------------------
+1 | RhythmDesk 1.63 · iPhone 离线版
+------------------------------------------------------------------------------
+
+Readme.txt
+【修改前 1.62】第 4 行
+------------------------------------------------------------------------------
+4 | 联网用 Safari 打开地址，进入「离线使用」，等待「1.62 离线资源已校验」。
+------------------------------------------------------------------------------
+【修改后 1.63】第 4 行
+------------------------------------------------------------------------------
+4 | 联网用 Safari 打开地址，进入「离线使用」，等待「1.63 离线资源已校验」。
+------------------------------------------------------------------------------
+
+Readme.txt
+【修改前 1.62】第 6 行
+------------------------------------------------------------------------------
+6 | 首次从主屏幕打开时保持联网，在该窗口再次确认「1.62 离线资源已校验」。
+------------------------------------------------------------------------------
+【修改后 1.63】第 6 行
+------------------------------------------------------------------------------
+6 | 首次从主屏幕打开时保持联网，在该窗口再次确认「1.63 离线资源已校验」。
+------------------------------------------------------------------------------
+
+Readme.txt
+【修改前 1.62】第 17 行
+------------------------------------------------------------------------------
+17 | 升级已有主屏幕版本时在原 HTTPS 地址覆盖完整目录，保留原作用域；联网重新打开，看到 1.62 的首页版本与离线校验提示后再断网。
+------------------------------------------------------------------------------
+【修改后 1.63】第 17 行
+------------------------------------------------------------------------------
+17 | 升级已有主屏幕版本时在原 HTTPS 地址覆盖完整目录，保留原作用域；联网重新打开，看到 1.63 的首页版本与离线校验提示后再断网。
+------------------------------------------------------------------------------
+
+■ 安卓 assets/index.html：版本号与日期（功能修改之外的差异）
+
+assets/index.html
+【修改前 1.62】第 395 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+395 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 395 行
+------------------------------------------------------------------------------
+395 |     <p class="browser-release"><span data-i18n="browse.release">版本</span> 1.63 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.62】第 754 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+754 |       <p><small>适用版本 1.62 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 754 行
+------------------------------------------------------------------------------
+754 |       <p><small>适用版本 1.63 · 更新于 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.62】第 855 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+855 |       <p><small>For version 1.62 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 855 行
+------------------------------------------------------------------------------
+855 |       <p><small>For version 1.63 · Updated 2026-11-22</small></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.62】第 960 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+960 |     <p><span data-i18n="browse.release">版本</span> 1.62 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+【修改后 1.63】第 960 行
+------------------------------------------------------------------------------
+960 |     <p><span data-i18n="browse.release">版本</span> 1.63 · <span data-i18n="browse.updated">更新于</span> <time datetime="2026-11-22">2026-11-22</time></p>
+------------------------------------------------------------------------------
+
+assets/index.html
+【修改前 1.62】第 5343–5344 行（1.63 文件行号，版本号替换不改变行数）
+------------------------------------------------------------------------------
+5343 |   const data={version:'1.62',userAgent:navigator.userAgent,viewport:{width:el.paper.clientWidth,height:el.paper.clientHeight},events:androidFollowLog.slice()};
+5344 |   download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),'RhythmDesk-follow-diagnostics-1.62.json');
+------------------------------------------------------------------------------
+【修改后 1.63】第 5343–5344 行
+------------------------------------------------------------------------------
+5343 |   const data={version:'1.63',userAgent:navigator.userAgent,viewport:{width:el.paper.clientWidth,height:el.paper.clientHeight},events:androidFollowLog.slice()};
+5344 |   download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),'RhythmDesk-follow-diagnostics-1.63.json');
+------------------------------------------------------------------------------
+
+■ 安卓 AndroidManifest.xml（二进制）
+------------------------------------------------------------------------------
+修改前 1.62：versionCode = 162，versionName = "1.62"
+修改后 1.63：versionCode = 163，versionName = "1.63"
+------------------------------------------------------------------------------
+
+■ 新增文件（修改前不存在）
+  RhythmDesk-Win11/source/tests/editor163.e2e.cjs  —— 1.63 功能的 Playwright 测试，全文见附录 C。
+  tools/patch163.py。发布日期与 1.62 同为 2026-11-22，因此日期字符串未改。
+
+■ 本轮开发中的注意点
+  · 预设次数按「共几遍（含第一遍）」计，与方块上方「↻ 再循环…」的「再循环几次（本轮之后）」不同：预设 3 遍时，进入循环后按钮显示「再循环 2 次」。
+  · 设置次数会停止正在进行的播放（与添加、移除、修改循环终点一致），因为它属于鼓谱修改；临时调整请用「↻ 再循环…」。
+  · 测试 editor160/editor161 中的长按时长改为 0.65 秒（应打开）与 0.25 秒（不应打开）；editor163 另验证 0.3 秒不打开、0.7 秒打开。
+  · 用 1.62 页面对照：双击小节线时菜单覆盖点按位置（距离 −89 px），1.63 为 44 px，说明 editor163 的避让检查确实有效。
+
+==============================================================================
+七、后续开发建议
 ==============================================================================
   · 新一轮修改沿用同样做法：先在 Win11 源码 source/ui 上设计修改，写成 tools/patchXXX.py 清单同时作用于安卓 index.html，
     构建后比对两平台页面差异，确认只剩原有安卓专用部分；然后重打包、签名、校验、跑测试。
   · 安卓专用代码只存在于 android/index.html（APK 内页面）。修改跟随、保存、下载相关代码时，两个平台写法不同，需分别处理。
   · 签名必须一直使用同一私钥，否则用户无法覆盖安装；versionCode 必须递增。
-  · 建议在安卓真机和 Windows 11 Edge 上补做人工验收：长按 1 秒的手感、菜单避让位置、再循环计数、锁定输入。
+  · 建议在安卓真机和 Windows 11 Edge 上补做人工验收：长按 0.5 秒的手感、单击／双击／长按菜单的避让位置、预设循环次数与再循环计数、锁定输入。
 
 ==============================================================================
-附录 A：新增测试 editor160.e2e.cjs（1.60）
+附录 A：测试 editor160.e2e.cjs（1.60 新增，1.63 更新后的全文）
 ==============================================================================
 文件：RhythmDesk-Win11/source/tests/editor160.e2e.cjs
 ------------------------------------------------------------------------------
   1 | // 1.60 editor checks in a real Chromium page (Playwright): Duplicate Track, splitting cells and
-  2 | // changing subdivisions with notes in place, and the one-second hold that opens every double-tap
+  2 | // changing subdivisions with notes in place, and the hold (0.5 s since 1.63) that opens every double-tap
   3 | // menu clear of the held point. Run once per built page:
   4 | //   node editor160.e2e.cjs ../../RhythmDesk.html ANDROID_ASSETS/index.html
   5 | const assert = require('node:assert/strict');
@@ -3491,12 +4788,12 @@ assets/index.html
 175 |   // Short press (0.5 s) opens nothing.
 176 |   const slot = row.locator('.slot').nth(4);
 177 |   let point = await centerOf(slot);
-178 |   await hold(point, 500); await release(); await page.waitForTimeout(450);
-179 |   assert.equal(await beatMenuOpen(page), false, 'a 0.5 s press does not open the beat menu');
-180 |   // 1 s hold on a stem opens the beat menu clear of the finger; releasing chooses nothing.
+178 |   await hold(point, 250); await release(); await page.waitForTimeout(450);
+179 |   assert.equal(await beatMenuOpen(page), false, 'a 0.25 s press does not open the beat menu');
+180 |   // A 0.5 s hold (1 s before 1.63) on a stem opens the beat menu clear of the finger; releasing chooses nothing.
 181 |   await page.evaluate(() => closePopups());
 182 |   point = await centerOf(slot);
-183 |   await hold(point, 1100);
+183 |   await hold(point, 650);
 184 |   assert(await beatMenuOpen(page), 'held stem opens the beat menu');
 185 |   assertClear(await rectOf(page, '#beatMenu'), point, 'beat menu');
 186 |   const selected = await page.evaluate(() => ({beat: cursor.beat, slot: cursor.slot, undo: undoStack.length}));
@@ -3516,7 +4813,7 @@ assets/index.html
 200 |   // Blue sticking dot -> sticking menu.
 201 |   await page.evaluate(() => closePopups());
 202 |   point = await centerOf(row.locator('.slot').nth(5).locator('.hand-dot'));
-203 |   await hold(point, 1100);
+203 |   await hold(point, 650);
 204 |   assert(await menuOpen(page), 'held sticking dot opens the sticking menu');
 205 |   assert(await page.locator('#menu button', {hasText: /左手|Left/}).count() > 0, 'it is the sticking menu');
 206 |   assertClear(await rectOf(page, '#menu'), point, 'sticking menu');
@@ -3525,7 +4822,7 @@ assets/index.html
 209 |   // Barline -> measure menu.
 210 |   await page.evaluate(() => closePopups());
 211 |   point = await centerOf(row.locator('.barline').nth(1));
-212 |   await hold(point, 1100);
+212 |   await hold(point, 650);
 213 |   assert(await menuOpen(page), 'held barline opens the barline menu');
 214 |   assertClear(await rectOf(page, '#menu'), point, 'barline menu');
 215 |   const items = await page.locator('#menu button').count();
@@ -3536,14 +4833,14 @@ assets/index.html
 220 |   const meter = row.locator('.group-meter').nth(2);
 221 |   await meter.scrollIntoViewIfNeeded();
 222 |   point = await centerOf(meter);
-223 |   await hold(point, 1100);
+223 |   await hold(point, 650);
 224 |   assert(await menuOpen(page), 'held group meter opens the meter menu');
 225 |   assertClear(await rectOf(page, '#menu'), point, 'group meter menu');
 226 |   await release(); await page.waitForTimeout(450);
 227 |   // Group tempo -> tempo dialog away from the finger.
 228 |   await page.evaluate(() => closePopups());
 229 |   point = await centerOf(row.locator('.group-tempo').nth(2));
-230 |   await hold(point, 1100);
+230 |   await hold(point, 650);
 231 |   assert(await page.locator('dialog.tempo-editor[open]').count() === 1, 'held group tempo opens the tempo editor');
 232 |   assertClear(await rectOf(page, 'dialog.tempo-editor[open]'), point, 'tempo editor');
 233 |   await release(); await page.waitForTimeout(450);
@@ -3552,11 +4849,11 @@ assets/index.html
 236 |   // Multi-selection keeps its 0.5 s whole-group hold and opens no beat menu.
 237 |   await page.evaluate(id => startMultiGroups(doc.tracks.find(track => track.id === id)), track);
 238 |   point = await centerOf(row.locator('.slot').nth(4));
-239 |   await hold(point, 1100); await release(); await page.waitForTimeout(450);
+239 |   await hold(point, 650); await release(); await page.waitForTimeout(450);
 240 |   assert.equal(await beatMenuOpen(page), false, 'multi-selection hold opens no beat menu');
 241 |   assert(await page.evaluate(() => multiGroups?.picks.length > 0), 'multi-selection hold still picks the group');
 242 |   await page.evaluate(() => finishMultiGroups());
-243 |   console.log(`  PASS ${touch ? 'touch' : 'mouse'} 1 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
+243 |   console.log(`  PASS ${touch ? 'touch' : 'mouse'} 0.5 s hold: stem, sticking dot, barline, group meter, group tempo; menus clear of the point; release, short press, movement and multi-selection.`);
 244 | }
 245 | 
 246 | (async () => {
@@ -3587,7 +4884,7 @@ assets/index.html
 ------------------------------------------------------------------------------
 
 ==============================================================================
-附录 B：测试 editor161.e2e.cjs（1.61 新增，1.62 更新后的全文）
+附录 B：测试 editor161.e2e.cjs（1.61 新增，1.62／1.63 更新后的全文）
 ==============================================================================
 文件：RhythmDesk-Win11/source/tests/editor161.e2e.cjs
 ------------------------------------------------------------------------------
@@ -3734,7 +5031,7 @@ assets/index.html
 141 | async function lockChecks(page, touch) {
 142 |   await openDemo(page);
 143 |   const cdp = touch ? await page.context().newCDPSession(page) : null;
-144 |   const hold = async (locator, ms = 1100) => {
+144 |   const hold = async (locator, ms = 650) => {
 145 |     const box = await locator.boundingBox();
 146 |     const x = box.x + box.width / 2, y = box.y + box.height / 2;
 147 |     if (touch) {
@@ -3771,7 +5068,7 @@ assets/index.html
 178 |   assert.equal((await cellsOf())[4], null);
 179 |   if (!touch) { await slots.nth(5).click(); await slots.nth(5).click(); await page.waitForTimeout(300); }
 180 |   assert.equal(await page.evaluate(() => el.beatMenu.hidden), true, 'double tap does not open the beat menu while locked');
-181 |   // A 1 s hold on a stem still opens the beat menu and writes nothing.
+181 |   // A 0.5 s hold on a stem still opens the beat menu and writes nothing.
 182 |   cells = await cellsOf();
 183 |   await hold(slots.nth(7));
 184 |   assert.equal(await page.evaluate(() => el.beatMenu.hidden), false, 'hold still opens the beat menu');
@@ -3839,4 +5136,207 @@ assets/index.html
 246 |   } finally { await browser.close(); }
 247 |   console.log('PASS 1.61 editor checks on ' + pages.length + ' page(s).');
 248 | })().catch(error => { console.error(error); process.exitCode = 1; });
+------------------------------------------------------------------------------
+
+==============================================================================
+附录 C：新增测试 editor163.e2e.cjs（1.63）
+==============================================================================
+文件：RhythmDesk-Win11/source/tests/editor163.e2e.cjs
+------------------------------------------------------------------------------
+  1 | // 1.63 editor checks in a real Chromium page (Playwright): a preset count on each loop region (two
+  2 | // loops on one track play their own number of passes and then continue by themselves), the 0.5 s
+  3 | // hold, and menus opened by a double-tap keeping clear of the tapped point. Run once per built page:
+  4 | //   node editor163.e2e.cjs ../../RhythmDesk.html ANDROID_ASSETS/index.html
+  5 | const assert = require('node:assert/strict');
+  6 | const path = require('node:path');
+  7 | const {chromium} = require('playwright');
+  8 | 
+  9 | const CLEARANCE = 40;
+ 10 | function assertClear(rect, point, label) {
+ 11 |   const covers = point.x > rect.left - CLEARANCE && point.x < rect.right + CLEARANCE &&
+ 12 |     point.y > rect.top - CLEARANCE && point.y < rect.bottom + CLEARANCE;
+ 13 |   assert(!covers, `${label} must keep ${CLEARANCE}px clear of the tapped point ${JSON.stringify(point)}; menu ${JSON.stringify(rect)}`);
+ 14 | }
+ 15 | const rectOf = (page, selector) => page.$eval(selector, node => {
+ 16 |   const r = node.getBoundingClientRect(); return {left: r.left, top: r.top, right: r.right, bottom: r.bottom};
+ 17 | });
+ 18 | async function centerOf(locator) {
+ 19 |   const box = await locator.boundingBox();
+ 20 |   return {x: box.x + box.width / 2, y: box.y + box.height / 2};
+ 21 | }
+ 22 | async function openDemo(page, setup = '') {
+ 23 |   await page.evaluate(setup => {
+ 24 |     const project = demoProject();
+ 25 |     project.bpm = 300;
+ 26 |     new Function('project', setup)(project);
+ 27 |     openNewScore(project, '');
+ 28 |   }, setup);
+ 29 |   await page.waitForSelector('.staff');
+ 30 | }
+ 31 | const menuItems = page => page.locator('#menu button').allTextContents();
+ 32 | 
+ 33 | async function presetChecks(page) {
+ 34 |   // Djembe 1 (track 3) gets two loops: measure 1 and measure 2.
+ 35 |   await openDemo(page, 'project.tracks[2].loops = [{from: 0, to: 1}, {from: 1, to: 2}];');
+ 36 |   const djembe = await page.evaluate(() => doc.tracks[2].id);
+ 37 |   const row = page.locator(`.staff[data-track-id="${djembe}"]`);
+ 38 |   const shared = row.locator('.barline').nth(1); // ends loop 1 and starts loop 2
+ 39 |   await shared.dblclick();
+ 40 |   let items = await menuItems(page);
+ 41 |   assert(items.some(item => /设置结束于此的循环次数…（一直循环）|Times for Loop Ending Here… \(until stopped\)/.test(item)), items.join(' | '));
+ 42 |   assert(items.some(item => /设置起始于此的循环次数…（一直循环）/.test(item)));
+ 43 |   await page.locator('#menu button', {hasText: /结束于此的循环次数|Loop Ending Here/}).click();
+ 44 |   const box = page.locator('dialog.loop-times-editor[open]');
+ 45 |   assert.equal(await box.count(), 1);
+ 46 |   assert.match(await box.locator('h3').textContent(), /Djembe 1.*第 1 小节/);
+ 47 |   assert.equal(await box.locator('input').inputValue(), '', 'no count yet: blank means loop until stopped');
+ 48 |   for (const bad of ['0', '1000', '1.5']) {
+ 49 |     await box.locator('input').fill(bad);
+ 50 |     await box.locator('.tempo-confirm').click();
+ 51 |     assert.equal(await box.count(), 1, 'refuses ' + bad);
+ 52 |   }
+ 53 |   await box.locator('input').fill('2');
+ 54 |   await box.locator('input').press('Enter');
+ 55 |   assert.equal(await box.count(), 0);
+ 56 |   await shared.dblclick();
+ 57 |   await page.locator('#menu button', {hasText: /起始于此的循环次数/}).click();
+ 58 |   await box.locator('.tempo-controls button').nth(1).click(); // blank + 1 -> 2
+ 59 |   await box.locator('.tempo-controls button').nth(1).click(); // 3
+ 60 |   await box.locator('.tempo-confirm').click();
+ 61 |   let state = await page.evaluate(id => ({loops: doc.tracks.find(track => track.id === id).loops,
+ 62 |     marks: [...document.querySelectorAll(`.staff[data-track-id="${id}"] .loop-times`)].map(node => node.textContent),
+ 63 |     reopened: readProject(JSON.parse(JSON.stringify(doc))).tracks.find(track => track.id === id).loops}), djembe);
+ 64 |   assert.deepEqual(state.loops, [{from: 0, to: 1, times: 2}, {from: 1, to: 2, times: 3}]);
+ 65 |   assert.deepEqual(state.marks, ['×2', '×3'], 'closing barlines show the counts');
+ 66 |   assert.deepEqual(state.reopened, state.loops, 'counts are saved with the score');
+ 67 |   // Track menu: the loop of the selected measure.
+ 68 |   await row.locator('.slot').nth(1).click();
+ 69 |   await row.locator('.staff-head button.icon').click();
+ 70 |   items = await menuItems(page);
+ 71 |   assert(items.some(item => /设置本小节循环次数…（共 2 遍）|Loop Times for This Measure… \(2×\)/.test(item)), items.join(' | '));
+ 72 |   await page.keyboard.press('Escape');
+ 73 | 
+ 74 |   // Playback: 2 passes of measure 1, 3 passes of measure 2, then the score ends by itself.
+ 75 |   const run = await page.evaluate(id => new Promise(resolve => {
+ 76 |     const steps = [], chips = new Set();
+ 77 |     el.play.click();
+ 78 |     const started = performance.now();
+ 79 |     const tick = () => {
+ 80 |       const step = playingPositions.get(id);
+ 81 |       if (step !== undefined && steps.at(-1) !== step) steps.push(step);
+ 82 |       if (!el.loopRepeat.hidden) chips.add(el.loopRepeat.textContent);
+ 83 |       if (performance.now() - started > 12000) resolve({steps, chips: [...chips], timeout: true});
+ 84 |       else if (!pending && !engine.running && steps.length > 5) resolve({steps, chips: [...chips], timeout: false});
+ 85 |       else requestAnimationFrame(tick);
+ 86 |     };
+ 87 |     requestAnimationFrame(tick);
+ 88 |   }), djembe);
+ 89 |   const returns = (from, to) => run.steps.filter((step, i) => i && step < run.steps[i - 1] && step >= from && step < to).length;
+ 90 |   assert.equal(run.timeout, false, 'playback finished without pressing anything');
+ 91 |   assert.equal(returns(0, 12), 1, 'measure 1 played twice: ' + run.steps);
+ 92 |   assert.equal(returns(12, 24), 2, 'measure 2 played three times: ' + run.steps);
+ 93 |   assert.equal(Math.max(...run.steps), 23);
+ 94 |   assert(run.chips.some(text => /再循环 1 次|1 more/.test(text)) && run.chips.some(text => /再循环 2 次|2 more/.test(text)),
+ 95 |     'the chip shows the preset passes left: ' + run.chips);
+ 96 | 
+ 97 |   // The chip still overrides a preset for this playback only: keep looping, then the square.
+ 98 |   await page.click('#play');
+ 99 |   await page.waitForFunction(() => !el.loopRepeat.hidden && /再循环 1 次|1 more/.test(el.loopRepeat.textContent), null, {timeout: 5000});
+100 |   await page.click('#loopRepeat');
+101 |   await page.locator('dialog.loop-repeat-editor .loop-keep').click();
+102 |   await page.waitForTimeout(2000); // 2.5 passes
+103 |   assert(await page.evaluate(id => engine.running && playingPositions.get(id) < 12, djembe), 'kept looping past the preset');
+104 |   await page.evaluate(() => stopPlayback());
+105 |   assert.equal(await page.evaluate(id => doc.tracks.find(track => track.id === id).loops[0].times, djembe), 2, 'the preset itself is unchanged');
+106 | 
+107 |   // Clear a count: back to looping until stopped; the mark disappears.
+108 |   await shared.dblclick();
+109 |   await page.locator('#menu button', {hasText: /结束于此的循环次数/}).click();
+110 |   assert.equal(await box.locator('input').inputValue(), '2');
+111 |   await box.locator('.loop-keep').click();
+112 |   state = await page.evaluate(id => ({loops: doc.tracks.find(track => track.id === id).loops,
+113 |     marks: [...document.querySelectorAll(`.staff[data-track-id="${id}"] .loop-times`)].map(node => node.textContent)}), djembe);
+114 |   assert.deepEqual(state.loops, [{from: 0, to: 1}, {from: 1, to: 2, times: 3}]);
+115 |   assert.deepEqual(state.marks, ['×3']);
+116 |   // Inserting a measure before the loops keeps their counts.
+117 |   await page.evaluate(id => { const track = doc.tracks.find(item => item.id === id); change(() => insertTrackBarAt(doc, track, 0), true); }, djembe);
+118 |   assert.deepEqual(await page.evaluate(id => doc.tracks.find(track => track.id === id).loops, djembe), [{from: 1, to: 2}, {from: 2, to: 3, times: 3}]);
+119 |   console.log('  PASS loop presets: barline and track menus, ×N marks, 2 + 3 passes then automatic continue, chip shows/overrides, save, clear, insert.');
+120 | }
+121 | 
+122 | async function avoidChecks(page, touch) {
+123 |   await openDemo(page);
+124 |   assert.equal(await page.evaluate(() => MENU_HOLD_MS), 500);
+125 |   const cdp = touch ? await page.context().newCDPSession(page) : null;
+126 |   const doubleTap = async point => {
+127 |     if (touch) {
+128 |       for (let i = 0; i < 2; i++) {
+129 |         await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [{x: point.x, y: point.y}]});
+130 |         await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+131 |         await page.waitForTimeout(60);
+132 |       }
+133 |     } else await page.mouse.dblclick(point.x, point.y);
+134 |     await page.waitForTimeout(250);
+135 |   };
+136 |   const press = async (point, ms) => {
+137 |     if (touch) {
+138 |       await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [{x: point.x, y: point.y}]});
+139 |       await page.waitForTimeout(ms);
+140 |       await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+141 |     } else { await page.mouse.move(point.x, point.y); await page.mouse.down(); await page.waitForTimeout(ms); await page.mouse.up(); }
+142 |     await page.waitForTimeout(450);
+143 |   };
+144 |   const row = page.locator('.staff').nth(2);
+145 |   const reset = () => page.evaluate(() => { closePopups(); document.querySelector('dialog[open]')?.close(); });
+146 |   const checks = [
+147 |     ['barline menu', row.locator('.barline').nth(1), '#menu'],
+148 |     ['group meter menu', row.locator('.group-meter').nth(2), '#menu'],
+149 |     ['beat menu', row.locator('.slot').nth(4), '#beatMenu'],
+150 |     ['sticking menu', row.locator('.slot').nth(5).locator('.hand-dot'), '#menu'],
+151 |     ['tempo editor', row.locator('.group-tempo').nth(2), 'dialog.tempo-editor[open]'],
+152 |   ];
+153 |   for (const [label, locator, menu] of checks) {
+154 |     await reset();
+155 |     await locator.scrollIntoViewIfNeeded();
+156 |     const point = await centerOf(locator);
+157 |     await doubleTap(point);
+158 |     assert(await page.locator(menu).isVisible(), label + ' opens on a double-tap');
+159 |     assertClear(await rectOf(page, menu), point, label + ' (double-tap)');
+160 |   }
+161 |   await reset();
+162 |   // 0.3 s opens nothing; 0.7 s opens the barline menu.
+163 |   const barline = await centerOf(row.locator('.barline').nth(1));
+164 |   await press(barline, 300);
+165 |   assert.equal(await page.evaluate(() => el.menu.hidden), true, 'a 0.3 s press opens nothing');
+166 |   await press(barline, 700);
+167 |   assert.equal(await page.evaluate(() => el.menu.hidden), false, 'a 0.7 s hold opens the menu');
+168 |   assertClear(await rectOf(page, '#menu'), barline, 'barline menu (hold)');
+169 |   console.log(`  PASS ${touch ? 'touch' : 'mouse'} (${page.viewportSize().width}px): double-tap menus (barline, group meter, beat, sticking, tempo) clear of the tap; hold opens at 0.5 s, not at 0.3 s.`);
+170 | }
+171 | 
+172 | (async () => {
+173 |   const pages = process.argv.slice(2);
+174 |   if (!pages.length) throw Error('Usage: node editor163.e2e.cjs PAGE.html [PAGE.html ...]');
+175 |   const browser = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
+176 |   try {
+177 |     for (const file of pages) {
+178 |       console.log('Page ' + path.resolve(file));
+179 |       const url = 'file://' + path.resolve(file);
+180 |       for (const [label, options] of [['desktop', {viewport: {width: 1280, height: 800}}],
+181 |         ['phone', {viewport: {width: 390, height: 780}, hasTouch: true, isMobile: true, deviceScaleFactor: 1}]]) {
+182 |         const context = await browser.newContext({...options, locale: 'zh-CN'});
+183 |         const page = await context.newPage();
+184 |         const errors = [];
+185 |         page.on('pageerror', error => errors.push(error.message));
+186 |         await page.goto(url);
+187 |         await page.waitForSelector('#rhythmGrid');
+188 |         if (label === 'desktop') { await presetChecks(page); await avoidChecks(page, false); }
+189 |         else { await avoidChecks(page, true); await avoidChecks(page, false); }
+190 |         assert.deepEqual(errors, [], 'no page errors on ' + label);
+191 |         await context.close();
+192 |       }
+193 |     }
+194 |   } finally { await browser.close(); }
+195 |   console.log('PASS 1.63 editor checks on ' + pages.length + ' page(s).');
+196 | })().catch(error => { console.error(error); process.exitCode = 1; });
 ------------------------------------------------------------------------------

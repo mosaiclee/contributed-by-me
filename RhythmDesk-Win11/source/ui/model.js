@@ -2,6 +2,7 @@ const FORMAT = 'rhythm-desk';
 const HAND_MARKS = ['L', 'R', 'LR'];
 const trackSequences = track => track.hands ? [track.cells, track.hands] : [track.cells];
 const TRACK_LIMIT = 100;
+const LOOP_TIMES_MAX = 999; // 1.63: most passes a loop can be preset to play
 const BPM_MIN = 20;
 const BPM_MAX = 360;
 // 0.22: 2520000 = 2^6·3^2·5^4·7, so a group of 3, 4, 5 or 7 cells with any cell split into 2, 3 or 4
@@ -181,7 +182,10 @@ function readLoops(track, bars) {
   if (!Array.isArray(ranges) || ranges.length > bars) throw new Error(t('err.loops'));
   const loops = ranges.map(range => {
     if (!range) throw new Error(t('err.loops'));
-    return readRepeat(range, bars);
+    // 1.63: keep a loop's preset `times` (total passes, 1-999); any other value means "loop until stopped".
+    const loop = readRepeat(range, bars);
+    if (Number.isInteger(range.times) && range.times >= 1 && range.times <= LOOP_TIMES_MAX) loop.times = range.times;
+    return loop;
   }).sort((a, b) => a.from - b.from);
   if (loops.some((range, index) => index > 0 && range.from < loops[index - 1].to)) {
     throw new Error(t('loop.overlap'));
@@ -729,8 +733,8 @@ function insertBar(doc, after, duplicate) {
 }
 
 function deleteBar(doc, bar) {
-  const afterRemoval = range => ({
-    from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)
+  const afterRemoval = range => ({ // 1.63: ...range keeps a loop's preset times
+    ...range, from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)
   });
   if (doc.repeat) {
     const range = afterRemoval(doc.repeat);
@@ -787,7 +791,7 @@ function insertTrackBarAt(doc, track, at, keepBreak = false) {
   if (at > 0) {
     insertTrackBar(doc, track, at - 1, false);
   } else {
-    const loops = track.loops.map(range => ({from: range.from + 1, to: range.to + 1}));
+    const loops = track.loops.map(range => ({...range, from: range.from + 1, to: range.to + 1}));
     insertTrackBar(doc, track, 0, false);
     const {barSteps} = trackGrid(doc, track);
     for (const sequence of trackSequences(track)) {
@@ -808,7 +812,7 @@ function deleteTrackBar(doc, track, bar) {
   for (const sequence of trackSequences(track)) sequence.splice(start, grid.barSteps[bar + 1] - start);
   track.measures = grid.measures.slice();
   track.measures.splice(bar, 1);
-  track.loops = track.loops.map(range => ({from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)}))
+  track.loops = track.loops.map(range => ({...range, from: range.from - Number(bar < range.from), to: range.to - Number(bar < range.to)}))
     .filter(range => range.from < range.to);
   markVersion(doc, 4);
   shiftTrackLineBreaks(doc, track, bar, -1);

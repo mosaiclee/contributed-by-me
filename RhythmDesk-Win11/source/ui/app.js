@@ -138,14 +138,15 @@ document.addEventListener('click', event => {
   if (quickTap && !quickTap.target.contains(event.target)) quickTap = null;
 }, true);
 
-// 1.60: every control that opens a menu on a double-tap also opens it when held for one second
-// (finger, pen or left mouse button). The menu then keeps clear of the held point, and the click
-// that ends the hold is dropped, so lifting the finger never chooses a menu item.
-const MENU_HOLD_MS = 1000;
+// 1.60: every control that opens a menu on a double-tap also opens it when held (finger, pen or left
+// mouse button). The menu then keeps clear of the held point, and the click that ends the hold is
+// dropped, so lifting the finger never chooses a menu item.
+// 1.63: the hold takes 0.5 s (was 1 s), and a menu opened by a double-tap keeps clear of the tap too.
+const MENU_HOLD_MS = 500;
 const MENU_HOLD_SLOP = 10;
 const MENU_HOLD_CLEARANCE = 40;
 let menuHold = null;
-let menuHoldPoint = null;
+let menuHoldPoint = null; // point the open menu keeps clear of; `id` is set while that finger is still down
 let menuHoldClickUntil = 0;
 function cancelMenuHold() {
   if (menuHold) clearTimeout(menuHold.timer);
@@ -161,7 +162,7 @@ function bindMenuHold(node, open, allowed = () => true) {
       menuHold = null;
       if (!node.isConnected || !allowed()) return;
       quickTap = null;
-      menuHoldPoint = {id: press.id, x: press.x, y: press.y};
+      setMenuAvoidPoint(node, press.x, press.y, press.id);
       menuHoldClickUntil = Infinity;
       open(press);
     }, MENU_HOLD_MS);
@@ -170,6 +171,8 @@ function bindMenuHold(node, open, allowed = () => true) {
   node.addEventListener('contextmenu', event => event.preventDefault());
 }
 document.addEventListener('pointerdown', event => {
+  // 1.63: a new press is a new request, so forget the point the last menu kept clear of.
+  menuHoldPoint = null;
   // A second finger (pinch) or another pointer ends the hold.
   if (menuHold && menuHold.id !== event.pointerId) cancelMenuHold();
 }, true);
@@ -180,8 +183,8 @@ document.addEventListener('pointermove', event => {
 for (const name of ['pointerup', 'pointercancel']) {
   document.addEventListener(name, event => {
     if (menuHold?.id === event.pointerId) cancelMenuHold();
-    if (menuHoldPoint?.id !== event.pointerId) return;
-    menuHoldPoint = null;
+    if (menuHoldPoint?.id == null || menuHoldPoint.id !== event.pointerId) return;
+    menuHoldPoint.id = null; // 1.63: the finger lifted; the point now moves with the control under it
     menuHoldClickUntil = performance.now() + 400;
   }, true);
 }
@@ -196,12 +199,33 @@ window.addEventListener('click', event => {
 window.addEventListener('wheel', cancelMenuHold, {capture: true, passive: true});
 window.addEventListener('blur', cancelMenuHold);
 
-// Move a menu box {left, top, width, height} so it does not cover the point still held by a long press.
-// Returns the same object when no move is needed.
-function clearOfMenuHold(box, bounds) {
+// 1.63: remember where a menu was asked for, as a screen point and as a place on the control, so the
+// point follows the score if it scrolls after the finger has lifted.
+function setMenuAvoidPoint(node, x, y, id = null) {
+  const rect = node.getBoundingClientRect();
+  menuHoldPoint = {id, x, y, node, fx: rect.width ? (x - rect.left) / rect.width : .5,
+    fy: rect.height ? (y - rect.top) / rect.height : .5};
+}
+
+// 1.63: call with the click that completes a double-tap. Keyboard clicks carry no point (detail 0).
+function markMenuTap(event) {
+  if (event.detail && Number.isFinite(event.clientX)) setMenuAvoidPoint(event.currentTarget, event.clientX, event.clientY);
+}
+
+function menuAvoidPoint() {
   const point = menuHoldPoint;
+  if (!point || point.id !== null || !point.node.isConnected) return point;
+  const rect = point.node.getBoundingClientRect();
+  return {x: rect.left + point.fx * rect.width, y: rect.top + point.fy * rect.height};
+}
+
+// Move a menu box {left, top, width, height} so it does not cover the point of the long press or
+// double-tap that opened it. Returns the same object when no move is needed.
+function clearOfMenuHold(box, bounds) {
+  const point = menuAvoidPoint();
   if (!point) return box;
-  const reach = MENU_HOLD_CLEARANCE;
+  // 1.63: 2 px allowance, because event coordinates and layout sizes are rounded to whole pixels.
+  const reach = MENU_HOLD_CLEARANCE + 2;
   const covers = ({left, top}) => point.x > left - reach && point.x < left + box.width + reach &&
     point.y > top - reach && point.y < top + box.height + reach;
   if (!covers(box)) return box;
@@ -225,11 +249,11 @@ function clearOfMenuHold(box, bounds) {
   return {...options.reduce((best, option) => overlap(option) < overlap(best) ? option : best), covered: true};
 }
 
-// The larger free height above or below the held point.
+// The larger free height above or below the held or tapped point.
 function menuHoldRoom(bounds) {
-  const point = menuHoldPoint;
+  const point = menuAvoidPoint();
   if (!point) return Infinity;
-  const gap = MENU_HOLD_CLEARANCE + 2;
+  const gap = MENU_HOLD_CLEARANCE + 4;
   return Math.max(point.y - gap - bounds.top, bounds.bottom - point.y - gap);
 }
 
@@ -530,7 +554,9 @@ function boundaryAt(track, bar, measure, side = '', showPending = true) {
     : closing
     ? '<path d="M16 4v48" stroke="currentColor" stroke-width="4"/><path d="M11 4v48" stroke="currentColor"/><circle cx="5" cy="23" r="2"/><circle cx="5" cy="33" r="2"/>'
     : '<path d="M10 4v48" stroke="currentColor" stroke-width="1.5"/>';
-  const line = button('', event => { if (quickDoubleTap(event)) openTrackBoundary(track, bar, event.currentTarget, side); }, 'barline');
+  const line = button('', event => {
+    if (quickDoubleTap(event)) { markMenuTap(event); openTrackBoundary(track, bar, event.currentTarget, side); }
+  }, 'barline');
   bindMenuHold(line, () => { if (!blockOtherTrack(track.id)) openTrackBoundary(track, bar, line, side); });
   if (side === 'end') line.classList.add('line-end');
   if (pendingStart || (showPending && side !== 'end' && measureCopyStart?.track === track && measureCopyStart.bar === bar)) {
@@ -545,6 +571,17 @@ function boundaryAt(track, bar, measure, side = '', showPending = true) {
   line.setAttribute('aria-label', line.title);
   line.append(svg);
   line.dataset.barBoundary = bar;
+  // 1.63: a loop with a preset count shows ×N beside its closing barline.
+  const timed = side !== 'start' && track.loops.find(range => range.to === bar && range.times);
+  if (timed) {
+    const mark = document.createElement('span');
+    mark.className = 'loop-times';
+    mark.textContent = '×' + timed.times;
+    mark.setAttribute('aria-hidden', 'true');
+    line.append(mark);
+    line.title += ' · ' + t('loop.timesState', {n: timed.times});
+    line.setAttribute('aria-label', line.title);
+  }
   if (measure && side !== 'end') {
     const marker = document.createElement('span');
     marker.className = 'measure-marker';
@@ -667,6 +704,7 @@ function renderScore(updatedTrack) {
           el.paper.scrollTo({left: scrollLeft, top: scrollTop, behavior: 'instant'});
           if (locked) writeLockedStroke();
           else if (activate) {
+            markMenuTap(event);
             if (hand) openHandMenu(event.currentTarget);
             else openBeatMenu(box);
           }
@@ -720,14 +758,14 @@ function renderScore(updatedTrack) {
       });
       const meter = layout.steps?.length ? layout.steps[0].meter : groupMeter(measure, group);
       const meterButton = button((meter ?? '–') + ' ▾',
-        event => { if (quickDoubleTap(event)) openGroupMeterMenu(event.currentTarget, track.id, beat); }, 'group-meter');
+        event => { if (quickDoubleTap(event)) { markMenuTap(event); openGroupMeterMenu(event.currentTarget, track.id, beat); } }, 'group-meter');
       bindMenuHold(meterButton, () => { if (!blockOtherTrack(track.id)) openGroupMeterMenu(meterButton, track.id, beat); });
       meterButton.style.left = ((stems[0] ?? leading) / width * 100) + '%';
       meterButton.title = t('meter.groupButton', {bar: bar + 1, group: group + 1, meter: meter ?? '–'});
       meterButton.setAttribute('aria-label', meterButton.title);
       meterButton.setAttribute('aria-haspopup', 'true');
       const tempoButton = button(Math.round(effectiveTempo(doc, track, measure, group)) + ' ♩',
-        event => { if (quickDoubleTap(event)) openTempoEditor(track, bar, group); }, 'group-tempo');
+        event => { if (quickDoubleTap(event)) { markMenuTap(event); openTempoEditor(track, bar, group); } }, 'group-tempo');
       bindMenuHold(tempoButton, () => { if (!blockOtherTrack(track.id)) openTempoEditor(track, bar, group); });
       tempoButton.title = t('tempo.group');
       tempoButton.style.left = meterButton.style.left;
@@ -1125,13 +1163,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.62', userAgent: navigator.userAgent,
+    version: '1.63', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.62.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.63.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));
@@ -2686,6 +2724,7 @@ function openTrackMenu(track, anchor) {
       if (range) removeTrackLoop(track, range);
       else addTrackLoop(track, bar, bar + 1);
     }],
+    ...(range ? [[t('track.loopTimes', {state: loopTimesState(range)}), () => openLoopTimesDialog(track, range)]] : []),
     [t('bulk.track'), () => openBulkSplit(anchor, [track])],
     [t('tempo.track'), () => openTempoEditor(track)],
     [t('track.edit'), () => openTrackEditor(track)],
@@ -2733,6 +2772,8 @@ function openTrackBoundary(track, bar, anchor, side = '') {
     ...(copyEnd !== null ? [[t('bar.copyThrough'), () => copyMeasures(track, copyingFrom, copyEnd)]] : []),
     ...(copyable ? [[t('bulk.measure'), () => openBulkSplit(anchor, [track], bar, bar + 1)], [t('tempo.measure'), () => openTempoEditor(track, bar)]] : []),
     ...(incoming ? [[t('loop.editEnd'), () => { loopStart = {id: track.id, bar: incoming.from}; notify(t('bar.pickEnd')); }]] : []),
+    ...(incoming ? [[t('loop.timesIncoming', {state: loopTimesState(incoming)}), () => openLoopTimesDialog(track, incoming)]] : []),
+    ...(outgoing ? [[t('loop.timesOutgoing', {state: loopTimesState(outgoing)}), () => openLoopTimesDialog(track, outgoing)]] : []),
     [t('bar.insert'), () => insertTrackMeasureAt(track, bar, side)],
     [broken ? t('bar.unbreak') : t('bar.break'), () => toggleTrackBreakAt(track, bar), bar <= 0 || bar >= bars],
     [t('bar.delete', {bar: bar + 1}), () => deleteTrackMeasure(track, bar), !measure || bars < 2],
@@ -2825,6 +2866,54 @@ function addTrackLoop(track, from, to) {
     track.loops.sort((a, b) => a.from - b.from);
   }, true);
   loopStart = {id: track.id, bar: from};
+}
+
+// 1.63: preset how many times a track loop plays in total (1-999, including the first pass) before
+// playback continues by itself. Blank or "Loop until stopped" keeps looping until the square is pressed.
+function loopTimesState(range) {
+  return range.times ? t('loop.timesState', {n: range.times}) : t('loop.timesUnset');
+}
+
+function openLoopTimesDialog(source, range) {
+  closePopups();
+  const panel = document.createElement('dialog'); panel.className = 'tempo-editor loop-times-editor';
+  const form = document.createElement('form'); form.className = 'tempo-form';
+  const title = document.createElement('h3');
+  const bars = range.to - range.from > 1 ? t('loop.bars', {from: range.from + 1, to: range.to}) : t('bar.measure', {bar: range.to});
+  title.textContent = t('loop.timesTitle', {track: source.name, bars});
+  const controls = document.createElement('div'); controls.className = 'tempo-controls';
+  const input = document.createElement('input'); input.type = 'number'; input.min = 1; input.max = LOOP_TIMES_MAX;
+  input.step = 1; input.inputMode = 'numeric'; input.value = range.times ?? ''; input.placeholder = t('loop.timesUnset');
+  input.setAttribute('aria-label', title.textContent);
+  const bump = n => { input.value = clamp(Math.round(Number(input.value) || 1) + n, 1, LOOP_TIMES_MAX); };
+  controls.append(button('−', () => bump(-1)), input, button('+', () => bump(1)));
+  const hint = document.createElement('p'); hint.className = 'loop-repeat-hint'; hint.textContent = t('loop.timesHint');
+  const actions = document.createElement('div'); actions.className = 'tempo-actions';
+  const confirm = document.createElement('button'); confirm.type = 'submit'; confirm.className = 'tempo-confirm';
+  confirm.textContent = t('dialog.done');
+  actions.append(button(t('dialog.cancel'), () => panel.close(), 'tempo-cancel'), confirm);
+  form.append(title, controls, hint, actions);
+  if (range.times) form.append(button(t('loop.timesClear'), () => { panel.close(); setLoopTimes(source, range, null); }, 'loop-keep'));
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (input.value.trim() === '' && !input.validity.badInput) { panel.close(); setLoopTimes(source, range, null); return; }
+    const times = Number(input.value);
+    if (!Number.isInteger(times) || times < 1 || times > LOOP_TIMES_MAX) { input.reportValidity(); return; }
+    panel.close();
+    setLoopTimes(source, range, times);
+  });
+  panel.append(form);
+  panel.addEventListener('close', () => panel.remove(), {once: true});
+  document.body.append(panel); panel.showModal();
+  input.select();
+}
+
+function setLoopTimes(source, range, times) {
+  const track = doc.tracks.find(item => item.id === source.id);
+  const loop = track?.loops.find(item => item.from === range.from && item.to === range.to);
+  if (!loop || (loop.times ?? null) === times) return;
+  change(() => { if (times) loop.times = times; else delete loop.times; }, true);
+  notify(times ? t('loop.timesSet', {n: times}) : t('loop.timesCleared'));
 }
 
 function removeTrackLoop(track, range) {
@@ -3861,7 +3950,7 @@ function openTempoEditor(track = null, bar = null, group = null) {
   panel.append(form);
   panel.addEventListener('close', () => panel.remove(), {once:true});
   document.body.append(panel); panel.showModal();
-  // Opened by a one-second hold: keep the dialog's buttons away from the finger that is still down.
+  // Opened by a hold or a double-tap: keep the dialog's buttons away from that point.
   const frame = panel.getBoundingClientRect();
   const placed = {left: frame.left, top: frame.top, width: frame.width, height: frame.height};
   const box = clearOfMenuHold(placed, {left: 8, top: 8, right: innerWidth - 8, bottom: innerHeight - 8});
