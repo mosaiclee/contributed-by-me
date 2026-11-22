@@ -43,6 +43,7 @@ let cursor = { track: doc.tracks[0].id, beat: 0, slot: 0 };
 let keysOpen = false;
 let keyboardType = '';
 let noteLock; // 1.61: {stroke, type} while a note key (or Rest, stroke null) is locked for tap entry
+let tapEntryArmed = false; // 1.67: 点按输入 was pressed and the next note key chosen locks that note
 let rows = new Map();
 let playingPositions = new Map();
 let pending = false;
@@ -128,9 +129,10 @@ const svgNode = () => document.createElementNS(xmlns, 'svg');
 
 // Use the same strict timing for mouse and touch instead of platform dblclick defaults.
 let quickTap = null;
+const DOUBLE_TAP_MS = 500; // 1.67: two taps on the same control within 0.5 s (was 0.25 s)
 function quickDoubleTap(event, kind = '') {
   const now = performance.now(), target = event.currentTarget;
-  const hit = quickTap && quickTap.target === target && quickTap.kind === kind && now - quickTap.time < 250;
+  const hit = quickTap && quickTap.target === target && quickTap.kind === kind && now - quickTap.time < DOUBLE_TAP_MS;
   quickTap = hit ? null : {target, kind, time: now};
   return Boolean(hit);
 }
@@ -144,10 +146,11 @@ document.addEventListener('click', event => {
 // 1.63: the hold takes 0.5 s (was 1 s), and a menu opened by a double-tap keeps clear of the tap too.
 // 1.65: menus opened after a 0.2 s hold, while locking a note key, and a stem's beat menu while a note
 // was locked, kept 0.5 s.
-// 1.66: as requested, every hold takes 0.1 s, the note lock included, so a press held longer than 0.1 s
-// counts as a hold. NOTE_LOCK_HOLD_MS stays separate so the lock can be tuned on its own again.
-const MENU_HOLD_MS = 100;
-const NOTE_LOCK_HOLD_MS = 100;
+// 1.66: every hold took 0.1 s, the note lock included.
+// 1.67: every hold takes 0.3 s (menus, the note lock, and a stem's beat menu while a note is locked).
+// NOTE_LOCK_HOLD_MS stays separate so the lock can be tuned on its own.
+const MENU_HOLD_MS = 300;
+const NOTE_LOCK_HOLD_MS = 300;
 const MENU_HOLD_SLOP = 10;
 const MENU_HOLD_CLEARANCE = 40;
 let menuHold = null;
@@ -896,7 +899,7 @@ function clearSelectedBeat() {
 function updateKeyboard() {
   el.keyboard.hidden = !keysOpen;
   el.showKeys.setAttribute('aria-pressed', keysOpen);
-  if (!keysOpen) { if (noteLock) setNoteLock(); return; }
+  if (!keysOpen) { if (noteLock || tapEntryArmed) setNoteLock(); return; }
   const type = selectedTrack().type;
   if (keyboardType === type) return;
   keyboardType = type;
@@ -944,7 +947,7 @@ function updateKeyboard() {
     return node;
   };
   nav.append(jump('⇤', t('keys.start'), false), jump('⇥', t('keys.end'), true),
-    lockableKey(key(t('keys.rest'), () => tapNoteKey(null), 'silence'), null), key('←', () => moveCursor(-1), 'aux'), key('→', () => moveCursor(1), 'aux'));
+    lockableKey(key(t('keys.rest'), () => tapNoteKey(null), 'silence'), null), tapEntryKey(key), key('←', () => moveCursor(-1), 'aux'), key('→', () => moveCursor(1), 'aux'));
   el.keys.replaceChildren(...rows, main, nav);
   paintNoteLock();
 }
@@ -959,7 +962,24 @@ function lockableKey(node, stroke) {
   return node;
 }
 
+// 1.67: the 点按输入 key is a second way into tap entry: press it, then a note key (or Rest) to lock that
+// note; press the locked note key or 点按输入 again to leave. Holding a note key still locks it directly.
+function tapEntryKey(key) {
+  const node = key(t('keys.tapEntry'), toggleTapEntry, 'tap-entry');
+  node.title = t('keys.tapEntryTitle');
+  node.setAttribute('aria-label', node.title);
+  return node;
+}
+
+function toggleTapEntry() {
+  if (noteLock) { unlockNote(); return; }
+  tapEntryArmed = !tapEntryArmed;
+  paintNoteLock();
+  notify(t(tapEntryArmed ? 'lock.pick' : 'lock.pickCancelled'));
+}
+
 function setNoteLock(stroke) {
+  tapEntryArmed = false;
   noteLock = stroke === undefined ? undefined
     : {stroke, type: stroke ? Object.keys(TYPES).find(type => TYPES[type].strokes.includes(stroke)) : null};
   if (noteLock?.stroke && TYPES[selectedTrack().type].strokes.includes(noteLock.stroke)) noteLock.type = selectedTrack().type;
@@ -972,6 +992,11 @@ function paintNoteLock() {
     node.classList.toggle('locked', locked);
     node.setAttribute('aria-pressed', String(locked));
   }
+  const entry = el.keys.querySelector('.key.tap-entry');
+  entry?.classList.toggle('armed', tapEntryArmed);
+  entry?.classList.toggle('active', Boolean(noteLock));
+  entry?.setAttribute('aria-pressed', String(tapEntryArmed || Boolean(noteLock)));
+  el.keys.classList.toggle('picking', tapEntryArmed);
   el.paper.classList.toggle('note-lock', Boolean(noteLock));
 }
 
@@ -988,6 +1013,7 @@ function toggleNoteLock(stroke) {
 
 function tapNoteKey(stroke) {
   if (noteLock && noteLock.stroke === stroke) unlockNote();
+  else if (tapEntryArmed) toggleNoteLock(stroke); // 1.67: chosen after 点按输入
   else writeStroke(stroke);
 }
 
@@ -1170,13 +1196,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.66', userAgent: navigator.userAgent,
+    version: '1.67', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.66.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.67.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));
@@ -2998,8 +3024,8 @@ function saveScore() {
 }
 
 // 0.18: long press (mouse or touch) or right-click on a rhythm card shows 复制 / 删除.
-// 1.65: the card menu opened after 0.2 s (was 0.5 s); 1.66: 0.1 s, like the editor menus.
-const LONG_PRESS_MS = 100;
+// 1.65: the card menu opened after 0.2 s (was 0.5 s); 1.66: 0.1 s; 1.67: 0.3 s, like the editor menus.
+const LONG_PRESS_MS = 300;
 let cardPress = null;
 let suppressCardClick = null;
 
@@ -3847,6 +3873,7 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     if (!el.menu.hidden || !el.beatMenu.hidden) closePopups();
     else if (noteLock) unlockNote();
+    else if (tapEntryArmed) toggleTapEntry();
     else if (multiGroups) finishMultiGroups();
     else if (measureCopyStart) { measureCopyStart = undefined; renderScore(); }
     else if (loopStart) cancelLoopStart();

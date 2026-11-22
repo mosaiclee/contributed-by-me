@@ -121,7 +121,7 @@ async function presetChecks(page) {
 
 async function avoidChecks(page, touch) {
   await openDemo(page);
-  assert.equal(await page.evaluate(() => MENU_HOLD_MS), 100); // 0.5 s in 1.63–1.64, 0.2 s in 1.65
+  assert.equal(await page.evaluate(() => MENU_HOLD_MS), 300); // 0.5 s in 1.63–1.64, 0.2 s in 1.65, 0.1 s in 1.66
   const cdp = touch ? await page.context().newCDPSession(page) : null;
   const doubleTap = async point => {
     if (touch) {
@@ -166,7 +166,7 @@ async function avoidChecks(page, touch) {
   await press(barline, 700);
   assert.equal(await page.evaluate(() => el.menu.hidden), false, 'a 0.7 s hold opens the menu');
   assertClear(await rectOf(page, '#menu'), barline, 'barline menu (hold)');
-  console.log(`  PASS ${touch ? 'touch' : 'mouse'} (${page.viewportSize().width}px): double-tap menus (barline, group meter, beat, sticking, tempo) clear of the tap; hold opens the menu (0.1 s since 1.66), a 0.02 s press does not.`);
+  console.log(`  PASS ${touch ? 'touch' : 'mouse'} (${page.viewportSize().width}px): double-tap menus (barline, group meter, beat, sticking, tempo) clear of the tap; hold opens the menu (0.3 s since 1.67), a 0.02 s press does not.`);
 }
 
 (async () => {

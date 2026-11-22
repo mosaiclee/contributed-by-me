@@ -18,12 +18,12 @@
   const test = document.getElementById('offline-test');
   const phrases = {
     zh: {title: '离线使用', test: '试开离线副本', download: '下载单文件 HTML',
-      preparing: '正在准备离线资源…', ready: '1.66 离线资源已校验。可从同一地址或主屏幕离线打开。',
-      failed: '1.66 离线校验未完成。请保持联网，在同一浏览器重新打开本页。',
+      preparing: '正在准备离线资源…', ready: '1.67 离线资源已校验。可从同一地址或主屏幕离线打开。',
+      failed: '1.67 离线校验未完成。请保持联网，在同一浏览器重新打开本页。',
       unsupported: '请在 Safari 中通过 HTTPS 打开本页以启用离线缓存。'},
     en: {title: 'Offline access', test: 'Test the offline copy', download: 'Download standalone HTML',
-      preparing: 'Preparing offline files…', ready: 'Offline files for 1.66 are verified. Reopen this address or Home Screen app offline.',
-      failed: 'Offline files for 1.66 are not ready. Stay online and reopen this page in the same browser.',
+      preparing: 'Preparing offline files…', ready: 'Offline files for 1.67 are verified. Reopen this address or Home Screen app offline.',
+      failed: 'Offline files for 1.67 are not ready. Stay online and reopen this page in the same browser.',
       unsupported: 'Open this page over HTTPS in Safari to enable offline caching.'}
   };
   let state = 'preparing';
@@ -49,7 +49,7 @@
       const response = await fetch('./?rhythm-cache-check=1', {cache: 'no-store'});
       if (response.ok && response.headers.has('X-RhythmDesk-Cache')) {
         const result = await response.json();
-        ready = result.version === '1.66' && result.ready === true;
+        ready = result.version === '1.67' && result.ready === true;
       }
     } catch {}
     if (attempt === latestAttempt) { state = ready ? 'ready' : 'failed'; renderStatus(); }

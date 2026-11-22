@@ -21,9 +21,10 @@ function gestures() {
   vm.createContext(s);
   vm.runInContext(section('let quickTap = null;', "document.addEventListener('click'"),s);
   const event={currentTarget:{}};
-  assert.equal(s.quickDoubleTap(event,'note'),false);wall=249;assert.equal(s.quickDoubleTap(event,'note'),true);
-  wall=300;assert.equal(s.quickDoubleTap(event,'note'),false);wall=550;assert.equal(s.quickDoubleTap(event,'note'),false);
-  wall=560;assert.equal(s.quickDoubleTap(event,'hand'),false);wall=580;assert.equal(s.quickDoubleTap(event,'hand'),true);
+  // 1.67: two taps on the same control within 0.5 s (0.25 s before 1.67).
+  assert.equal(s.quickDoubleTap(event,'note'),false);wall=499;assert.equal(s.quickDoubleTap(event,'note'),true);
+  wall=600;assert.equal(s.quickDoubleTap(event,'note'),false);wall=1101;assert.equal(s.quickDoubleTap(event,'note'),false);
+  wall=1110;assert.equal(s.quickDoubleTap(event,'hand'),false);wall=1130;assert.equal(s.quickDoubleTap(event,'hand'),true);
   vm.runInContext(section("el.paper.addEventListener('wheel', event => {", "function resumeFollowingAfterDrag()"),s);
   let prevented=0;
   const wheel={deltaMode:0,deltaY:-80,deltaX:0,clientX:195,clientY:100,buttons:0,preventDefault(){prevented++}};
@@ -63,7 +64,7 @@ async function saves() {
     logFollow:event=>s.followEvents.push({event}),followEvents:[],navigator:{userAgent:'Test'},
     el:{paper:{clientWidth:390,clientHeight:338}},saveScoreExport:async(f,name)=>{pickerSawPause=s.engine.paused;record=JSON.parse(await f.text());return name}});
   vm.runInContext(section('async function exportFollowDiagnostics()', 'function measureMotionScale()'),s);
-  await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.66');assert.equal(record.events.at(-1).event,'export');
+  await s.exportFollowDiagnostics();assert(pickerSawPause);assert.equal(record.version,'1.67');assert.equal(record.events.at(-1).event,'export');
   console.log('PASS Windows save/overwrite/keep-both/cancel, Safari share/Save to Files/cancel, download fallback, diagnostic JSON.');
 }
 gestures();saves().catch(e=>{console.error(e);process.exitCode=1});

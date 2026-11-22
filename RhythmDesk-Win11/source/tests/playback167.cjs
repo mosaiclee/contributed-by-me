@@ -165,7 +165,7 @@ async function scenario(code, opts) {
 }
 (async()=>{
   const [apkPage,browserPage] = process.argv.slice(2);
-  if(!browserPage) throw Error('Usage: node playback166.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
+  if(!browserPage) throw Error('Usage: node playback167.cjs ANDROID_EDITOR_HTML BUILT_BROWSER_HTML');
   const android = editor(apkPage), browser = editor(browserPage);
   for(const [width,zoom,scale] of [[360,.5,.5],[360,.5,1],[960,1,1],[960,2.5,2.5],[390,5,5]]) {
     const options={width,zoom,scale};
