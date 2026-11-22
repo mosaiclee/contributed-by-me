@@ -90,7 +90,9 @@ h2 { margin: 0; font-size: 19px; white-space: nowrap; }
 .multi-groups .slot { -webkit-touch-callout: none; user-select: none; }
 .multi-groups .slot:hover { background: transparent; }
 .multi-groups .beat.group-picked { color: #1d5b99; border-color: #1d5b99; background: #e5efff; }
-.multi-groups .slot.slot-picked { background: #dcecff; outline: 2px solid #1d5b99; outline-offset: -2px; }
+/* 1.64: a picked stem is framed in translucent blue; the slot lies above the drawn staff, so the old opaque
+   fill (#dcecff) hid the stem and the note. */
+.multi-groups .slot.slot-picked { background: #2876e829; outline: 2px solid #1d5b99b3; outline-offset: -2px; }
 .multi-paste .slot { cursor: copy; }
 .beat svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .group-meter { position: absolute; bottom: calc(100% + 12px); transform: translateX(-50%); min-width: 44px; min-height: 27px; padding: 0 5px; border: 1px solid #d5dce6; border-radius: 5px; background: #f5f8fc; color: #245387; font-size: 12px; font-weight: 650; line-height: 1; white-space: nowrap; touch-action: manipulation; }
@@ -153,7 +155,7 @@ h2 { margin: 0; font-size: 19px; white-space: nowrap; }
 .selection-actions button:hover:not(:disabled), .selection-meters button:hover { background: #e4efff; }
 .selection-link { color: #245387; }
 .slot.selection-span { background: #2876e81c; }
-.slot.paste-preview { background: #dcecff; box-shadow: inset 0 2px #2469bd, inset 0 -2px #2469bd; }
+.slot.paste-preview { background: #2876e824; box-shadow: inset 0 2px #2469bdb3, inset 0 -2px #2469bdb3; } /* 1.64: translucent like the pick frame */
 .slot.paste-anchor { outline: 2px solid #2469bd; outline-offset: -2px; }
 .paste-range-summary { color: #234e80; font-size: 13px; }
 .keyboard-inner { margin: auto; padding: 7px 8px 9px; max-width: 620px; display: grid; gap: 6px; }

@@ -2,10 +2,14 @@
 
 - `RhythmDesk-Win11/` — Windows 11 edition: `RhythmDesk.exe` opens `RhythmDesk.html` in Edge. Readable sources in `RhythmDesk-Win11/source/ui`; `source/build_ui.py` rebuilds the page.
 - `android/` — Android edition: the signed APK and `index.html`, the editor page packed as `assets/index.html` in the APK.
-- `tools/` — the per-release patch lists (`patch160.py` … `patch163.py`), APK repack, signing, verification and handoff-document scripts.
-- `docs/RhythmDesk-交接文档-1.59至1.63.txt` — developer handoff (Chinese): every request so far, what changed for each, and before/after code for every changed passage.
+- `tools/` — the per-release patch lists (`patch160.py` … `patch164.py`), APK repack, signing, verification and handoff-document scripts.
+- `docs/RhythmDesk-交接文档-1.59至1.64.txt` — developer handoff (Chinese): every request so far, what changed for each, and before/after code for every changed passage.
 
 The Android signing key is kept outside this repository (`*.pem` is ignored).
+
+## 1.64
+
+1. **Translucent pick frame**: in multi-selection a picked stem is framed in translucent blue, so its stem and note stay visible (the slot lies above the drawn staff, and the old opaque fill hid them). The paste preview is translucent as well.
 
 ## 1.63
 
@@ -39,22 +43,23 @@ The Android signing key is kept outside this repository (`*.pem` is ignored).
 python3 RhythmDesk-Win11/source/build_ui.py
 
 # Android: replace the page and version in the previous APK, then sign with the release key (APK Signature Scheme v2)
-python3 tools/repack_apk.py RhythmDesk-Android-1.62.apk android/index.html unsigned.apk 1.63
+python3 tools/repack_apk.py RhythmDesk-Android-1.63.apk android/index.html unsigned.apk 1.64
 java --add-exports java.base/sun.security.x509=ALL-UNNAMED --add-exports java.base/sun.security.pkcs=ALL-UNNAMED \
      --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java \
-     RhythmDesk-Android-signing.pem unsigned.apk RhythmDesk-Android-1.63.apk
-python3 tools/verify_v2.py RhythmDesk-Android-1.63.apk
+     RhythmDesk-Android-signing.pem unsigned.apk RhythmDesk-Android-1.64.apk
+python3 tools/verify_v2.py RhythmDesk-Android-1.64.apk
 ```
 
-`tools/patch160.py` (1.59 → 1.60), `patch161.py` (→ 1.61), `patch162.py` (→ 1.62) and `patch163.py` (→ 1.63) are the exact edit sets applied to the Win11 sources and the Android page; every edit had to match in both, so both editions received identical changes. `tools/make_handoff.py` builds the handoff document from them. `apksig-2.3.0.jar` is `com.android.tools.build:apksig:2.3.0` from Maven Central.
+`tools/patch160.py` (1.59 → 1.60), `patch161.py` (→ 1.61), `patch162.py` (→ 1.62), `patch163.py` (→ 1.63) and `patch164.py` (→ 1.64) are the exact edit sets applied to the Win11 sources and the Android page; every edit had to match in both, so both editions received identical changes. `tools/make_handoff.py` builds the handoff document from them. `apksig-2.3.0.jar` is `com.android.tools.build:apksig:2.3.0` from Maven Central.
 
 ## Tests
 
 ```sh
 cd RhythmDesk-Win11/source/tests
-node interaction163.cjs
-node playback163.cjs ../../../android/index.html ../../RhythmDesk.html
+node interaction164.cjs
+node playback164.cjs ../../../android/index.html ../../RhythmDesk.html
 node editor160.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.60 features; needs Playwright + Chromium
 node editor161.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.61/1.62 features
 node editor163.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.63 features
+node editor164.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.64 (pixel check of the pick frame)
 ```
