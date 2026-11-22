@@ -59,15 +59,14 @@ async function checks(page, touch) {
   assert.equal(await page.evaluate(() => noteLock?.stroke), 'T', 'a 0.5 s hold locks the key');
   await page.evaluate(() => unlockNote());
 
-  // Keyboard layout: Rest is about half as wide as before, with 点按输入 of the same width beside it.
+  // Keyboard layout: 点按输入 sits right of Rest (1.68: Rest about three times as wide; 1.67 had equal widths).
   const rest = await page.locator('#keys .key[data-stroke=""]').boundingBox();
   const entry = page.locator('#keys .key.tap-entry');
   const entryBox = await entry.boundingBox();
   const row3 = await page.locator('#keys .key-row.navigation').boundingBox();
-  assert.match(await entry.textContent(), /点按输入|Tap entry/);
-  assert(Math.abs(rest.width - entryBox.width) < 2, 'Rest and 点按输入 share the space equally');
+  assert.match(await entry.getAttribute('aria-label'), /点按输入|Tap entry/);
+  assert(rest.width > entryBox.width * 2.5, 'Rest is about three times as wide as 点按输入');
   assert(Math.abs(rest.y - entryBox.y) < 1 && entryBox.x > rest.x, '点按输入 sits right of Rest');
-  assert(rest.width < row3.width * 0.3, 'Rest is shorter than before (was about 45% of the row)');
   assert(row3.x >= 0 && row3.x + row3.width <= page.viewportSize().width + 0.5, 'the row fits the screen');
 
   // Tap entry with the key: press 点按输入, then a note key → locked; tapping stems enters it.
@@ -107,7 +106,7 @@ async function checks(page, touch) {
   await press(row.locator('.slot').nth(9)); await settle();
   await press(page.locator('#keys .key[data-stroke="T"]')); await settle();
   assert.equal((await cells())[9], 'T');
-  console.log(`  PASS ${touch ? 'touch' : 'mouse'}: double-tap within 0.5 s, 0.3 s holds, half-width Rest with 点按输入, tap entry started, used and ended with the key.`);
+  console.log(`  PASS ${touch ? 'touch' : 'mouse'}: double-tap within 0.5 s, 0.3 s holds, Rest with 点按输入 beside it, tap entry started, used and ended with the key.`);
 }
 
 (async () => {

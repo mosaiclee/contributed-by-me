@@ -965,7 +965,9 @@ function lockableKey(node, stroke) {
 // 1.67: the 点按输入 key is a second way into tap entry: press it, then a note key (or Rest) to lock that
 // note; press the locked note key or 点按输入 again to leave. Holding a note key still locks it directly.
 function tapEntryKey(key) {
-  const node = key(t('keys.tapEntry'), toggleTapEntry, 'tap-entry');
+  // 1.68: a tapping-finger icon replaces the words 点按输入; the name stays in the tooltip and label.
+  const node = key('', toggleTapEntry, 'tap-entry');
+  node.innerHTML = '<svg aria-hidden="true"><use href="#i-tap-entry"/></svg>';
   node.title = t('keys.tapEntryTitle');
   node.setAttribute('aria-label', node.title);
   return node;
@@ -1196,13 +1198,13 @@ async function exportFollowDiagnostics() {
   const pause = engine.running && !engine.paused ? togglePlayback() : Promise.resolve();
   logFollow('export');
   const data = {
-    version: '1.67', userAgent: navigator.userAgent,
+    version: '1.68', userAgent: navigator.userAgent,
     viewport: {width: el.paper.clientWidth, height: el.paper.clientHeight},
     events: followEvents.slice()
   };
   const file = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   try {
-    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.67.json')]);
+    const [, name] = await Promise.all([pause, saveScoreExport(file, 'RhythmDesk-follow-diagnostics-1.68.json')]);
     if (name) notify(t('msg.download', {name}));
   } catch (error) {
     if (error.name !== 'AbortError') notify(t('scoreExport.failed'));

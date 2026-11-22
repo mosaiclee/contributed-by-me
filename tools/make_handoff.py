@@ -1,10 +1,10 @@
 """Generate the RhythmDesk developer handoff document (1.59 -> 1.60 -> 1.61).
 
-Usage: python3 make_handoff.py V159_DIR … V167_DIR OUT.txt  (nine version folders, oldest first)
+Usage: python3 make_handoff.py V159_DIR … V168_DIR OUT.txt  (ten version folders, oldest first)
   each Vxxx_DIR holds RhythmDesk-Win11/ (the Win11 package) and index.html (the Android page)
 
 Every before/after code block is taken from the real files: the edit lists of patch160.py and
-patch161.py … patch167.py give the changed passages; their line numbers are looked up in the version before and
+patch161.py … patch168.py give the changed passages; their line numbers are looked up in the version before and
 after the round. Changes outside the patch lists (version strings, readmes, tests, iPhone files)
 are listed from a line diff.
 """
@@ -23,8 +23,9 @@ import patch164  # noqa: E402
 import patch165  # noqa: E402
 import patch166  # noqa: E402
 import patch167  # noqa: E402
+import patch168  # noqa: E402
 
-V159, V160, V161, V162, V163, V164, V165, V166, V167, OUT = (Path(arg) for arg in sys.argv[1:11])
+V159, V160, V161, V162, V163, V164, V165, V166, V167, V168, OUT = (Path(arg) for arg in sys.argv[1:12])
 RULE = '-' * 78
 HEAVY = '=' * 78
 UI = 'RhythmDesk-Win11/source/ui/'
@@ -91,6 +92,27 @@ PROMPT_7 = '所有长按激活菜单激活时间改为长按0.1秒激活，同�
 
 PROMPT_8 = ('所有长按激活菜单激活时间改为长按0.3秒激活，同时音符锁定也改成0.3秒激活，双击激活改为间隔0.5秒内可激活，缩短休止按钮，'
             '添加一个点按输入按钮，功能是先点击点按输入按钮后再点击音符按钮激活点按输入功能，再次点击被激活点按输入的音符或者该点按输入激活按钮则取消激活')
+
+PROMPT_9 = '休止按钮图形缩的太短了，加长休止按钮长度，点按输入按钮图形缩短一半，将点按输入文字改为一个适当的符号表达此功能含义'
+
+SUMMARY_9 = {
+    'size': """「休止」键加长，「点按输入」键缩短一半。
+  · style.css：键盘第三行 grid-template-columns 由 1.67 的「1fr 1fr minmax(56px, 1.9fr) minmax(56px, 1.9fr) 1fr 1fr」改为
+    「1fr 1fr minmax(84px, 2.85fr) minmax(40px, .95fr) 1fr 1fr」：「点按输入」为 1.67 的一半（0.95fr，约一个箭头键宽），
+    原来休止键的总宽度 3.8fr 中其余 2.85fr 归「休止」。
+  · 实测（手机 390 px 宽）：休止键 85 → 128 px，点按输入键 85 → 43 px（箭头键 45 px）；桌面 1280 px：休止 141 → 212 px，
+    点按输入 141 → 71 px。""",
+    'icon': """「点按输入」键的文字改为手指点按图标（食指加两道点按波纹），表示“点按谱面输入”。
+  · index.html 的图标库新增 <symbol id="i-tap-entry">（24×24 线条图标，与其他图标同一风格）。
+  · app.js tapEntryKey()：键不再显示文字，改为 <svg><use href="#i-tap-entry"/></svg>；名称「点按输入」保留在提示文字（title）和
+    无障碍标签（aria-label）中。style.css 新增 .key.tap-entry svg（28 px，蓝色线条；激活时随键变为白色）。
+  · i18n.js 删除不再使用的 keys.tapEntry（中英文）；说明书中写明该键是「休止键右侧的手指点按图标」。
+  · 设计时先在键的实际大小下比较了三个候选图标（单道波纹、双道波纹、波纹加点），双道波纹在白底、等待、激活三种状态下都最清楚。
+  · 测试：新增 editor168.e2e.cjs，在同一页面分别套用 1.67 与 1.68 的列宽实测两键宽度比例，确认图标确实画出（按截图统计蓝色像素）、
+    键上无文字、提示与无障碍标签含名称、功能照常；editor167.e2e.cjs 的布局断言改为「休止约为点按输入的三倍宽」。""",
+    'common': """关于页「本版更新」文字按 1.68 改写；Readme.txt 与 source/Readme-Win11.txt 首行改为 1.68 并新增「1.68 更新」；
+  仓库 README.md 增加 1.68 段落；本交接文档延续加入第 9 段提示词与修改对照，并更新版本记录、构建与测试命令。""",
+}
 
 SUMMARY_8 = {
     'hold': """所有长按菜单和音符锁定改为长按 0.3 秒（1.66 为 0.1 秒）。
@@ -425,7 +447,7 @@ def appendix_files(files):
 def main():
     out = [
         'RhythmDesk（鼓谱工作台）开发交接文档',
-        f'覆盖范围：1.59（接手时的版本）→ 1.60 → 1.61 → 1.62 → 1.63 → 1.64 → 1.65 → 1.66 → 1.67',
+        f'覆盖范围：1.59（接手时的版本）→ 1.60 → … → 1.67 → 1.68（共 9 次修改）',
         '编写日期：2026-11-22',
         '',
         HEAVY, '一、项目结构与两个平台的关系', HEAVY, """
@@ -440,7 +462,7 @@ def main():
 2. 安卓版（RhythmDesk-Android-x.xx.apk，包名 org.rhythmdesk.app，minSdk 26，targetSdk 34）
    · 外壳 classes.dex（WebView）未改动；编辑器是 APK 内的 assets/index.html，它和 Win11 页面使用同一套脚本、样式和说明书，
      另含安卓专用代码（rhythmDeskAndroid 标志、系统保存窗口桥接、androidFollow* 跟随实现、内嵌音色数据、安卓版说明书文字）。
-   · 接手的压缩包没有安卓 index.html 的拆分源码，因此每轮修改都写成补丁清单（tools/patch160.py … tools/patch167.py），
+   · 接手的压缩包没有安卓 index.html 的拆分源码，因此每轮修改都写成补丁清单（tools/patch160.py … tools/patch168.py），
      同一份清单同时作用于 Win11 源码和安卓 index.html：每处修改必须在两边都恰好匹配规定次数，否则整个补丁不写入。
      这保证两个平台的改动完全一致。生成后还比对了「Win11 页面 与 安卓页面」的差异，确认只剩原有的安卓专用部分。
    · APK 重新打包：tools/repack_apk.py 以上一版已签名 APK 为基础，只替换 assets/index.html 和二进制 AndroidManifest.xml 中的
@@ -453,23 +475,24 @@ def main():
 
 3. 构建命令
    python3 RhythmDesk-Win11/source/build_ui.py
-   python3 tools/patch167.py RhythmDesk-Win11/source/ui android/index.html      （在 1.66 源码上应用 1.67 修改，已应用过的不要重复执行）
-   python3 tools/repack_apk.py 上一版.apk android/index.html unsigned.apk 1.67
+   python3 tools/patch168.py RhythmDesk-Win11/source/ui android/index.html      （在 1.67 源码上应用 1.68 修改，已应用过的不要重复执行）
+   python3 tools/repack_apk.py 上一版.apk android/index.html unsigned.apk 1.68
    java --add-exports java.base/sun.security.x509=ALL-UNNAMED --add-exports java.base/sun.security.pkcs=ALL-UNNAMED \\
-        --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java 签名.pem unsigned.apk RhythmDesk-Android-1.67.apk
-   python3 tools/verify_v2.py RhythmDesk-Android-1.67.apk
+        --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java 签名.pem unsigned.apk RhythmDesk-Android-1.68.apk
+   python3 tools/verify_v2.py RhythmDesk-Android-1.68.apk
 
 4. 测试（RhythmDesk-Win11/source/tests）
-   node interaction167.cjs                                  双击计时、滚轮缩放、拖动、保存流程、诊断文件版本
-   node playback167.cjs 安卓index.html ../../RhythmDesk.html  安卓页面与浏览器页面播放跟随轨迹一致、循环释放规则
-   node offline167.cjs 解压后的iPhone离线包目录                 iPhone 离线版 service worker（需要先生成 iPhone 包）
+   node interaction168.cjs                                  双击计时、滚轮缩放、拖动、保存流程、诊断文件版本
+   node playback168.cjs 安卓index.html ../../RhythmDesk.html  安卓页面与浏览器页面播放跟随轨迹一致、循环释放规则
+   node offline168.cjs 解压后的iPhone离线包目录                 iPhone 离线版 service worker（需要先生成 iPhone 包）
    node editor160.e2e.cjs 页面...                            （需 Playwright + Chromium）1.60 三项功能：复制轨道、带音符切分、长按菜单（1.67 起为 0.3 秒）
    node editor161.e2e.cjs 页面...                            （需 Playwright + Chromium）1.61/1.62 功能：再循环次数（自由输入）、竖向蓝色播放方框、音符锁定
    node editor163.e2e.cjs 页面...                            （需 Playwright + Chromium）1.63 功能：每个循环预设次数、0.5 秒长按、双击菜单避让
    node editor164.e2e.cjs 页面...                            （需 Playwright + Chromium）1.64：多选半透明选框（按像素检查竖线与音符可见）
    node editor165.e2e.cjs 页面...                            （需 Playwright + Chromium）长按时长（1.65 新增，1.67 起全部 0.3 秒）：菜单、首页卡片、音符锁定，以及点按仍能选中和输入
-   node editor167.e2e.cjs 页面...                            （需 Playwright + Chromium）1.67：双击 0.5 秒内、0.3 秒长按、休止键缩短与「点按输入」键
-   1.67 发布前上述测试（offline 除外）在 Win11 页面和从已签名 APK 中取出的页面上全部通过；未在安卓真机和 Windows Edge 上实测。
+   node editor167.e2e.cjs 页面...                            （需 Playwright + Chromium）1.67：双击 0.5 秒内、0.3 秒长按、「点按输入」键的功能
+   node editor168.e2e.cjs 页面...                            （需 Playwright + Chromium）1.68：休止键与点按输入键的宽度、手指点按图标
+   1.68 发布前上述测试（offline 除外）在 Win11 页面和从已签名 APK 中取出的页面上全部通过；未在安卓真机和 Windows Edge 上实测。
 
 5. 版本记录
    1.59  接手版本（2026-11-17）。安卓 versionCode 159。
@@ -481,6 +504,7 @@ def main():
    1.65  2026-11-22：所有长按菜单（含首页卡片菜单）改为 0.2 秒；音符锁定与锁定时符杆保留 0.5 秒。versionCode 165。
    1.66  2026-11-22：所有长按菜单与音符锁定都改为 0.1 秒。versionCode 166。
    1.67  2026-11-22：长按菜单与音符锁定改为 0.3 秒；双击间隔 0.5 秒内；休止键缩短、新增「点按输入」键。versionCode 167。
+   1.68  2026-11-22：休止键加长；「点按输入」键缩短一半并改为手指点按图标。versionCode 168。
 """.strip('\n'),
         '', HEAVY, '二、提示词汇总', HEAVY,
         '第 1 段提示词（初次接手，产出 1.60）：', PROMPT_1, '',
@@ -520,6 +544,10 @@ def main():
         '  需求 1：所有长按激活的菜单和音符锁定，改为长按 0.3 秒激活。',
         '  需求 2：双击激活改为两次点按间隔 0.5 秒内即可。',
         '  需求 3：缩短「休止」键，新增「点按输入」键：先点它再点音符键进入点按输入；再点该音符或「点按输入」键取消。',
+        '  （按惯例同步说明书并延续本交接文档。）', '',
+        '第 9 段提示词（产出 1.68，并延续本文档）：', PROMPT_9, '',
+        '  需求 1：「休止」键缩得太短，加长；「点按输入」键缩短一半。',
+        '  需求 2：「点按输入」的文字改为一个能表达此功能的符号。',
         '  （按惯例同步说明书并延续本交接文档。）',
         '',
         HEAVY, '三、第 1 段提示词的程序修改（1.59 → 1.60）', HEAVY,
@@ -703,19 +731,40 @@ def main():
             '  RhythmDesk-Win11/source/tests/editor167.e2e.cjs  —— 1.67 的 Playwright 测试，全文见附录 F。',
             '  tools/patch167.py。发布日期与 1.66 同为 2026-11-22，因此日期字符串未改。']
 
-    out += ['', HEAVY, '十一、后续开发建议', HEAVY, """
+    out += ['', HEAVY, '十一、第 9 段提示词的程序修改（1.67 → 1.68）', HEAVY,
+            '说明：「修改前」取自 1.67 文件，「修改后」取自 1.68 文件，行号为各自文件中的行号；路径相对于 RhythmDesk-Win11/。',
+            f'本轮补丁清单：tools/patch168.py（{len(patch168.EDITS)} 处修改）。']
+    out += edits_section(patch168, '1.67', '1.68', V167, V168, SUMMARY_9)
+    files_9 = ['RhythmDesk-Win11/Readme.txt', 'RhythmDesk-Win11/source/Readme-Win11.txt',
+               'RhythmDesk-Win11/source/tests/interaction168.cjs', 'RhythmDesk-Win11/source/tests/playback168.cjs',
+               'RhythmDesk-Win11/source/tests/offline168.cjs', 'RhythmDesk-Win11/source/tests/editor167.e2e.cjs',
+               'RhythmDesk-Win11/source/iphone-offline/sw.js', 'RhythmDesk-Win11/source/iphone-offline/install.html',
+               'RhythmDesk-Win11/source/iphone-offline/local-fallback.html', 'RhythmDesk-Win11/source/iphone-offline/Readme.txt']
+    renamed_9 = {f'RhythmDesk-Win11/source/tests/{n}168.cjs': f'RhythmDesk-Win11/source/tests/{n}167.cjs'
+                 for n in ('interaction', 'playback', 'offline')}
+    out += other_changes(patch168, '1.67', '1.68', V167, V168, files_9, renamed_9)
+    out += android_page_extra('1.67', '1.68', V167, V168, patch168)
+    out += ['', '■ 安卓 AndroidManifest.xml（二进制）', RULE,
+            '修改前 1.67：versionCode = 167，versionName = "1.67"',
+            '修改后 1.68：versionCode = 168，versionName = "1.68"', RULE,
+            '', '■ 新增文件（修改前不存在）',
+            '  RhythmDesk-Win11/source/tests/editor168.e2e.cjs  —— 1.68 的 Playwright 测试，全文见附录 G。',
+            '  tools/patch168.py。发布日期与 1.67 同为 2026-11-22，因此日期字符串未改。']
+
+    out += ['', HEAVY, '十二、后续开发建议', HEAVY, """
   · 新一轮修改沿用同样做法：先在 Win11 源码 source/ui 上设计修改，写成 tools/patchXXX.py 清单同时作用于安卓 index.html，
     构建后比对两平台页面差异，确认只剩原有安卓专用部分；然后重打包、签名、校验、跑测试。
   · 安卓专用代码只存在于 android/index.html（APK 内页面）。修改跟随、保存、下载相关代码时，两个平台写法不同，需分别处理。
   · 签名必须一直使用同一私钥，否则用户无法覆盖安装；versionCode 必须递增。
-  · 建议在安卓真机和 Windows 11 Edge 上补做人工验收：长按 0.3 秒与双击 0.5 秒的手感（连续点同一符杆是否被当成双击、滑动时是否误开菜单）、「点按输入」键的使用、单击／双击／长按菜单的避让位置、预设循环次数与再循环计数、锁定输入。
+  · 建议在安卓真机和 Windows 11 Edge 上补做人工验收：长按 0.3 秒与双击 0.5 秒的手感（连续点同一符杆是否被当成双击、滑动时是否误开菜单）、「点按输入」键（手指图标）是否易懂好按、单击／双击／长按菜单的避让位置、预设循环次数与再循环计数、锁定输入。
 """.strip('\n')]
-    out += appendix_files([(str(V167 / 'RhythmDesk-Win11/source/tests/editor160.e2e.cjs'), '附录 A：测试 editor160.e2e.cjs（1.60 新增，1.63／1.65／1.66／1.67 更新后的全文）'),
-                           (str(V167 / 'RhythmDesk-Win11/source/tests/editor161.e2e.cjs'), '附录 B：测试 editor161.e2e.cjs（1.61 新增，1.62／1.63 更新后的全文）'),
-                           (str(V167 / 'RhythmDesk-Win11/source/tests/editor163.e2e.cjs'), '附录 C：测试 editor163.e2e.cjs（1.63 新增，1.65／1.66／1.67 更新后的全文）'),
-                           (str(V167 / 'RhythmDesk-Win11/source/tests/editor164.e2e.cjs'), '附录 D：测试 editor164.e2e.cjs（1.64 新增）'),
-                           (str(V167 / 'RhythmDesk-Win11/source/tests/editor165.e2e.cjs'), '附录 E：测试 editor165.e2e.cjs（1.65 新增，1.66／1.67 改写后的全文）'),
-                           (str(V167 / 'RhythmDesk-Win11/source/tests/editor167.e2e.cjs'), '附录 F：新增测试 editor167.e2e.cjs（1.67）')])
+    out += appendix_files([(str(V168 / 'RhythmDesk-Win11/source/tests/editor160.e2e.cjs'), '附录 A：测试 editor160.e2e.cjs（1.60 新增，1.63／1.65／1.66／1.67 更新后的全文）'),
+                           (str(V168 / 'RhythmDesk-Win11/source/tests/editor161.e2e.cjs'), '附录 B：测试 editor161.e2e.cjs（1.61 新增，1.62／1.63 更新后的全文）'),
+                           (str(V168 / 'RhythmDesk-Win11/source/tests/editor163.e2e.cjs'), '附录 C：测试 editor163.e2e.cjs（1.63 新增，1.65／1.66／1.67 更新后的全文）'),
+                           (str(V168 / 'RhythmDesk-Win11/source/tests/editor164.e2e.cjs'), '附录 D：测试 editor164.e2e.cjs（1.64 新增）'),
+                           (str(V168 / 'RhythmDesk-Win11/source/tests/editor165.e2e.cjs'), '附录 E：测试 editor165.e2e.cjs（1.65 新增，1.66／1.67 改写后的全文）'),
+                           (str(V168 / 'RhythmDesk-Win11/source/tests/editor167.e2e.cjs'), '附录 F：测试 editor167.e2e.cjs（1.67 新增，1.68 更新后的全文）'),
+                           (str(V168 / 'RhythmDesk-Win11/source/tests/editor168.e2e.cjs'), '附录 G：新增测试 editor168.e2e.cjs（1.68）')])
     text = '\n'.join(out).replace('\n', '\r\n') + '\r\n'
     OUT.write_bytes(b'\xef\xbb\xbf' + text.encode('utf-8'))
     print(f'Wrote {OUT} ({len(out)} blocks, {text.count(chr(10))} lines)')

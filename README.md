@@ -2,16 +2,20 @@
 
 - `RhythmDesk-Win11/` — Windows 11 edition: `RhythmDesk.exe` opens `RhythmDesk.html` in Edge. Readable sources in `RhythmDesk-Win11/source/ui`; `source/build_ui.py` rebuilds the page.
 - `android/` — Android edition: the signed APK and `index.html`, the editor page packed as `assets/index.html` in the APK.
-- `tools/` — the per-release patch lists (`patch160.py` … `patch167.py`), APK repack, signing, verification and handoff-document scripts.
-- `docs/RhythmDesk-交接文档-1.59至1.67.txt` — developer handoff (Chinese): every request so far, what changed for each, and before/after code for every changed passage.
+- `tools/` — the per-release patch lists (`patch160.py` … `patch168.py`), APK repack, signing, verification and handoff-document scripts.
+- `docs/RhythmDesk-交接文档-1.59至1.68.txt` — developer handoff (Chinese): every request so far, what changed for each, and before/after code for every changed passage.
 
 The Android signing key is kept outside this repository (`*.pem` is ignored).
+
+## 1.68
+
+1. **Keyboard row**: the Rest key is longer again (2.85fr) and the 点按输入 / Tap entry key is half as wide as in 1.67 (0.95fr, about one arrow key), showing a tapping-finger icon (`#i-tap-entry`) instead of words; its name stays in the tooltip and accessible label.
 
 ## 1.67
 
 1. **0.3-second holds**: every hold menu (score menus and the rhythm-card menu) and the note-key lock take 0.3 s.
 2. **Double-tap within 0.5 s**: two taps on the same control up to 0.5 s apart open its menu (was 0.25 s).
-3. **点按输入 / Tap entry key**: the Rest key is half as wide, and a Tap entry key sits beside it. Press Tap entry, then a note key (or Rest), to enter that note by tapping stems; press the locked note key or Tap entry again to stop. Holding a note key for 0.3 s still locks it directly.
+3. **点按输入 / Tap entry key**: the Rest key is half as wide, and a Tap entry key sits beside it (1.68: longer Rest, narrower icon key). Press Tap entry, then a note key (or Rest), to enter that note by tapping stems; press the locked note key or Tap entry again to stop. Holding a note key for 0.3 s still locks it directly.
 
 ## 1.66
 
@@ -57,25 +61,26 @@ The Android signing key is kept outside this repository (`*.pem` is ignored).
 python3 RhythmDesk-Win11/source/build_ui.py
 
 # Android: replace the page and version in the previous APK, then sign with the release key (APK Signature Scheme v2)
-python3 tools/repack_apk.py RhythmDesk-Android-1.66.apk android/index.html unsigned.apk 1.67
+python3 tools/repack_apk.py RhythmDesk-Android-1.67.apk android/index.html unsigned.apk 1.68
 java --add-exports java.base/sun.security.x509=ALL-UNNAMED --add-exports java.base/sun.security.pkcs=ALL-UNNAMED \
      --add-exports java.base/sun.security.util=ALL-UNNAMED -cp apksig-2.3.0.jar tools/SignApk.java \
-     RhythmDesk-Android-signing.pem unsigned.apk RhythmDesk-Android-1.67.apk
-python3 tools/verify_v2.py RhythmDesk-Android-1.67.apk
+     RhythmDesk-Android-signing.pem unsigned.apk RhythmDesk-Android-1.68.apk
+python3 tools/verify_v2.py RhythmDesk-Android-1.68.apk
 ```
 
-`tools/patch160.py` (1.59 → 1.60), `patch161.py` (→ 1.61), `patch162.py` (→ 1.62), `patch163.py` (→ 1.63), `patch164.py` (→ 1.64), `patch165.py` (→ 1.65), `patch166.py` (→ 1.66) and `patch167.py` (→ 1.67) are the exact edit sets applied to the Win11 sources and the Android page; every edit had to match in both, so both editions received identical changes. `tools/make_handoff.py` builds the handoff document from them. `apksig-2.3.0.jar` is `com.android.tools.build:apksig:2.3.0` from Maven Central.
+`tools/patch160.py` (1.59 → 1.60), `patch161.py` (→ 1.61), `patch162.py` (→ 1.62), `patch163.py` (→ 1.63), `patch164.py` (→ 1.64), `patch165.py` (→ 1.65), `patch166.py` (→ 1.66), `patch167.py` (→ 1.67) and `patch168.py` (→ 1.68) are the exact edit sets applied to the Win11 sources and the Android page; every edit had to match in both, so both editions received identical changes. `tools/make_handoff.py` builds the handoff document from them. `apksig-2.3.0.jar` is `com.android.tools.build:apksig:2.3.0` from Maven Central.
 
 ## Tests
 
 ```sh
 cd RhythmDesk-Win11/source/tests
-node interaction167.cjs
-node playback167.cjs ../../../android/index.html ../../RhythmDesk.html
+node interaction168.cjs
+node playback168.cjs ../../../android/index.html ../../RhythmDesk.html
 node editor160.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.60 features; needs Playwright + Chromium
 node editor161.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.61/1.62 features
 node editor163.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.63 features
 node editor164.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.64 (pixel check of the pick frame)
 node editor165.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # hold timings (all 0.3 s since 1.67)
 node editor167.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.67: double-tap window, Tap entry key
+node editor168.e2e.cjs ../../RhythmDesk.html ../../../android/index.html   # 1.68: key widths and icon
 ```
